@@ -1,0 +1,10 @@
+{ 
+    "injectChanges": false,
+    "files": [ "index.html", "bundle.js", "src/*" ],
+    "watchOptions": { 
+        "ignored": "node_modules" 
+    },
+    "server": { 
+        "baseDir": "./" 
+    }
+}

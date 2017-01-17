@@ -1,0 +1,16 @@
+{
+  "name": "who-to-follow",
+  "version": "1.0.0",
+  "private": "true",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "flyd": "^0.1.6",
+    "whatwg-fetch": "^0.9.0"
+  }
+}

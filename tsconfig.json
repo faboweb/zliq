@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "es2015",
+        "target": "es5",
+        "moduleResolution": "node",
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "jsx": "preserve"
+    },
+    "include": [
+        "./src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
