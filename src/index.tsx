@@ -1,11 +1,11 @@
 import { render } from 'preact';
 import { h } from 'preact-flyd';
-import ph from './preact-hyperscript-helpers';
+import ph from './utils/preact-hyperscript-helpers';
 const { div, span, button} = ph(h);
 import { reduxy } from './reduxy';
 import { clicks, CLICK } from './reducers/clicks';
 import flyd from 'flyd';
-import { deepSelect } from './flyd-utils';
+import { deepSelect } from './utils/flyd-utils';
 
 let { action$, state$ } = reduxy({
 	clicks
