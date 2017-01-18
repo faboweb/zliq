@@ -11,13 +11,15 @@ let { action$, state$ } = reduxy({
 	clicks
 });
 
-render(div('#foo.bar', [
-	span('Hello, world!'),
-	span(deepSelect(state$, 'clicks.clicks')),
-	button({
-		onclick: e => {
-			console.log('clicked');
-			action$({ type: CLICK });
-		}
-	}, 'Click Me'),
-]), document.querySelector('app'));
+render(
+	div('#foo.bar', [
+		span('Hello, world!'),
+		span(deepSelect(state$, 'clicks.clicks')),
+		button({
+			onclick: e => {
+				console.log('clicked');
+				action$({ type: CLICK });
+			}
+		}, 'Click Me'),
+	])
+, document.querySelector('app'));

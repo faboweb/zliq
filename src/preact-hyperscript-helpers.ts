@@ -1,5 +1,8 @@
 import hh from 'hyperscript-helpers';
 
+/* allow for dom defenition like div#foo.bar */
+/* this does not seem to work with preact */
+
 function ph(h) {
 	return function (selector: string, _props?, _children?) {
 		let tag, id, classes, props, children;
