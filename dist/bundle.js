@@ -2467,8 +2467,8 @@ function reduxy(reducers) {
 function reduce(state$, reducers, action) {
     var reducerNames = Object.getOwnPropertyNames(reducers);
     state$(reducerNames.reduce(function (state$, reducer) {
-        var newState = {};
-        newState[reducer] = reducers[reducer](state$.map(function (state) { return state[reducer]; })(), action);
+        var newState = state$() || {};
+        newState[reducer] = reducers[reducer](newState[reducer], action);
         return newState;
     }, state$));
 }
@@ -2508,7 +2508,7 @@ var easyFetch = function (store, token$) { return function (request, actionType)
 function fetchMiddleware(prefix, reducer) {
     return function (state, _a) {
         var type = _a.type, payload = _a.payload;
-        var output = Object.assign({}, state);
+        var output = state;
         switch (type) {
             case prefix + '_LOAD':
                 output[prefix.toLowerCase() + '_loading'] = true;

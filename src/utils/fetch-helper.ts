@@ -36,7 +36,7 @@ export const easyFetch = (store, token$) => (request, actionType) => {
 
 export function fetchMiddleware(prefix: string, reducer) {
 	return (state, {type, payload}) => {
-		let output = Object.assign({}, state);
+		let output = state;
 		switch (type) {
 			case prefix + '_LOAD':
 				output[prefix.toLowerCase() + '_loading'] = true;

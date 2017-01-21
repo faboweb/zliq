@@ -24,7 +24,6 @@ render(
 	</div>
 , document.querySelector('app'));
 
-
 function fetchStuff() {
 	easyFetch(store, null)({
 		method: 'GET',

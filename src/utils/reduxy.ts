@@ -19,8 +19,8 @@ export function reduxy(reducers) {
 function reduce(state$, reducers, action) {
 	let reducerNames = Object.getOwnPropertyNames(reducers);
 	state$(reducerNames.reduce((state$, reducer) => {
-		let newState = {};
-		newState[reducer] = reducers[reducer](state$.map(state => state[reducer])(), action);
+		let newState = state$() || {};
+		newState[reducer] = reducers[reducer](newState[reducer], action);
 		return newState;
 	}, state$));
 }
