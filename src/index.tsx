@@ -1,7 +1,7 @@
 import { h } from './utils/flyd-hyperscript';
 import { render } from './utils/flyd-render';
 import { reduxy } from './utils/reduxy';
-import { fetchy as _fetchy, easyFetch } from './utils/fetchy';
+import { easyFetch } from './utils/fetch-helper';
 import { clicks, CLICK } from './reducers/clicks';
 import flyd from 'flyd';
 import { deepSelect } from './utils/flyd-utils';

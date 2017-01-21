@@ -2472,23 +2472,6 @@ function reduce(state$, reducers, action) {
         return newState;
     }, state$));
 }
-function fetchMiddleware(prefix, reducer) {
-    return function (state, _a) {
-        var type = _a.type, payload = _a.payload;
-        var output = Object.assign({}, state);
-        switch (type) {
-            case prefix + '_LOAD':
-                output[prefix.toLowerCase() + '_loading'] = true;
-            case prefix + '_SUCCESS':
-                output[prefix.toLowerCase() + '_loading'] = false;
-                type = prefix;
-            case prefix + '_FAILURE':
-                output[prefix.toLowerCase() + '_loading'] = false;
-                output[prefix.toLowerCase() + '_message'] = payload.message;
-        }
-        return reducer(output, { type, payload });
-    };
-}
 //# sourceMappingURL=reduxy.js.map
 
 function isAuthenticated(token$) {
@@ -2522,7 +2505,24 @@ var easyFetch = function (store, token$) { return function (request, actionType)
         store.dispatch({ type: actionType + '_SUCCESS', payload: body });
     });
 }; };
-//# sourceMappingURL=fetchy.js.map
+function fetchMiddleware(prefix, reducer) {
+    return function (state, _a) {
+        var type = _a.type, payload = _a.payload;
+        var output = Object.assign({}, state);
+        switch (type) {
+            case prefix + '_LOAD':
+                output[prefix.toLowerCase() + '_loading'] = true;
+            case prefix + '_SUCCESS':
+                output[prefix.toLowerCase() + '_loading'] = false;
+                type = prefix;
+            case prefix + '_FAILURE':
+                output[prefix.toLowerCase() + '_loading'] = false;
+                output[prefix.toLowerCase() + '_message'] = payload.message;
+        }
+        return reducer(output, { type, payload });
+    };
+}
+//# sourceMappingURL=fetch-helper.js.map
 
 var CLICK = 'CLICK';
 var FETCHED = 'FETCHED';

@@ -1,4 +1,4 @@
-import {fetchMiddleware} from '../utils/reduxy';
+import {fetchMiddleware} from '../utils/fetch-helper';
 
 export const CLICK = 'CLICK';
 export const FETCHED = 'FETCHED';

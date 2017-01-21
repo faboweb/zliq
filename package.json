@@ -11,12 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "flyd": "^0.2.2",
-    "flyd-filter": "^1.0.2",
-    "hyperscript-helpers": "^3.0.2",
-    "preact": "^7.1.0",
-    "preact-flyd": "0.0.5",
-    "preact-hyperscript": "^0.7.0",
-    "react-flyd": "^0.2.1",
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
