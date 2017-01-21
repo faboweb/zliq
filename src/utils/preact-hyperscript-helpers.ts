@@ -23,9 +23,10 @@ function ph(h) {
 		}
 
 		return h(tag, Object.assign(props, {
-			id,
-			className: classes.length > 0 ? classes.join(' ') : null
-		}), ...children);
+			id
+		}, classes.length > 0 ? {
+			className: classes.join(' ')
+		} : {}), children);
 	};
 }
 

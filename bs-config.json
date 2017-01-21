@@ -6,5 +6,6 @@
     },
     "server": { 
         "baseDir": "./" 
-    }
+    },
+    "startPath": "/dist/index.html"
 }
