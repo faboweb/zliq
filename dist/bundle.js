@@ -309,9 +309,7 @@ var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 
 
 
 
-function unwrapExports (x) {
-	return x && x.__esModule ? x['default'] : x;
-}
+
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -2453,89 +2451,6 @@ var render = function (tree$, parentElem) {
 };
 //# sourceMappingURL=flyd-render.js.map
 
-var index$13 = createCommonjsModule(function (module, exports) {
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-var isValidString = function isValidString(param) {
-  return typeof param === 'string' && param.length > 0;
-};
-
-var startsWith = function startsWith(string, start) {
-  return string[0] === start;
-};
-
-var isSelector = function isSelector(param) {
-  return isValidString(param) && (startsWith(param, '.') || startsWith(param, '#'));
-};
-
-var node = function node(h) {
-  return function (tagName) {
-    return function (first) {
-      for (var _len = arguments.length, rest = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        rest[_key - 1] = arguments[_key];
-      }
-
-      if (isSelector(first)) {
-        return h.apply(undefined, [tagName + first].concat(rest));
-      } else if (typeof first === 'undefined') {
-        return h(tagName);
-      } else {
-        return h.apply(undefined, [tagName, first].concat(rest));
-      }
-    };
-  };
-};
-
-var TAG_NAMES = ['a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio', 'b', 'base', 'basefont', 'bdi', 'bdo', 'bgsound', 'big', 'blink', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup', 'command', 'content', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'dir', 'div', 'dl', 'dt', 'element', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'image', 'img', 'input', 'ins', 'isindex', 'kbd', 'keygen', 'label', 'legend', 'li', 'link', 'listing', 'main', 'map', 'mark', 'marquee', 'math', 'menu', 'menuitem', 'meta', 'meter', 'multicol', 'nav', 'nextid', 'nobr', 'noembed', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'picture', 'plaintext', 'pre', 'progress', 'q', 'rb', 'rbc', 'rp', 'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section', 'select', 'shadow', 'small', 'source', 'spacer', 'span', 'strike', 'strong', 'style', 'sub', 'summary', 'sup', 'svg', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'tt', 'u', 'ul', 'var', 'video', 'wbr', 'xmp'];
-
-exports['default'] = function (h) {
-  var createTag = node(h);
-  var exported = { TAG_NAMES: TAG_NAMES, isSelector: isSelector, createTag: createTag };
-  TAG_NAMES.forEach(function (n) {
-    exported[n] = createTag(n);
-  });
-  return exported;
-};
-
-module.exports = exports['default'];
-});
-
-var hh = unwrapExports(index$13);
-
-function ph(h) {
-    return function (selector, _props, _children) {
-        var tag, id, classes, props, children;
-        if (!_children) {
-            props = {};
-            children = _props;
-        }
-        else {
-            props = _props;
-            children = _children;
-        }
-        var _a = selector.split('#'), _tag = _a[0], rest = _a[1];
-        var hasId = !!rest;
-        if (hasId) {
-            tag = _tag;
-            _b = rest.split('.'), id = _b[0], classes = _b.slice(1);
-        }
-        else {
-            _c = _tag.split('.'), tag = _c[0], classes = _c.slice(1);
-        }
-        return h(tag, Object.assign(props, {
-            id
-        }, classes.length > 0 ? {
-            className: classes.join(' ')
-        } : {}), children);
-        var _b, _c;
-    };
-}
-var ph$1 = function (h) { return hh(ph(h)); };
-//# sourceMappingURL=preact-hyperscript-helpers.js.map
-
 function reduxy(reducers) {
     var action$ = index$10.stream({ type: 'INIT' });
     var state$ = index$10.combine(function (action$, self) {
@@ -2545,8 +2460,8 @@ function reduxy(reducers) {
         console.log('Action called:', action$());
     }, [action$]);
     return {
-        action$,
-        state$
+        $: state$,
+        dispatch: function (action) { return action$(action); }
     };
 }
 function reduce(state$, reducers, action) {
@@ -2557,22 +2472,77 @@ function reduce(state$, reducers, action) {
         return newState;
     }, state$));
 }
+function fetchMiddleware(prefix, reducer) {
+    return function (state, _a) {
+        var type = _a.type, payload = _a.payload;
+        var output = Object.assign({}, state);
+        switch (type) {
+            case prefix + '_LOAD':
+                output[prefix.toLowerCase() + '_loading'] = true;
+            case prefix + '_SUCCESS':
+                output[prefix.toLowerCase() + '_loading'] = false;
+                type = prefix;
+            case prefix + '_FAILURE':
+                output[prefix.toLowerCase() + '_loading'] = false;
+                output[prefix.toLowerCase() + '_message'] = payload.message;
+        }
+        return reducer(output, { type, payload });
+    };
+}
 //# sourceMappingURL=reduxy.js.map
 
+function isAuthenticated(token$) {
+    return function (res) {
+        if (res.status === 401) {
+            token$ && token$(null);
+        }
+        return res;
+    };
+}
+// interface Request {
+// 	url: string;
+// 	method: string;
+// 	headers?: any;
+// 	cache?: string;
+// }
+var easyFetch = function (store, token$) { return function (request, actionType) {
+    store.dispatch({ type: actionType + '_LOADING' });
+    var options = {
+        method: request.method || 'GET',
+        headers: Object.assign(token$ && token$() ? {
+            'Authentication': "Bearer " + token$()
+        } : {}, request.headers),
+        mode: 'cors',
+        cache: request.cache || 'default'
+    };
+    fetch(request.url, options)
+        .then(isAuthenticated(token$))
+        .then(function (res) { return res.json(); })
+        .then(function (body) {
+        store.dispatch({ type: actionType + '_SUCCESS', payload: body });
+    });
+}; };
+//# sourceMappingURL=fetchy.js.map
+
 var CLICK = 'CLICK';
+var FETCHED = 'FETCHED';
 var INITIAL_STORE = {
     clicks: 0
 };
-function clicks(_state, _a) {
+function clicksReducer(_state, _a) {
     var type = _a.type, payload = _a.payload;
     var state = _state || INITIAL_STORE;
     switch (type) {
         case CLICK: return Object.assign({}, state, {
             clicks: ++state.clicks
         });
+        case FETCHED: return Object.assign({}, state, {
+            fetched: payload
+        });
     }
     return state;
 }
+var clicks = fetchMiddleware(FETCHED, clicksReducer);
 //# sourceMappingURL=clicks.js.map
 
 var deepSelect = function (input$, selector) {
@@ -2585,32 +2555,25 @@ var deepSelect = function (input$, selector) {
 };
 //# sourceMappingURL=flyd-utils.js.map
 
-var _a = ph$1(h);
-var div = _a.div;
-var span = _a.span;
-var button = _a.button;
-var _b = reduxy({
+var store = reduxy({
     clicks
 });
-var action$ = _b.action$;
-var state$ = _b.state$;
-render(
-// div('#foo.bar', [
-// 	span('Hello, world!'),
-// 	span(deepSelect(state$, 'clicks.clicks')),
-// 	button({
-// 		onclick: e => {
-// 			console.log('clicked');
-// 			action$({ type: CLICK });
-// 		}
-// 	}, 'Click Me'),
-// ])
-h('div', { id: "foo", className: "bar" }, [
+render(h('div', { id: "foo", className: "bar" }, [
     h('span', null, ["Hello World"]),
-    h('span', null, [deepSelect(state$, 'clicks.clicks')]),
+    h('span', null, [deepSelect(store.$, 'clicks.clicks')]),
     h('button', { onclick: function (e) {
-            console.log('clicked');
-            action$({ type: CLICK });
-        } }, ["Click Me"])
+            store.dispatch({ type: CLICK });
+        } }, ["Click Me"]),
+    h('button', { onclick: function (e) {
+            fetchStuff();
+        } }, ["Click Me"]),
+    h('span', null, [deepSelect(store.$, 'clicks.fetched').map(function (payload) { return JSON.stringify(payload); })])
 ]), document.querySelector('app'));
+function fetchStuff() {
+    easyFetch(store, null)({
+        method: 'GET',
+        url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
+    }, 'FETCHED');
+}
+//# sourceMappingURL=index.jsx.map
 //# sourceMappingURL=bundle.js.map

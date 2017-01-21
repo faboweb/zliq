@@ -11,8 +11,8 @@ export function reduxy(reducers) {
 	}, [action$]);
 
 	return {
-		action$,
-		state$
+		$: state$,
+		dispatch: (action) => action$(action)
 	};
 }
 
@@ -23,4 +23,22 @@ function reduce(state$, reducers, action) {
 		newState[reducer] = reducers[reducer](state$.map(state => state[reducer])(), action);
 		return newState;
 	}, state$));
+}
+
+export function fetchMiddleware(prefix: string, reducer) {
+	return (state, {type, payload}) => {
+		let output = Object.assign({}, state);
+		switch (type) {
+			case prefix + '_LOAD':
+				output[prefix.toLowerCase() + '_loading'] = true;
+			case prefix + '_SUCCESS':
+				output[prefix.toLowerCase() + '_loading'] = false;
+
+				type = prefix;
+			case prefix + '_FAILURE':
+				output[prefix.toLowerCase() + '_loading'] = false;
+				output[prefix.toLowerCase() + '_message'] = payload.message;
+		}
+		return reducer(output, {type, payload});
+	}
 }

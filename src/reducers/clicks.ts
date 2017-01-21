@@ -1,16 +1,24 @@
+import {fetchMiddleware} from '../utils/reduxy';
+
 export const CLICK = 'CLICK';
+export const FETCHED = 'FETCHED';
 
 const INITIAL_STORE = {
 	clicks: 0
 };
 
-export function clicks(_state, {type, payload}) {
+function clicksReducer(_state, {type, payload}) {
 	let state = _state || INITIAL_STORE;
 	switch (type) {
 		case CLICK: return Object.assign({}, state, {
 			clicks: ++state.clicks
 		});
+		case FETCHED: return Object.assign({}, state, {
+			fetched: payload
+		});
 	}
 
 	return state;
 }
+
+export const clicks = fetchMiddleware(FETCHED, clicksReducer);
