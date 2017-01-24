@@ -1,10 +1,9 @@
-import { h } from './utils/flyd-hyperscript';
-import { render } from './utils/flyd-render';
+import { h } from './utils/streamy-hyperscript';
+import { render } from './utils/render';
 import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
+import {stream, merge} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
-import flyd from 'flyd';
-import { deepSelect } from './utils/flyd-utils';
 
 let store = reduxy({
 	clicks
@@ -12,15 +11,15 @@ let store = reduxy({
 
 render(
 	<div id='foo' className='bar'>
-		<span>Hello World</span>
-		<span>{deepSelect(store.$, 'clicks.clicks')}</span>
+		<p>Hello World</p>
 		<button onclick={e => {
 			store.dispatch({ type: CLICK });
-		}}>Click Me</button>
+		}}>Click To Count</button>
+		<p>{store.$('clicks.clicks')}</p>
 		<button onclick={e => {
 			fetchStuff();
-		}}>Click Me</button>
-		<span>{deepSelect(store.$, 'clicks.fetched').map(payload => JSON.stringify(payload))}</span>
+		}}>Fetch Quote</button>
+		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
 	</div>
 , document.querySelector('app'));
 

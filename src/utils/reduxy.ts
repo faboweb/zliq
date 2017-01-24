@@ -1,26 +1,27 @@
-import flyd from 'flyd';
+import {stream, merge} from './streamy';
 
 export function reduxy(reducers) {
-	let action$ = flyd.stream({type: 'INIT'});
-	let state$ = flyd.combine(function(action$, self) {
-		reduce(self, reducers, action$());
-	}, [action$]);
-
-	flyd.combine((action$) => {
-		console.log('Action called:', action$());
-	}, [action$]);
+	let action$ = stream({type: 'INIT'});
+	let state$ = stream();
+	action$.map((action, self) => reduce(state$, reducers, action));
+	action$.map((action) => console.log('Action called:', action));
 
 	return {
-		$: state$,
+		$: (query) => queryStore(state$, query).distinct(),
 		dispatch: (action) => action$(action)
 	};
 }
 
 function reduce(state$, reducers, action) {
 	let reducerNames = Object.getOwnPropertyNames(reducers);
-	state$(reducerNames.reduce((state$, reducer) => {
-		let newState = state$() || {};
+	state$(reducerNames.reduce((state, reducer) => {
+		let newState = state || {};
 		newState[reducer] = reducers[reducer](newState[reducer], action);
 		return newState;
-	}, state$));
+	}, state$()));
 }
+
+function queryStore(state$, query) {
+	if (!query) return state$;
+	return state$.deepSelect(query);
+};
