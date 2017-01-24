@@ -12,7 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "deep-equal": "^1.0.1",
-    "flyd": "^0.2.2",
     "hyperscript-helpers": "^3.0.2",
     "virtual-dom": "^2.1.1"
   },

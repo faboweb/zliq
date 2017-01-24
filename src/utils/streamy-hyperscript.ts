@@ -20,5 +20,15 @@ function wrapChildren$(children) {
 		return arr.concat(child);
 	}, []);
 
-	return merge(...children$Arr);
+	return merge(...children$Arr)
+		.map(children => {
+			if (children.reduce((hasStream, child) => {
+				if (hasStream) return true;
+				return isStream(child);
+			}, false)) {
+				// TODO maybe add flatmap
+				return wrapChildren$(children)();
+			}
+			return children;
+		});
 }
