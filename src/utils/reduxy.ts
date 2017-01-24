@@ -1,44 +1,31 @@
-import flyd from 'flyd';
+import {stream, merge$} from './streamy';
 
 export function reduxy(reducers) {
-	let action$ = flyd.stream({type: 'INIT'});
-	let state$ = flyd.combine(function(action$, self) {
-		reduce(self, reducers, action$());
-	}, [action$]);
-
-	flyd.combine((action$) => {
-		console.log('Action called:', action$());
-	}, [action$]);
+	let action$ = stream({type: 'INIT'});
+	let state$ = stream();
+	action$.map((action, self) => reduce(state$, reducers, action));
+	// action$.map((action) => console.log('Action called:', action));
+	// state$.map((state) => console.log('New State:', state));
 
 	return {
-		$: state$,
-		dispatch: (action) => action$(action)
+		$: (query) => queryStore(state$, query).distinct(),
+		dispatch: (action) => {
+			action$(action);
+			return;
+		}
 	};
 }
 
 function reduce(state$, reducers, action) {
 	let reducerNames = Object.getOwnPropertyNames(reducers);
-	state$(reducerNames.reduce((state$, reducer) => {
-		let newState = {};
-		newState[reducer] = reducers[reducer](state$.map(state => state[reducer])(), action);
+	state$(reducerNames.reduce((state, reducer) => {
+		let newState = state || {};
+		newState[reducer] = reducers[reducer](newState[reducer], action);
 		return newState;
-	}, state$));
+	}, state$()));
 }
 
-export function fetchMiddleware(prefix: string, reducer) {
-	return (state, {type, payload}) => {
-		let output = Object.assign({}, state);
-		switch (type) {
-			case prefix + '_LOAD':
-				output[prefix.toLowerCase() + '_loading'] = true;
-			case prefix + '_SUCCESS':
-				output[prefix.toLowerCase() + '_loading'] = false;
-
-				type = prefix;
-			case prefix + '_FAILURE':
-				output[prefix.toLowerCase() + '_loading'] = false;
-				output[prefix.toLowerCase() + '_message'] = payload.message;
-		}
-		return reducer(output, {type, payload});
-	}
-}
+function queryStore(state$, query) {
+	if (!query) return state$;
+	return state$.deepSelect(query);
+};

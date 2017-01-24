@@ -4,23 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "npm run build & npm run serve",
     "build": "rollup -w -c -o ./dist/bundle.js",
     "serve": "lite-server"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flyd": "^0.2.2",
-    "flyd-filter": "^1.0.2",
+    "deep-equal": "^1.0.1",
     "hyperscript-helpers": "^3.0.2",
-    "preact": "^7.1.0",
-    "preact-flyd": "0.0.5",
-    "preact-hyperscript": "^0.7.0",
-    "react-flyd": "^0.2.1",
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
+    "@types/es6-promise": "0.0.32",
+    "@types/whatwg-fetch": "0.0.33",
     "lite-server": "^2.2.2",
+    "rollup": "^0.41.4",
     "rollup-plugin-commonjs": "^7.0.0",
     "rollup-plugin-jsx": "^1.0.3",
     "rollup-plugin-node-resolve": "^2.0.0",
