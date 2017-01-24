@@ -669,13 +669,6 @@ function objEquiv(a, b, opts) {
 }
 });
 
-function replace(arr, index, value) {
-    var newArr = [].concat(arr);
-    newArr.splice(index, 1, value);
-    return newArr;
-}
-//# sourceMappingURL=array-utils.js.map
-
 var stream = function (init_value) {
     function s(value) {
         if (arguments.length === 0)
@@ -756,11 +749,11 @@ function merge$() {
     for (var _i = 0; _i < arguments.length; _i++) {
         streams[_i - 0] = arguments[_i];
     }
-    var values = streams.map(function (parent$) { return parent$(); });
+    var values = streams.map(function (parent$) { return parent$.value; });
     var newStream = stream(values);
     streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
         parent$.listeners.push(function updateMergedStream(value) {
-            newStream(replace(values, index, value));
+            newStream(streams.map(function (parent$) { return parent$.value; }));
         });
     });
     return newStream;
@@ -1923,6 +1916,7 @@ var render = function (tree$, parentElem) {
     tree$.map(function (tree) {
         var patches = diff_1(oldTree, tree);
         patch_1(rootNode, patches);
+        oldTree = tree;
     });
 };
 //# sourceMappingURL=streamy-render.js.map
@@ -1954,6 +1948,8 @@ function queryStore(state$, query) {
         return state$;
     return state$.deepSelect(query);
 }
+
+//# sourceMappingURL=reduxy.js.map
 
 function isAuthenticated(token$) {
     return function (res) {

@@ -10,5 +10,6 @@ export const render = (tree$, parentElem) => {
 	tree$.map((tree) => {
 		let patches = diff(oldTree, tree);
 		patch(rootNode, patches);
+		oldTree = tree;
 	});
 };

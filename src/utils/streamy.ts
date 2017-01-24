@@ -86,11 +86,11 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 }
 
 export function merge$(...streams) {
-	let values = streams.map(parent$ => parent$());
+	let values = streams.map(parent$ => parent$.value);
 	let newStream = stream(values);
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
-			newStream(replace(values, index, value));
+			newStream(streams.map(parent$ => parent$.value));
 		});
 	});
 	return newStream;
