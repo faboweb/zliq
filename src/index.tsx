@@ -1,10 +1,11 @@
-import { h } from './utils/flyd-hyperscript';
-import { render } from './utils/flyd-render';
+import { h } from './utils/streamy-hyperscript';
+import { render } from './utils/streamy-render';
 import { reduxy } from './utils/reduxy';
-import { fetchy as _fetchy, easyFetch } from './utils/fetchy';
+import { easyFetch } from './utils/fetch-helper';
+import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
-import flyd from 'flyd';
-import { deepSelect } from './utils/flyd-utils';
+import {CleverComponent, DumbComponent} from './component';
+
 
 let store = reduxy({
 	clicks
@@ -12,18 +13,24 @@ let store = reduxy({
 
 render(
 	<div id='foo' className='bar'>
-		<span>Hello World</span>
-		<span>{deepSelect(store.$, 'clicks.clicks')}</span>
+		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
+			style={{
+				'color': store.$('clicks.clicks').map(clicks => clicks > 0 ? 'red' : 'blue')
+			}}>Hello World</p>
 		<button onclick={e => {
 			store.dispatch({ type: CLICK });
-		}}>Click Me</button>
+		}}>Click To Count</button>
+		<p>{store.$('clicks.clicks')}</p>
+		<hr />
 		<button onclick={e => {
 			fetchStuff();
-		}}>Click Me</button>
-		<span>{deepSelect(store.$, 'clicks.fetched').map(payload => JSON.stringify(payload))}</span>
+		}}>Fetch Quote</button>
+		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
+		<hr />
+		<CleverComponent sinks={{store}} />
+		<DumbComponent sinks={{store}} />
 	</div>
 , document.querySelector('app'));
-
 
 function fetchStuff() {
 	easyFetch(store, null)({
