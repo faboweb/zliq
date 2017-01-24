@@ -20,6 +20,7 @@
     "@types/es6-promise": "0.0.32",
     "@types/whatwg-fetch": "0.0.33",
     "lite-server": "^2.2.2",
+    "rollup": "^0.41.4",
     "rollup-plugin-commonjs": "^7.0.0",
     "rollup-plugin-jsx": "^1.0.3",
     "rollup-plugin-node-resolve": "^2.0.0",

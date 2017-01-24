@@ -1,8 +1,8 @@
 import { h } from './utils/streamy-hyperscript';
-import { render } from './utils/render';
+import { render } from './utils/streamy-render';
 import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
-import {stream, merge} from './utils/streamy';
+import { stream, merge} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
 
 let store = reduxy({
