@@ -315,6 +315,8 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
+/*global window, global*/
+
 var root = typeof window !== 'undefined' ?
     window : typeof commonjsGlobal !== 'undefined' ?
     commonjsGlobal : {};
@@ -1332,6 +1334,8 @@ StreamTransformer.prototype['@@transducer/step'] = function(s, v) { return v; };
 
 var index$10 = flyd;
 
+// TODO check for props are children
+// TODO resolve nested props streams
 var h = function (tag, props, children) {
     if (!children) {
         return index$10.stream()(h_1(tag, props));
@@ -1364,7 +1368,6 @@ function wrapChildren(children) {
             .reduce(function (arr, child$) { return arr.concat(child$()); }, []);
     }, children$Arr);
 }
-//# sourceMappingURL=flyd-hyperscript.js.map
 
 var version$6 = version$1;
 
@@ -2449,7 +2452,6 @@ var render = function (tree$, parentElem) {
         patch_1(rootNode, patches);
     }, [tree$]);
 };
-//# sourceMappingURL=flyd-render.js.map
 
 function reduxy(reducers) {
     var action$ = index$10.stream({ type: 'INIT' });
@@ -2489,7 +2491,6 @@ function fetchMiddleware(prefix, reducer) {
         return reducer(output, { type, payload });
     };
 }
-//# sourceMappingURL=reduxy.js.map
 
 function isAuthenticated(token$) {
     return function (res) {
@@ -2522,7 +2523,6 @@ var easyFetch = function (store, token$) { return function (request, actionType)
         store.dispatch({ type: actionType + '_SUCCESS', payload: body });
     });
 }; };
-//# sourceMappingURL=fetchy.js.map
 
 var CLICK = 'CLICK';
 var FETCHED = 'FETCHED';
@@ -2543,7 +2543,6 @@ function clicksReducer(_state, _a) {
     return state;
 }
 var clicks = fetchMiddleware(FETCHED, clicksReducer);
-//# sourceMappingURL=clicks.js.map
 
 var deepSelect = function (input$, selector) {
     var selectors = selector.split('.');
@@ -2553,7 +2552,6 @@ var deepSelect = function (input$, selector) {
         });
     }, input$);
 };
-//# sourceMappingURL=flyd-utils.js.map
 
 var store = reduxy({
     clicks
@@ -2575,5 +2573,4 @@ function fetchStuff() {
         url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
     }, 'FETCHED');
 }
-//# sourceMappingURL=index.jsx.map
 //# sourceMappingURL=bundle.js.map

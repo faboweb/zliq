@@ -16,6 +16,6 @@ export default {
             extensions: [ '.js', '.json', '.ts', '.tsx' ]
         }),
         commonjs(),
-        typescript(),
+        typescript()
     ]
 }
