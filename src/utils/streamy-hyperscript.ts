@@ -6,13 +6,13 @@ export const h = (tag, props, children) => {
 	if (!children) {
 		return stream(vdomH(tag, props));
 	}
-	return merge$(wrapChildren$(children), wrapProps$(props))
+	return merge$(makeChildrenStreams$(children), wrapProps$(props))
 		.map(function updateElement([children, props]) {
 			return vdomH(tag, props, [].concat(children));
 		});
 };
 
-function wrapChildren$(children) {
+function makeChildrenStreams$(children) {
 	let children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
 		if (child === null || !isStream(child)) {
 			return arr.concat(stream(child));
@@ -22,12 +22,15 @@ function wrapChildren$(children) {
 
 	return merge$(...children$Arr)
 		.map(children => {
+			children = children.reduce((_children, child) => {
+				return _children.concat(child);
+			}, []);
 			if (children.reduce((hasStream, child) => {
 				if (hasStream) return true;
-				return isStream(child);
+				return isStream(child) || Array.isArray(child);
 			}, false)) {
 				// TODO maybe add flatmap
-				return wrapChildren$(children)();
+				return makeChildrenStreams$(children)();
 			}
 			return children;
 		});
