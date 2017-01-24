@@ -751,12 +751,12 @@ function distinct(parent$, fn) {
     });
     return newStream;
 }
-function merge() {
+function merge$() {
     var streams = [];
     for (var _i = 0; _i < arguments.length; _i++) {
         streams[_i - 0] = arguments[_i];
     }
-    var values = streams.map(function (parent$) { return parent$.value; });
+    var values = streams.map(function (parent$) { return parent$(); });
     var newStream = stream(values);
     streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
         parent$.listeners.push(function updateMergedStream(value) {
@@ -766,28 +766,80 @@ function merge() {
     return newStream;
 }
 function isStream(parent$) {
-    return !!parent$.IS_STREAM;
+    return parent$ !== null && !!parent$.IS_STREAM;
 }
-//# sourceMappingURL=streamy.js.map
 
+// TODO check for props are children
 var h = function (tag, props, children) {
     if (!children) {
         return stream(h_1(tag, props));
     }
-    return wrapChildren$(children).map(function updateChildren(children) {
+    return merge$(wrapChildren$(children), wrapProps$(props))
+        .map(function updateElement(_a) {
+        var children = _a[0], props = _a[1];
         return h_1(tag, props, [].concat(children));
     });
 };
 function wrapChildren$(children) {
     var children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
-        if (!isStream(child)) {
+        if (child === null || !isStream(child)) {
             return arr.concat(stream(child));
         }
         return arr.concat(child);
     }, []);
-    return merge.apply(void 0, children$Arr);
+    return merge$.apply(void 0, children$Arr)
+        .map(function (children) {
+        if (children.reduce(function (hasStream, child) {
+            if (hasStream)
+                return true;
+            return isStream(child);
+        }, false)) {
+            // TODO maybe add flatmap
+            return wrapChildren$(children)();
+        }
+        return children;
+    });
 }
-//# sourceMappingURL=streamy-hyperscript.js.map
+// TODO: refactor, make more understandable
+function wrapProps$(props) {
+    if (props === null)
+        return stream();
+    if (isStream(props)) {
+        return props;
+    }
+    var props$ = Object.keys(props).map(function (propName, index) {
+        var value = props[propName];
+        if (isStream(value)) {
+            return value.map(function (value) {
+                return {
+                    key: propName,
+                    value
+                };
+            });
+        }
+        else {
+            if (value !== null && typeof value === 'object') {
+                return wrapProps$(value).map(function (value) {
+                    return {
+                        key: propName,
+                        value
+                    };
+                });
+            }
+            return stream({
+                key: propName,
+                value
+            });
+        }
+    });
+    return merge$.apply(void 0, props$).map(function (props) {
+        return props.reduce(function (obj, _a) {
+            var key = _a.key, value = _a.value;
+            obj[key] = value;
+            return obj;
+        }, {});
+    });
+}
 
 var version$6 = version$1;
 
@@ -1872,7 +1924,7 @@ var render = function (tree$, parentElem) {
         patch_1(rootNode, patches);
     });
 };
-//# sourceMappingURL=render.js.map
+//# sourceMappingURL=streamy-render.js.map
 
 function reduxy(reducers) {
     var action$ = stream({ type: 'INIT' });
@@ -1897,8 +1949,6 @@ function queryStore(state$, query) {
         return state$;
     return state$.deepSelect(query);
 }
-
-//# sourceMappingURL=reduxy.js.map
 
 function isAuthenticated(token$) {
     return function (res) {
@@ -1975,7 +2025,10 @@ var store = reduxy({
     clicks
 });
 render(h('div', { id: "foo", className: "bar" }, [
-    h('p', null, ["Hello World"]),
+    h('p', { className: store.$('clicks.clicks').map(function (clicks$$1) { return 'clicks-' + clicks$$1; }),
+        style: {
+            'color': store.$('clicks.clicks').map(function (clicks$$1) { return clicks$$1 > 0 ? 'red' : 'blue'; })
+        } }, ["Hello World"]),
     h('button', { onclick: function (e) {
             store.dispatch({ type: CLICK });
         } }, ["Click To Count"]),

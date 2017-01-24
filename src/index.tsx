@@ -2,7 +2,7 @@ import { h } from './utils/streamy-hyperscript';
 import { render } from './utils/streamy-render';
 import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
-import { stream, merge} from './utils/streamy';
+import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
 
 let store = reduxy({
@@ -11,7 +11,10 @@ let store = reduxy({
 
 render(
 	<div id='foo' className='bar'>
-		<p>Hello World</p>
+		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
+			style={{
+				'color': store.$('clicks.clicks').map(clicks => clicks > 0 ? 'red' : 'blue')
+			}}>Hello World</p>
 		<button onclick={e => {
 			store.dispatch({ type: CLICK });
 		}}>Click To Count</button>

@@ -85,7 +85,7 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 	return newStream;
 }
 
-export function merge(...streams) {
+export function merge$(...streams) {
 	let values = streams.map(parent$ => parent$());
 	let newStream = stream(values);
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
@@ -97,5 +97,5 @@ export function merge(...streams) {
 }
 
 export function isStream(parent$) {
-	return !!parent$.IS_STREAM;
+	return parent$ !== null && !!parent$.IS_STREAM;
 }

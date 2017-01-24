@@ -1,4 +1,4 @@
-import {stream, merge} from './streamy';
+import {stream, merge$} from './streamy';
 
 export function reduxy(reducers) {
 	let action$ = stream({type: 'INIT'});
