@@ -4,6 +4,8 @@ import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
+import {CleverComponent, DumbComponent} from './component';
+
 
 let store = reduxy({
 	clicks
@@ -19,10 +21,14 @@ render(
 			store.dispatch({ type: CLICK });
 		}}>Click To Count</button>
 		<p>{store.$('clicks.clicks')}</p>
+		<hr />
 		<button onclick={e => {
 			fetchStuff();
 		}}>Fetch Quote</button>
 		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
+		<hr />
+		<CleverComponent sinks={{store}} />
+		<DumbComponent sinks={{store}} />
 	</div>
 , document.querySelector('app'));
 

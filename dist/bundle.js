@@ -766,10 +766,10 @@ function merge$() {
     return newStream;
 }
 function isStream(parent$) {
-    return parent$ !== null && !!parent$.IS_STREAM;
+    return parent$ != null && !!parent$.IS_STREAM;
 }
+//# sourceMappingURL=streamy.js.map
 
-// TODO check for props are children
 var h = function (tag, props, children) {
     if (!children) {
         return stream(h_1(tag, props));
@@ -840,6 +840,7 @@ function wrapProps$(props) {
         }, {});
     });
 }
+//# sourceMappingURL=streamy-hyperscript.js.map
 
 var version$6 = version$1;
 
@@ -1930,10 +1931,14 @@ function reduxy(reducers) {
     var action$ = stream({ type: 'INIT' });
     var state$ = stream();
     action$.map(function (action, self) { return reduce(state$, reducers, action); });
-    action$.map(function (action) { return console.log('Action called:', action); });
+    // action$.map((action) => console.log('Action called:', action));
+    // state$.map((state) => console.log('New State:', state));
     return {
         $: function (query) { return queryStore(state$, query).distinct(); },
-        dispatch: function (action) { return action$(action); }
+        dispatch: function (action) {
+            action$(action);
+            return;
+        }
     };
 }
 function reduce(state$, reducers, action) {
@@ -2002,6 +2007,7 @@ function fetchMiddleware(prefix, reducer) {
 
 var CLICK = 'CLICK';
 var FETCHED = 'FETCHED';
+var SUBTRACKED = 'SUBTRACKED';
 var INITIAL_STORE = {
     clicks: 0
 };
@@ -2012,6 +2018,9 @@ function clicksReducer(_state, _a) {
         case CLICK: return Object.assign({}, state, {
             clicks: ++state.clicks
         });
+        case SUBTRACKED: return Object.assign({}, state, {
+            clicks: --state.clicks
+        });
         case FETCHED: return Object.assign({}, state, {
             fetched: payload
         });
@@ -2020,6 +2029,18 @@ function clicksReducer(_state, _a) {
 }
 var clicks = fetchMiddleware(FETCHED, clicksReducer);
 //# sourceMappingURL=clicks.js.map
+
+var CleverComponent = function (_a) {
+    var store = _a.sinks.store;
+    return store.$('clicks.clicks').map(function (clicks$$1) {
+        return h('div', null, ["Clicks again ", clicks$$1]);
+    });
+};
+var DumbComponent = function (_a) {
+    var store = _a.sinks.store;
+    return h('button', { onclick: function () { return store.dispatch({ type: SUBTRACKED }); } }, ["subtracked"]);
+};
+//# sourceMappingURL=component.jsx.map
 
 var store = reduxy({
     clicks
@@ -2033,10 +2054,14 @@ render(h('div', { id: "foo", className: "bar" }, [
             store.dispatch({ type: CLICK });
         } }, ["Click To Count"]),
     h('p', null, [store.$('clicks.clicks')]),
+    h('hr'),
     h('button', { onclick: function (e) {
             fetchStuff();
         } }, ["Fetch Quote"]),
-    h('p', null, [store.$('clicks.fetched').map(function (payload) { return !payload ? null : JSON.stringify(payload); })])
+    h('p', null, [store.$('clicks.fetched').map(function (payload) { return !payload ? null : JSON.stringify(payload); })]),
+    h('hr'),
+    CleverComponent({ sinks: { store } }),
+    DumbComponent({ sinks: { store } })
 ]), document.querySelector('app'));
 function fetchStuff() {
     easyFetch(store, null)({
@@ -2044,4 +2069,5 @@ function fetchStuff() {
         url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
     }, 'FETCHED');
 }
+//# sourceMappingURL=index.jsx.map
 //# sourceMappingURL=bundle.js.map

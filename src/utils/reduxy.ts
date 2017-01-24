@@ -4,11 +4,15 @@ export function reduxy(reducers) {
 	let action$ = stream({type: 'INIT'});
 	let state$ = stream();
 	action$.map((action, self) => reduce(state$, reducers, action));
-	action$.map((action) => console.log('Action called:', action));
+	// action$.map((action) => console.log('Action called:', action));
+	// state$.map((state) => console.log('New State:', state));
 
 	return {
 		$: (query) => queryStore(state$, query).distinct(),
-		dispatch: (action) => action$(action)
+		dispatch: (action) => {
+			action$(action);
+			return;
+		}
 	};
 }
 
