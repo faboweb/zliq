@@ -41,7 +41,7 @@ export const DumbComponent = ({sinks: {store}}) =>
 
 Want to contribute? Great!
 
-Dillinger uses Rollup for fast developing.
+ZLIQ uses Rollup for fast developing.
 Make a change in your file and instantanously see your updates!
 
 Open your favorite Terminal and run these commands.
