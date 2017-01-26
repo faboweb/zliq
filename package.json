@@ -4,9 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build & npm run serve",
-    "build": "rollup -w -c -o ./dist/bundle.js",
-    "serve": "lite-server"
+    "start": "rollup -w -c -o ./dist/bundle.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,11 +15,12 @@
   "devDependencies": {
     "@types/es6-promise": "0.0.32",
     "@types/whatwg-fetch": "0.0.33",
-    "lite-server": "^2.2.2",
     "rollup": "^0.41.4",
     "rollup-plugin-commonjs": "^7.0.0",
     "rollup-plugin-jsx": "^1.0.3",
     "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-plugin-sass": "0.4.8",
+    "rollup-plugin-serve": "0.1.0",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-watch": "^3.2.2"
   }
