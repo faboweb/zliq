@@ -52,7 +52,6 @@ $ npm start
 
 ### Todos
 
- - Add Code Comments
  - Add Documentation
  - Add Tests
  - Make NPM Module
