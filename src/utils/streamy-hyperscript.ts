@@ -2,6 +2,9 @@ import vdomH from 'virtual-dom/h';
 import {stream, merge$, isStream} from './streamy';
 
 // TODO check for props are children
+/*
+* wrap hyperscript elements in reactive streams dependent on their children streams
+*/
 export const h = (tag, props, children) => {
 	if (!children) {
 		return stream(vdomH(tag, props));
@@ -12,7 +15,11 @@ export const h = (tag, props, children) => {
 		});
 };
 
+/*
+* wrap all children in streams and merge those
+*/
 function makeChildrenStreams$(children) {
+	// wrap all children in streams
 	let children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
 		if (child === null || !isStream(child)) {
 			return arr.concat(stream(child));
@@ -22,14 +29,17 @@ function makeChildrenStreams$(children) {
 
 	return merge$(...children$Arr)
 		.map(children => {
+			// flatten children array
 			children = children.reduce((_children, child) => {
 				return _children.concat(child);
 			}, []);
+			// TODO maybe add flatmap
+			// check if result has streams and if so hook into those streams
+			// acts as flatmap from rxjs
 			if (children.reduce((hasStream, child) => {
 				if (hasStream) return true;
 				return isStream(child) || Array.isArray(child);
 			}, false)) {
-				// TODO maybe add flatmap
 				return makeChildrenStreams$(children)();
 			}
 			return children;

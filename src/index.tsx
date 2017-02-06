@@ -6,25 +6,23 @@ import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
 import {CleverComponent, DumbComponent} from './component';
 
-
+// create the store providing reducers
 let store = reduxy({
 	clicks
 });
 
+// main render function for the application
+// render provided hyperscript into a parent element
 render(
 	<div id='foo' className='bar'>
 		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
 			style={{
 				'color': store.$('clicks.clicks').map(clicks => clicks > 0 ? 'red' : 'blue')
 			}}>Hello World</p>
-		<button onclick={e => {
-			store.dispatch({ type: CLICK });
-		}}>Click To Count</button>
+		<button onclick={e => store.dispatch({ type: CLICK })}>Click To Count</button>
 		<p>{store.$('clicks.clicks')}</p>
 		<hr />
-		<button onclick={e => {
-			fetchStuff();
-		}}>Fetch Quote</button>
+		<button onclick={e => fetchStuff()}>Fetch Quote</button>
 		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
 		<hr />
 		<CleverComponent sinks={{store}} />

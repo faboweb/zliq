@@ -1,5 +1,8 @@
 import {stream, merge$} from './streamy';
 
+/*
+* simple action -> reducers -> state mashine
+*/
 export function reduxy(reducers) {
 	let action$ = stream({type: 'INIT'});
 	let state$ = stream();
@@ -8,6 +11,9 @@ export function reduxy(reducers) {
 	// state$.map((state) => console.log('New State:', state));
 
 	return {
+		// query a value from the store
+		// as we probably render according to the values of this store only serve distinct values
+		// query format: {reducer}.{property}.{subproperty}
 		$: (query) => queryStore(state$, query).distinct(),
 		dispatch: (action) => {
 			action$(action);
@@ -16,6 +22,10 @@ export function reduxy(reducers) {
 	};
 }
 
+/*
+* applies reducers to an action for a state stream
+* the resulting store object has the format { {reducerName}: {reducerValue} }
+*/
 function reduce(state$, reducers, action) {
 	let reducerNames = Object.getOwnPropertyNames(reducers);
 	state$(reducerNames.reduce((state, reducer) => {
@@ -25,6 +35,10 @@ function reduce(state$, reducers, action) {
 	}, state$()));
 }
 
+/*
+* query a value from the streams value
+* query format: {reducer}.{property}.{subproperty}
+*/
 function queryStore(state$, query) {
 	if (!query) return state$;
 	return state$.deepSelect(query);

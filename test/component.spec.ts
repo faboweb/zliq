@@ -7,7 +7,7 @@ import { mockStore } from './mockStore';
 describe('CleverComponent', () => {
 	it('should show clicks', () => {
 		let store = mockStore({clicks: { clicks: 5 }});
-		let component$ = CleverComponent({ sinks: { store  }});
+		let component$ = CleverComponent({ sinks: { store }});
 		let elem = create(component$(), null);
 		expect(elem.innerText).to.contain('5');
 	});
