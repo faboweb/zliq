@@ -1,5 +1,6 @@
 import { h } from './utils/streamy-hyperscript';
 import { SUBTRACKED } from './reducers/clicks';
+import './component.scss';
 
 // component returning a stream
 export const CleverComponent = ({sinks: {store}}) => {
