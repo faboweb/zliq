@@ -13,19 +13,20 @@ function isAuthenticated(token$) {
 
 
 interface Request {
-	method;
-	headers?;
-	cache?;
-	url?;
-}
+	method: string;
+	headers?: Headers;
+	cache?: RequestCache;
+	url: string;
+};
+
 /*
 * wrapper for LOADING -> SUCCESS / FAILED actions
 * also adds oauth header for a provided oauth-token stream
 */
-export const easyFetch = (store, token$) => (request: Request, actionType) => {
+export const easyFetch = (store, token$) => (request, actionType) => {
 	store.dispatch({ type: actionType + '_LOADING'});
 
-	let options = {
+	let options: RequestOptions = {
 		method: request.method || 'GET',
 		headers: Object.assign(token$ && token$() ? {
 			'Authentication': `Bearer ${token$()}`
@@ -64,5 +65,5 @@ export function fetchMiddleware(prefix: string, reducer) {
 				output[prefix.toLowerCase() + '_message'] = payload.message;
 		}
 		return reducer(output, {type, payload});
-	}
+	};
 }
