@@ -44,22 +44,14 @@ Want to contribute? Great!
 ZLIQ uses Rollup for fast developing.
 Make a change in your file and instantanously see your updates!
 
-Open your favorite Terminal and run these commands.
+Open your favorite Terminal and run:
 
-First Tab:
 ```sh
-$ npm run build
+$ npm start
 ```
-
-Second Tab:
-```sh
-$ npm run serve
-```
-
 
 ### Todos
 
- - Add Code Comments
  - Add Documentation
  - Add Tests
  - Make NPM Module
