@@ -11,14 +11,6 @@ function isAuthenticated(token$) {
 	};
 }
 
-
-interface Request {
-	method: string;
-	headers?: Headers;
-	cache?: RequestCache;
-	url: string;
-};
-
 /*
 * wrapper for LOADING -> SUCCESS / FAILED actions
 * also adds oauth header for a provided oauth-token stream
@@ -26,7 +18,7 @@ interface Request {
 export const easyFetch = (store, token$) => (request, actionType) => {
 	store.dispatch({ type: actionType + '_LOADING'});
 
-	let options: RequestOptions = {
+	let options = {
 		method: request.method || 'GET',
 		headers: Object.assign(token$ && token$() ? {
 			'Authentication': `Bearer ${token$()}`
@@ -50,7 +42,7 @@ export const easyFetch = (store, token$) => (request, actionType) => {
 * on success provides a action of type {prefix} to the wrapped reducer
 * use like: fetchMiddleware('users', usersReducer)
 */
-export function fetchMiddleware(prefix: string, reducer) {
+export function fetchMiddleware(prefix, reducer) {
 	return (state, {type, payload}) => {
 		let output = state;
 		switch (type) {

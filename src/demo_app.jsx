@@ -4,7 +4,7 @@ import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
-import {CleverComponent, DumbComponent} from './component';
+import {CleverComponent, DumbComponent, SuperDumbComponent} from './demo_component.jsx';
 
 // create the store providing reducers
 let store = reduxy({
@@ -18,7 +18,7 @@ render(
 		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
 			style={{
 				'color': store.$('clicks.clicks').map(clicks => clicks > 0 ? 'red' : 'blue')
-			}}>Hello World</p>
+			}}><SuperDumbComponent /></p>
 		<button onclick={e => store.dispatch({ type: CLICK })}>Click To Count</button>
 		<p>{store.$('clicks.clicks')}</p>
 		<hr />

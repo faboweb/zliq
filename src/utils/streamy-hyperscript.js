@@ -6,6 +6,10 @@ import {stream, merge$, isStream} from './streamy';
 * wrap hyperscript elements in reactive streams dependent on their children streams
 */
 export const h = (tag, props, children) => {
+	// if it is a sub component, resolve that component
+	if (typeof tag === 'function') {
+		return tag(props, children);
+	}
 	if (!children) {
 		return stream(vdomH(tag, props));
 	}

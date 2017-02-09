@@ -1,0 +1,1 @@
+{"version":3,"file":"mockStore.js","sourceRoot":"","sources":["../../test/mockStore.ts"],"names":[],"mappings":";;IAEa,QAAA,SAAS,GAAG,UAAC,WAAW;QACpC,MAAM,CAAC;YACN,CAAC,EAAE,UAAC,KAAK,IAAK,OAAA,gBAAM,CAAC,WAAW,CAAC,EAAnB,CAAmB;YACjC,QAAQ,EAAE,UAAC,MAAM;gBAChB,MAAM,CAAC;YACR,CAAC;SACD,CAAC;IACH,CAAC,CAAC"}

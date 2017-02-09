@@ -6,7 +6,7 @@ import {replace} from './array-utils';
 * constructor returns a stream
 * get the current value of stream like: stream()
 */
-export const stream = function(init_value?) {
+export const stream = function(init_value) {
 	function s(value) {
 		if (arguments.length === 0) return s.value;
 		update(s, value);
