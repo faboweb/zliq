@@ -39,7 +39,7 @@ function reduce(state$, reducers, action) {
 * query a value from the streams value
 * query format: {reducer}.{property}.{subproperty}
 */
-function queryStore(state$, query) {
+export function queryStore(state$, query) {
 	if (!query) return state$;
 	return state$.deepSelect(query);
 };

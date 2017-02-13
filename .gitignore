@@ -35,3 +35,6 @@ jspm_packages
 
 # my ide
 .vscode
+
+# testing
+.tmp
