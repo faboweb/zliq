@@ -18,7 +18,7 @@ describe('Components', () => {
 		// to test components dependend on state we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 5 }});
 		// clever components return a stream of streams
-		let component$ = CleverComponent({ sinks: { store }})();
+		let component$ = CleverComponent({ sinks: { store }});
 		let expected = h('div', [
 			'Clicks again ', '5'
 		]);

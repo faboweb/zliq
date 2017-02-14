@@ -18,6 +18,7 @@ export const stream = function(init_value) {
 	s.listeners = [];
 
 	s.map = (fn) => map(s, fn);
+	s.flatMap = (fn) => flatMap(s, fn);
 	s.filter = (fn) => filter(s, fn);
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
@@ -60,6 +61,19 @@ function map(parent$, fn) {
 	let newStream = stream(fn(parent$.value));
 	parent$.listeners.push(function mapValue(value) {
 		newStream(fn(value));
+	});
+	return newStream;
+}
+
+/*
+* provides a new stream applying a transformation function to the value of a parent stream
+*/
+function flatMap(parent$, fn) {
+	let newStream = stream(fn(parent$.value)());
+	parent$.listeners.push(function mapValue(value) {
+		fn(value).map(function updateOuterStream(result) {
+			newStream(result);
+		});
 	});
 	return newStream;
 }
