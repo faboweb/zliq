@@ -4,7 +4,7 @@ import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
-import {CleverComponent, DumbComponent, SuperDumbComponent} from './demo_component.jsx';
+import { CleverComponent, DumbComponent, SuperDumbComponent } from './demo_component.jsx';
 
 // create the store providing reducers
 let store = reduxy({
