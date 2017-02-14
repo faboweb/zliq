@@ -50,7 +50,7 @@ $ npm start
 
 ### Todos
 
- - Add Documentation
+ - Refactor to make easier to understand
  - Make NPM Module
 
 License
