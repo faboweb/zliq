@@ -20,9 +20,14 @@ export const stream = function(init_value) {
 	s.map = (fn) => map(s, fn);
 	s.flatMap = (fn) => flatMap(s, fn);
 	s.filter = (fn) => filter(s, fn);
-	s.deepSelect = (fn) => deepSelect(s, fn);
+	s.deepSelect = (selector) => deepSelect(s, selector);
 	s.distinct = (fn) => distinct(s, fn);
 	s.notEmpty = () => notEmpty(s);
+	// function that deep selects the object that is the streams value
+	// useful for things like a redux store
+	s.$ = (selector) => Array.isArray(selector)
+		? multiQuery(s, selector)
+		: deepSelect(s, selector).distinct();
 
 	return s;
 };
@@ -111,6 +116,13 @@ function deepSelect(parent$, selector) {
 	});
 	return newStream;
 };
+
+/*
+* query multiple values from a store at the same time
+*/
+function multiQuery(parent$, selectorsArr) {
+	return merge$(...selectorsArr.map(selectors => deepSelect(parent$, selectors).distinct()));
+}
 
 // TODO: maybe refactor with filter
 /*

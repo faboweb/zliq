@@ -26,7 +26,7 @@ render(
 		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
 		<hr />
 		<CleverComponent sinks={{store}} />
-		<DumbComponent sinks={{store}} />
+		<DumbComponent sinks={{store, clicks: store.$('clicks.clicks')}} />
 	</div>
 , document.querySelector('app'));
 

@@ -56,6 +56,7 @@ function wrapProps$(props) {
 	if (isStream(props)) {
 		return props;
 	}
+	// map all props into streams of format {key,value} to rebuild props object later
 	let props$ = Object.keys(props).map((propName, index) => {
 		let value = props[propName];
 		if (isStream(value)) {
@@ -66,6 +67,7 @@ function wrapProps$(props) {
 				};
 			});
 		} else {
+			// if it's an object recursivly make it also into a stream
 			if (value !== null && typeof value === 'object') {
 				return wrapProps$(value).map(value => {
 					return {
@@ -80,6 +82,7 @@ function wrapProps$(props) {
 			});
 		}
 	});
+	// merge all props streams and build props object again
 	return merge$(...props$).map(props => {
 		return props.reduce((obj, {key, value}) => {
 			obj[key] = value;
