@@ -46,16 +46,16 @@ function update(parent$, newValue) {
 	if (newValue === undefined) {
 		return parent$.value;
 	}
+	notifyListeners(parent$.listeners, newValue, parent$.value);
 	parent$.value = newValue;
-	notifyListeners(parent$.listeners, newValue);
 };
 
 /*
 * provide a new value to all listeners registered for a stream
 */
-function notifyListeners(listeners, value) {
+function notifyListeners(listeners, newValue, oldValue) {
 	listeners.forEach(function notifyListener(listener) {
-		listener(value);
+		listener(newValue, oldValue);
 	});
 }
 
@@ -63,9 +63,9 @@ function notifyListeners(listeners, value) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function map(parent$, fn) {
-	let newStream = stream(fn(parent$.value));
-	parent$.listeners.push(function mapValue(value) {
-		newStream(fn(value));
+	let newStream = stream(fn(parent$.value, null));
+	parent$.listeners.push(function mapValue(newValue, oldValue) {
+		newStream(fn(newValue, oldValue));
 	});
 	return newStream;
 }
@@ -74,10 +74,10 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = stream(fn(parent$.value)());
-	parent$.listeners.push(function mapValue(value) {
-		fn(value).map(function updateOuterStream(result) {
-			newStream(result);
+	let newStream = stream(fn(parent$.value, null)());
+	parent$.listeners.push(function mapValue(newValue) {
+		fn(newValue, newStream.value).map(function updateOuterStream(newResult, oldResult) {
+			newStream(newResult, oldResult);
 		});
 	});
 	return newStream;
@@ -88,10 +88,10 @@ function flatMap(parent$, fn) {
 * still a stream ALWAYS has a value -> so it starts at least with NULL
 */
 function filter(parent$, fn) {
-	let newStream = stream(fn(parent$.value) ? parent$.value : null);
-	parent$.listeners.push(function filterValue(value) {
-		if (fn(value)) {
-			newStream(value);
+	let newStream = stream(fn(parent$.value, null) ? parent$.value : null);
+	parent$.listeners.push(function filterValue(newValue) {
+		if (fn(newValue, newStream.value)) {
+			newStream(newValue, newStream.value);
 		}
 	});
 	return newStream;
@@ -111,8 +111,8 @@ function deepSelect(parent$, selector) {
 	}
 
 	let newStream = stream(select(parent$.value, selectors));
-	parent$.listeners.push(function deepSelectValue(value) {
-		newStream(select(value, selectors));
+	parent$.listeners.push(function deepSelectValue(newValue) {
+		newStream(select(newValue, selectors), newStream.value);
 	});
 	return newStream;
 };
@@ -132,7 +132,7 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 	let newStream = stream(parent$.value);
 	parent$.listeners.push(function deepSelectValue(value) {
 		if (fn(newStream.value, value)) {
-			newStream(value);
+			newStream(value, newStream.value);
 		}
 	});
 	return newStream;
@@ -142,11 +142,11 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * merge several streams into one stream providing the values of all streams as an array
 */
 export function merge$(...streams) {
-	let values = streams.map(parent$ => parent$.value);
-	let newStream = stream(values);
+	let newStream = stream(streams.map(parent$ => parent$.value));
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
-			newStream(streams.map(parent$ => parent$.value));
+			let newValues = streams.map(parent$ => parent$.value);
+			newStream(newValues, newStream.value);
 		});
 	});
 	return newStream;
