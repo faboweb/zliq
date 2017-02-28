@@ -3,6 +3,8 @@ const DOM_EVENT_LISTENERS = [
     'ondblclick'
 ];
 
+// TODO custom rendering for classes and styles
+
 export function createElement(tagName, properties$, children$Arr) {
     let elem = document.createElement(tagName);
     manageProperties(elem, properties$)
@@ -10,41 +12,52 @@ export function createElement(tagName, properties$, children$Arr) {
     return elem;
 }
 
+// IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
 	let childElems = [];
 	children$Arr.map((child$, index) => {
 		child$.map(child => {
-			// if the child was there but got removed
-			// we need to remove the elem
-			if (childElems[index] && child === null) {
-				parentElem.removeChild(childElems[index]);
-				childElems[index] = null;
-			}
-			if (child == null) return;
-
-			if (typeof child === "string" || typeof child === "number") {
-				child = document.createTextNode(child);
-			}
-			// maybe some elements are missing
-			// so we get the relativePos by not counting the missing ones before
-			let relativePos = childElems.slice(0, index)
-				.reduce((pos, elem) => {
-					return pos + elem ? 1 : 0;
-				}, 0);
-			// if the element is not yet drawn
-			if (!childElems[index]) {
-				if (relativePos === 0) {
-					parentElem.appendChild(child);
-				} else {
-					insertAtPosition(child, parentElem, relativePos);
-				}
+			let rightNeighbor = childElems.slice(index).find(elem => elem !== null);
+			rightNeighbor = Array.isArray(rightNeighbor) ? rightNeighbor[0] : rightNeighbor;
+			let relativePos = rightNeighbor 
+				? Array.prototype.indexOf.call(parentElem.childNodes, rightNeighbor) - 1
+				: parentElem.childNodes.length;
+			// streams can return arrays of children
+			if (Array.isArray(child)) {
+				childElems[index] = childElems[index] || [];
+				var frag = document.createDocumentFragment();
+				parentElem.childNodes.forEach(node => frag.appendChild(node));
+				child.forEach((_child_, _index_) => {
+					childElems[index][_index_] = addOrUpdateChild(_child_, relativePos + _index_, childElems[index][_index_], frag, rightNeighbor);
+				});
+				parentElem.innerHtml = '';
+				parentElem.appendChild(frag);
 			} else {
-				// if the element is already there then replace it
-				parentElem.replaceChild(child, childElems[index]);
+				childElems[index] = addOrUpdateChild(child, relativePos, childElems[index], parentElem, rightNeighbor);
 			}
-			childElems[index] = child;
 		});
 	});
+}
+
+function addOrUpdateChild(child, relativePos, savedElem, parentElem, rightNeighbor) {
+	// if the child was there but got removed
+	// we need to remove the elem
+	if (savedElem && child === null) {
+		parentElem.removeChild(childElems[index]);
+		return null;
+	}
+	if (child == null) return null;
+
+	if (typeof child === "string" || typeof child === "number") {
+		child = document.createTextNode(child);
+	}
+	// if the element is already there then replace it
+	if (savedElem) {
+		parentElem.removeChild(savedElem);
+	}
+	// if rightNeighbor is null it gets appended
+	parentElem.insertBefore(child, rightNeighbor);
+	return child;
 }
 
 function manageProperties(elem, properties$) {

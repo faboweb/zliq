@@ -5,8 +5,9 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 ### Tech
 
 ZLIQ only uses a only view dependencies:
+ - [virtual-dom](https://github.com/Matt-Esch/virtual-dom)
  - [deep-equal](https://github.com/substack/node-deep-equal) to diff states
-
+ 
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
  - [Babel](https://github.com/babel/babel) for transpilation
@@ -20,7 +21,7 @@ ZLIQ implementes itself in a slim way:
 
 ### How It Works
 
-Every component is a function returning a stream of vdom-nodes!
+Every component is a function returning a stream of vdom-nodes! 
 
 ```js
 export const CleverComponent = ({sinks: {store}}) => {
@@ -51,7 +52,6 @@ $ npm start
 
  - Refactor to make easier to understand
  - Make NPM Module
- - Fix Testing
 
 License
 ----

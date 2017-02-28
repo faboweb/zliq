@@ -5,7 +5,6 @@ export const FETCHED = 'FETCHED';
 export const SUBTRACKED = 'SUBTRACKED';
 
 const INITIAL_STORE = {
-	nice_message: 'You are beautiful',
 	clicks: 0
 };
 

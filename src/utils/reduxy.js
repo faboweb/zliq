@@ -14,7 +14,7 @@ export function reduxy(reducers) {
 		// query a value from the store
 		// as we probably render according to the values of this store only serve distinct values
 		// query format: {reducer}.{property}.{subproperty}
-		$: (selector) => state$.$(selector),
+		$: (query) => queryStore(state$, query).distinct(),
 		dispatch: (action) => {
 			action$(action);
 			return;
@@ -34,3 +34,12 @@ function reduce(state$, reducers, action) {
 		return newState;
 	}, state$()));
 }
+
+/*
+* query a value from the streams value
+* query format: {reducer}.{property}.{subproperty}
+*/
+export function queryStore(state$, query) {
+	if (!query) return state$;
+	return state$.deepSelect(query);
+};
