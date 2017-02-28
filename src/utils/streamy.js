@@ -20,14 +20,9 @@ export const stream = function(init_value) {
 	s.map = (fn) => map(s, fn);
 	s.flatMap = (fn) => flatMap(s, fn);
 	s.filter = (fn) => filter(s, fn);
-	s.deepSelect = (selector) => deepSelect(s, selector);
+	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
 	s.notEmpty = () => notEmpty(s);
-	// function that deep selects the object that is the streams value
-	// useful for things like a redux store
-	s.$ = (selector) => Array.isArray(selector)
-		? multiQuery(s, selector)
-		: deepSelect(s, selector).distinct();
 
 	return s;
 };
@@ -42,12 +37,12 @@ function valuesChanged(oldValue, newValue) {
 /*
 * update the stream value and notify listeners on the stream
 */
-function update(parent$, value) {
-	if (value === undefined) {
+function update(parent$, newValue) {
+	if (newValue === undefined) {
 		return parent$.value;
 	}
-	notifyListeners(parent$.listeners, value);
-	parent$.value = value;
+	parent$.value = newValue;
+	notifyListeners(parent$.listeners, newValue);
 };
 
 /*
@@ -63,7 +58,7 @@ function notifyListeners(listeners, value) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function map(parent$, fn) {
-	let newStream = stream(fn(parent$.value, null));
+	let newStream = stream(fn(parent$.value));
 	parent$.listeners.push(function mapValue(value) {
 		newStream(fn(value));
 	});
@@ -74,7 +69,7 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = stream(fn(parent$.value, null)());
+	let newStream = stream(fn(parent$.value)());
 	parent$.listeners.push(function mapValue(value) {
 		fn(value).map(function updateOuterStream(result) {
 			newStream(result);
@@ -88,7 +83,7 @@ function flatMap(parent$, fn) {
 * still a stream ALWAYS has a value -> so it starts at least with NULL
 */
 function filter(parent$, fn) {
-	let newStream = stream(fn(parent$.value, null) ? parent$.value : null);
+	let newStream = stream(fn(parent$.value) ? parent$.value : null);
 	parent$.listeners.push(function filterValue(value) {
 		if (fn(value)) {
 			newStream(value);
@@ -117,13 +112,6 @@ function deepSelect(parent$, selector) {
 	return newStream;
 };
 
-/*
-* query multiple values from a store at the same time
-*/
-function multiQuery(parent$, selectorsArr) {
-	return merge$(...selectorsArr.map(selectors => deepSelect(parent$, selectors).distinct()));
-}
-
 // TODO: maybe refactor with filter
 /*
 * provide a new stream that only notifys its children if the containing value actualy changes
@@ -146,8 +134,7 @@ export function merge$(...streams) {
 	let newStream = stream(values);
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
-			values.splice(index, 1, value);
-			newStream(values);
+			newStream(streams.map(parent$ => parent$.value));
 		});
 	});
 	return newStream;

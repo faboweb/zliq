@@ -1,9 +1,5 @@
 import { h } from './utils/streamy-hyperscript';
-import { reduxy } from './utils/reduxy';
-import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
-import { clicks, CLICK } from './reducers/clicks';
-import { CleverComponent, DumbComponent, SuperDumbComponent } from './demo_component.jsx';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;

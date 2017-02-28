@@ -2,14 +2,16 @@ import { h } from './utils/streamy-hyperscript';
 import { SUBTRACKED } from './reducers/clicks';
 import './demo_component.scss';
 
-// component which content is based on store values
+// component returning a stream
 export const CleverComponent = ({sinks: {store}}) => {
-	return <div>{store.$('clicks.nice_message')}. Your click count is {store.$('clicks.clicks')}.</div>;
+	return store.$('clicks.clicks').flatMap(clicks => {
+		return <div>Clicks again {clicks}</div>;
+	});
 };
 
 // component returning a hyperscript element but interacting with the state
-export const DumbComponent = ({sinks: {store, clicks}}) =>
-	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked from {clicks}</button>;
+export const DumbComponent = ({sinks: {store}}) =>
+	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
 
 // component not interacting with anything -> plain hyperscript
 export const SuperDumbComponent = () =>
