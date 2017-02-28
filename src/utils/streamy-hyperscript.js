@@ -49,13 +49,14 @@ function wrapProps$(props) {
 		} else {
 			// if it's an object recursivly make it also into a stream
 			if (value !== null && typeof value === 'object') {
-				return wrapProps$(value).map(value => {
+				return wrapProps$(value).map(_value_ => {
 					return {
 						key: propName,
-						value
+						value: _value_
 					};
 				});
 			}
+			// if it's a plain value streamify it
 			return stream({
 				key: propName,
 				value

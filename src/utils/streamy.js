@@ -55,7 +55,7 @@ function update(parent$, value) {
 */
 function notifyListeners(listeners, value) {
 	listeners.forEach(function notifyListener(listener) {
-		listener(newValue);
+		listener(value);
 	});
 }
 
@@ -142,11 +142,12 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * merge several streams into one stream providing the values of all streams as an array
 */
 export function merge$(...streams) {
-	let newStream = stream(streams.map(parent$ => parent$.value));
+	let values = streams.map(parent$ => parent$.value);
+	let newStream = stream(values);
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
-			let newValues = streams.map(parent$ => parent$.value);
-			newStream(newValues);
+			values.splice(index, 1, value);
+			newStream(values);
 		});
 	});
 	return newStream;
