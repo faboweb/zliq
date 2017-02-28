@@ -11,8 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "deep-equal": "^1.0.1",
-    "virtual-dom": "^2.1.1"
+    "deep-equal": "^1.0.1"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

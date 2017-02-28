@@ -1,5 +1,4 @@
 import { h } from './utils/streamy-hyperscript';
-import { render } from './utils/streamy-render';
 import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
@@ -13,9 +12,9 @@ let store = reduxy({
 
 // main render function for the application
 // render provided hyperscript into a parent element
-render(
-	<div id='foo' className='bar'>
-		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
+let app =
+	<div id='foo' class='bar'>
+		<p class={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
 			style={{
 				'color': store.$('clicks.clicks').map(clicks => clicks > 0 ? 'red' : 'blue')
 			}}><SuperDumbComponent /></p>
@@ -26,9 +25,9 @@ render(
 		<p>{store.$('clicks.fetched').map(payload => !payload ? null : JSON.stringify(payload))}</p>
 		<hr />
 		<CleverComponent sinks={{store}} />
-		<DumbComponent sinks={{store}} />
-	</div>
-, document.querySelector('app'));
+		<DumbComponent sinks={{store, clicks: store.$('clicks.clicks')}} />
+	</div>;
+document.querySelector('app').appendChild(app);
 
 function fetchStuff() {
 	easyFetch(store, null)({
