@@ -1,4 +1,4 @@
-# ZLIQ
+# ZLIQ [BROKEN -> streams returning elem arrays not working]
 
 ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering.
 
