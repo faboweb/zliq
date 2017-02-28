@@ -14,7 +14,6 @@ export function createElement(tagName, properties$, children$Arr) {
 function manageChildren(parentElem, children$Arr) {
 	let childElems = [];
 	children$Arr.map((child$, index) => {
-		// TODO if child is array calc positions + refactor
 		child$.map(child => {
 			let rightNeighbor = childElems.slice(index).find(elem => elem !== null);
 			rightNeighbor = Array.isArray(rightNeighbor) ? rightNeighbor[0] : rightNeighbor;
@@ -24,17 +23,13 @@ function manageChildren(parentElem, children$Arr) {
 			// streams can return arrays of children
 			if (Array.isArray(child)) {
 				childElems[index] = childElems[index] || [];
-				var clonedParent = parentElem.cloneNode();
+				var frag = document.createDocumentFragment();
+				parentElem.childNodes.forEach(node => frag.appendChild(node));
 				child.forEach((_child_, _index_) => {
-					childElems[index][_index_] = addOrUpdateChild(_child_, relativePos + _index_, childElems[index][_index_], clonedParent, rightNeighbor);
+					childElems[index][_index_] = addOrUpdateChild(_child_, relativePos + _index_, childElems[index][_index_], frag, rightNeighbor);
 				});
-				// if the parent is already attached to the dom we replace it
-				// this is faster then manipulating it often
-				if (!parentElem.parentNode) {
-					return clonedParent;
-				} else {
-					parentElem.parentNode.replaceChild(clonedParent, parentElem);
-				}
+				parentElem.innerHtml = '';
+				parentElem.appendChild(frag);
 			} else {
 				childElems[index] = addOrUpdateChild(child, relativePos, childElems[index], parentElem, rightNeighbor);
 			}
@@ -54,14 +49,12 @@ function addOrUpdateChild(child, relativePos, savedElem, parentElem, rightNeighb
 	if (typeof child === "string" || typeof child === "number") {
 		child = document.createTextNode(child);
 	}
-	// if the element is not yet drawn
-	if (!savedElem) {
-		// if rightNeighbor is null it gets appended
-		parentElem.insertBefore(child, rightNeighbor);
-	} else {
-		// if the element is already there then replace it
-		parentElem.replaceChild(child, savedElem);
+	// if the element is already there then replace it
+	if (savedElem) {
+		parentElem.removeChild(savedElem);
 	}
+	// if rightNeighbor is null it gets appended
+	parentElem.insertBefore(child, rightNeighbor);
 	return child;
 }
 
