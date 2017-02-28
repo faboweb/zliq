@@ -1,5 +1,6 @@
 import { h } from './utils/streamy-hyperscript';
 import { stream, merge$} from './utils/streamy';
+import { render } from './utils/streamy-render';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;
@@ -84,7 +85,7 @@ function selectItem(evt) {
 	Operations.SelectItem(parseInt(el.id))();
 }
 
-let app =
+render(
 	<div className='container'>
 		<div className='jumbotron'>
 			<div className='row'>
@@ -140,5 +141,5 @@ let app =
 			</tbody>
 		</table>
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
-	</div>;
-document.querySelector('#main').appendChild(app);
+	</div>
+, document.querySelector('#main'));

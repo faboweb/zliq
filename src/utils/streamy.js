@@ -48,7 +48,7 @@ function update(parent$, newValue) {
 /*
 * provide a new value to all listeners registered for a stream
 */
-function notifyListeners(listeners, newValue, oldValue) {
+function notifyListeners(listeners, value) {
 	listeners.forEach(function notifyListener(listener) {
 		listener(value);
 	});
