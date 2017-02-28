@@ -16,7 +16,7 @@ ZLIQ is written with:
 ZLIQ implementes itself in a slim way:
  - streams
  - redux
- - virtual-dom rendering for streams
+ - dom rendering and updates for streams
 
 ### How It Works
 
