@@ -3,8 +3,6 @@ const DOM_EVENT_LISTENERS = [
     'ondblclick'
 ];
 
-// TODO custom rendering for classes and styles
-
 export function createElement(tagName, properties$, children$Arr) {
     let elem = document.createElement(tagName);
     manageProperties(elem, properties$)

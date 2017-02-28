@@ -1,5 +1,4 @@
 import { h } from './utils/streamy-hyperscript';
-import { render } from './utils/streamy-render';
 import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
