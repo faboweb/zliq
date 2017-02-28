@@ -1,9 +1,5 @@
 import vdomH from 'virtual-dom/h';
 import {stream, merge$, isStream} from './streamy';
-<<<<<<< HEAD
-=======
-import {createElement} from './streamy-createElement';
->>>>>>> parent of 7bcb3a3... cleanup
 
 // TODO check for props are children
 /*
