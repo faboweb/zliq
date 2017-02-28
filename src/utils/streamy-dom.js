@@ -14,37 +14,46 @@ function manageChildren(parentElem, children$Arr) {
 	let childElems = [];
 	children$Arr.map((child$, index) => {
 		child$.map(child => {
-			// if the child was there but got removed
-			// we need to remove the elem
-			if (childElems[index] && child === null) {
-				parentElem.removeChild(childElems[index]);
-				childElems[index] = null;
-			}
-			if (child == null) return;
-
-			if (typeof child === "string" || typeof child === "number") {
-				child = document.createTextNode(child);
-			}
-			// maybe some elements are missing
-			// so we get the relativePos by not counting the missing ones before
-			let relativePos = childElems.slice(0, index)
-				.reduce((pos, elem) => {
-					return pos + elem ? 1 : 0;
-				}, 0);
-			// if the element is not yet drawn
-			if (!childElems[index]) {
-				if (relativePos === 0) {
-					parentElem.appendChild(child);
-				} else {
-					insertAtPosition(child, parentElem, relativePos);
-				}
+			// streams can return arrays of children
+			if (Array.isArray(child)) {
+				child.forEach(_child_ => addOrUpdateChild(_child_, childElems));
 			} else {
-				// if the element is already there then replace it
-				parentElem.replaceChild(child, childElems[index]);
+				addOrUpdateChild(child, childElems);
 			}
-			childElems[index] = child;
 		});
 	});
+}
+
+function addOrUpdateChild(child, childElems) {
+	// if the child was there but got removed
+	// we need to remove the elem
+	if (childElems[index] && child === null) {
+		parentElem.removeChild(childElems[index]);
+		childElems[index] = null;
+	}
+	if (child == null) return;
+
+	if (typeof child === "string" || typeof child === "number") {
+		child = document.createTextNode(child);
+	}
+	// maybe some elements are missing
+	// so we get the relativePos by not counting the missing ones before
+	let relativePos = childElems.slice(0, index)
+		.reduce((pos, elem) => {
+			return pos + elem ? 1 : 0;
+		}, 0);
+	// if the element is not yet drawn
+	if (!childElems[index]) {
+		if (relativePos === 0) {
+			parentElem.appendChild(child);
+		} else {
+			insertAtPosition(child, parentElem, relativePos);
+		}
+	} else {
+		// if the element is already there then replace it
+		parentElem.replaceChild(child, childElems[index]);
+	}
+	childElems[index] = child;
 }
 
 function manageProperties(elem, properties$) {
