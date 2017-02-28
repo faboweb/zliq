@@ -1,6 +1,6 @@
 # ZLIQ
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on virtual-dom, redux, reactive-streams.
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering.
 
 ### Tech
 
