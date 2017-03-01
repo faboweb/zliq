@@ -35,7 +35,8 @@ function manageChildren(parentElem, children$Arr) {
 				elemLenghts[index] = child.length;
 			} else {
 				elemLenghts[index] = child !== null ? 1 : 0;
-				addOrUpdateChild(child, index, null, parentElem);
+				let leftNeighbor = getLeftNeighbor(index, null, elemLenghts, parentElem);
+				addOrUpdateChild(child, index, null, parentElem, leftNeighbor);
 			}
 		});
 	});
