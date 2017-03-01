@@ -52,6 +52,8 @@ $ npm start
 
  - Refactor to make easier to understand
  - Make NPM Module
+ - Add optional router
+ - Try own DOM manipulation
 
 License
 ----
