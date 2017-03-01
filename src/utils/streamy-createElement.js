@@ -14,49 +14,64 @@ export function createElement(tagName, properties$, children$Arr) {
 
 // IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
-	let childElems = [];
+	// array to store the actual count of elements in one virtual elem
+	// one virtual elem can produce a list of elems so we can't rely on the index only
+	let elemLenghts = [];
 	children$Arr.map((child$, index) => {
 		child$.map(child => {
-			let rightNeighbor = childElems.slice(index).find(elem => elem !== null);
-			rightNeighbor = Array.isArray(rightNeighbor) ? rightNeighbor[0] : rightNeighbor;
-			let relativePos = rightNeighbor 
-				? Array.prototype.indexOf.call(parentElem.childNodes, rightNeighbor) - 1
-				: parentElem.childNodes.length;
 			// streams can return arrays of children
 			if (Array.isArray(child)) {
-				childElems[index] = childElems[index] || [];
 				var frag = document.createDocumentFragment();
 				parentElem.childNodes.forEach(node => frag.appendChild(node));
-				child.forEach((_child_, _index_) => {
-					childElems[index][_index_] = addOrUpdateChild(_child_, relativePos + _index_, childElems[index][_index_], frag, rightNeighbor);
+				child.forEach((subChild_, subIndex) => {
+					let leftNeighbor = getLeftNeighbor(index, subIndex, elemLenghts, parentElem);
+					addOrUpdateChild(subChild_, index, subIndex, frag);
 				});
-				parentElem.innerHtml = '';
+				// remove 
+				while (parentElem.firstChild) {
+					parentElem.removeChild(parentElem.firstChild);
+				}
 				parentElem.appendChild(frag);
+				elemLenghts[index] = child.length;
 			} else {
-				childElems[index] = addOrUpdateChild(child, relativePos, childElems[index], parentElem, rightNeighbor);
+				elemLenghts[index] = child !== null ? 1 : 0;
+				addOrUpdateChild(child, index, null, parentElem);
 			}
 		});
 	});
 }
 
-function addOrUpdateChild(child, relativePos, savedElem, parentElem, rightNeighbor) {
+function getLeftNeighbor(index, subIndex, elemLenghts, parentElem) {
+	subIndex = subIndex || 0;
+	if (index === 0 && subIndex === 0) return null;
+	let relativePos = elemLengths.splice(0, index-1).reduce((sum, cur) => sum + cur, 0);
+	return parentElem.childNodes[relativePos + subIndex];
+}
+
+function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor) {
+	let elemQuery = `[data-key=${key}]` 
+		+ subkey !== null ? `[data-subkey=${subkey}]` : '';
+	let existingElem = parentElem.querySelector(elemQuery);
 	// if the child was there but got removed
 	// we need to remove the elem
-	if (savedElem && child === null) {
-		parentElem.removeChild(childElems[index]);
+	if (existingElem && child === null) {
+		parentElem.removeChild(existingElem);
 		return null;
 	}
 	if (child == null) return null;
+
+	child.dataSet['key'] = key;
+	subkey !== null && child.dataSet['subkey'] = subkey;
 
 	if (typeof child === "string" || typeof child === "number") {
 		child = document.createTextNode(child);
 	}
 	// if the element is already there then replace it
-	if (savedElem) {
-		parentElem.removeChild(savedElem);
+	if (existingElem) {
+		parentElem.replace(child, existingElem);
+	} else {
+		parentElem.insertBefore(child, leftNeighbor ? leftNeighbor.nextSibling : null);
 	}
-	// if rightNeighbor is null it gets appended
-	parentElem.insertBefore(child, rightNeighbor);
 	return child;
 }
 
