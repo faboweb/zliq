@@ -38,7 +38,7 @@ export const DumbComponent = ({sinks: {store}}) =>
 	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
 ```
 
-Please check out 'src/demo_app.jsx' if you want to see, how an application is set up.
+Please check out 'src/demo_app.jsx' if you want to see how an application is set up.
 
 ### Development
 
