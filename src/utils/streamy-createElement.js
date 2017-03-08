@@ -24,9 +24,8 @@ function manageChildren(parentElem, children$Arr) {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				var frag = document.createDocumentFragment();
-				let existingNodes = parentElem.childNodes;
-				while (existingNodes.length > 0) {
-					frag.appendChild(existingNodes[0]);
+				while (parentElem.length > 0) {
+					frag.appendChild(parentElem[0]);
 				}
 				changes.forEach(({ index: subIndex, elem }) => {
 					let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
@@ -44,7 +43,9 @@ function manageChildren(parentElem, children$Arr) {
 				// streams can return arrays of children
 				if (Array.isArray(child)) {
 					var frag = document.createDocumentFragment();
-					parentElem.childNodes.forEach(node => frag.appendChild(node));
+					while (parentElem.length > 0) {
+						frag.appendChild(parentElem[0]);
+					}
 					child.forEach((subChild_, subIndex) => {
 						let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
 						addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor);
