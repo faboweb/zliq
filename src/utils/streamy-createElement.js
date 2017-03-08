@@ -20,6 +20,7 @@ function manageChildren(parentElem, children$Arr) {
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	let elemLengths = [];
+	let childStorage = [];
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
@@ -29,7 +30,7 @@ function manageChildren(parentElem, children$Arr) {
 				}
 				changes.forEach(({ index: subIndex, elem }) => {
 					let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-					addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor);
+					addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, childStorage);
 				});
 				// remove 
 				while (parentElem.firstChild) {
@@ -48,7 +49,7 @@ function manageChildren(parentElem, children$Arr) {
 					}
 					child.forEach((subChild_, subIndex) => {
 						let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-						addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor);
+						addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor, childStorage);
 					});
 					// remove 
 					while (parentElem.firstChild) {
@@ -59,7 +60,7 @@ function manageChildren(parentElem, children$Arr) {
 				} else {
 					elemLengths[index] = child !== null ? 1 : 0;
 					let leftNeighbor = getLeftNeighbor(index, null, elemLengths, parentElem);
-					addOrUpdateChild(child, index, null, parentElem, leftNeighbor);
+					addOrUpdateChild(child, index, null, parentElem, leftNeighbor, childStorage);
 				}
 			});
 		}
@@ -73,28 +74,38 @@ function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
 	return parentElem.childNodes[leftElemRelativePos + subIndex];
 }
 
-function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor) {
-	let elemQuery = `[key='${key}']` 
-		+ subkey !== null ? `[subkey='${subkey}']` : '';
-	let existingElem = parentElem.querySelector(elemQuery);
+function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, childStorage) {
+	function getRef(index, subkey, childStorage) {
+		let ref = childStorage[key];
+		if (subkey) {
+			return ref == null ? null : ref[subkey];
+		}
+		return ref;
+	}
+
+	function setRef(index, subkey, childStorage, elem) {
+		if (subkey) {
+			if (childStorage[key] == null) {
+				childStorage[key] = [];
+			}
+			childStorage[key][subkey] = elem;
+		} else {
+			childStorage[key] = elem;
+		}
+	}
+
+	let existingElem = getRef(key, subkey, childStorage);
+
 	// if the child was there but got removed
 	// we need to remove the elem
 	if (existingElem && child === null) {
 		parentElem.removeChild(existingElem);
+	}
+	if (child == null) {
+		setRef(key, subkey, childStorage, null);
 		return null;
 	}
-	if (child == null) return null;
-
-	if (typeof child === "string" || typeof child === "number") {
-		let newChild = document.createElement('span');
-		newChild.innerText = child;
-		child = newChild;
-	}
-
-	child.setAttribute('key', key);
-	if (subkey !== null) {
-		child.setAttribute('subkey', subkey);
-	}
+	setRef(key, subkey, childStorage, child);
 
 	// if the element is already there then replace it
 	if (existingElem) {
