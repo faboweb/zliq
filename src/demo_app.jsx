@@ -13,7 +13,7 @@ let store = reduxy({
 
 // main render function for the application
 // render provided hyperscript into a parent element
-render(
+let app =
 	<div id='foo' className='bar'>
 		<p className={store.$('clicks.clicks').map(clicks => 'clicks-' + clicks)}
 			style={{
@@ -28,7 +28,8 @@ render(
 		<CleverComponent sinks={{store}} />
 		<DumbComponent sinks={{store}} />
 	</div>
-, document.querySelector('app'));
+;
+document.querySelector('app').appendChild(app);
 
 function fetchStuff() {
 	easyFetch(store, null)({
