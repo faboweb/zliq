@@ -74,6 +74,14 @@ function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
 	return parentElem.childNodes[leftElemRelativePos + subIndex];
 }
 
+function getExistingElem(index, subIndex, elemLengths, parentElem) {
+	subIndex = subIndex || 0;
+	if (index === 0 && subIndex === 0) return null;
+	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0);
+	let relativeSubPos = subIndex ? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0) : 0;
+	return parentElem.childNodes[relativePos + relativeSubPos];
+}
+
 function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, childStorage) {
 	function getRef(index, subkey, childStorage) {
 		let ref = childStorage[key];
