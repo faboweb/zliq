@@ -20,51 +20,66 @@ function manageChildren(parentElem, children$Arr) {
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	let elemLengths = [];
-	let childStorage = [];
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
-				var frag = document.createDocumentFragment();
-				while (parentElem.length > 0) {
-					frag.appendChild(parentElem[0]);
+				if (changes.length) {
+					elemLengths = applyChanges(index, changes, parentElem, elemLengths);
 				}
-				changes.forEach(({ index: subIndex, elem }) => {
-					let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-					addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, childStorage);
-				});
-				// remove 
-				while (parentElem.firstChild) {
-					parentElem.removeChild(parentElem.firstChild);
-				}
-				elemLengths[index] = frag.children.length;
-				parentElem.appendChild(frag);
 			});
 		} else {
 			child$.map(child => {
+				let changes;
 				// streams can return arrays of children
 				if (Array.isArray(child)) {
-					var frag = document.createDocumentFragment();
-					while (parentElem.length > 0) {
-						frag.appendChild(parentElem[0]);
-					}
-					child.forEach((subChild_, subIndex) => {
-						let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-						addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor, childStorage);
+					changes = child.map((child, subIndex) => {
+						return {
+							subIndex,
+							elem: child
+						}
 					});
-					// remove 
-					while (parentElem.firstChild) {
-						parentElem.removeChild(parentElem.firstChild);
-					}
-					parentElem.appendChild(frag);
-					elemLengths[index] = child.length;
+					// var frag = document.createDocumentFragment();
+					// while (parentElem.length > 0) {
+					// 	frag.appendChild(parentElem[0]);
+					// }
+					// child.forEach((subChild_, subIndex) => {
+					// 	let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
+					// 	addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor, elemLengths);
+					// });
+					// // remove 
+					// while (parentElem.firstChild) {
+					// 	parentElem.removeChild(parentElem.firstChild);
+					// }
+					// parentElem.appendChild(frag);
+					// elemLengths[index] = child.length;
 				} else {
-					elemLengths[index] = child !== null ? 1 : 0;
-					let leftNeighbor = getLeftNeighbor(index, null, elemLengths, parentElem);
-					addOrUpdateChild(child, index, null, parentElem, leftNeighbor, childStorage);
+					changes = [{
+						elem: child
+					}];
+					// elemLengths[index] = child !== null ? 1 : 0;
+					// let leftNeighbor = getLeftNeighbor(index, null, elemLengths, parentElem);
+					// addOrUpdateChild(child, index, null, parentElem, leftNeighbor, elemLengths);
 				}
+				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
 			});
 		}
 	});
+}
+
+// changes: [{index, elem}]
+function applyChanges(index, changes, parentElem, elemLengths) {
+	var outputElemLengths = [].concat(elemLengths);
+	var frag = document.createDocumentFragment();
+	while (parentElem.childNodes.length > 0) {
+		frag.appendChild(parentElem.childNodes[0]);
+	}
+	changes.forEach(({ subIndex, elem }) => {
+		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, frag);
+		outputElemLengths = addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, outputElemLengths);
+	});
+	parentElem.appendChild(frag);
+	// outputElemLengths[index] = parentElem.childNodes.length;
+	return outputElemLengths;
 }
 
 function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
@@ -75,34 +90,29 @@ function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
 }
 
 function getExistingElem(index, subIndex, elemLengths, parentElem) {
-	subIndex = subIndex || 0;
-	if (index === 0 && subIndex === 0) return null;
-	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0);
-	let relativeSubPos = subIndex ? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0) : 0;
+	// add all lengths before the index to get the position of the searched elem
+	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + (cur.length || cur), 0);
+	let relativeSubPos = subIndex && Array.isArray(elemLengths[index]) 
+		? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= subIndex ? sum :  sum + cur, 0)
+		: 0;
 	return parentElem.childNodes[relativePos + relativeSubPos];
 }
 
-function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, childStorage) {
-	function getRef(index, subkey, childStorage) {
-		let ref = childStorage[key];
-		if (subkey) {
-			return ref == null ? null : ref[subkey];
-		}
-		return ref;
-	}
+function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, elemLengths) {
+	let existingElem = getExistingElem(key, subkey, elemLengths, parentElem);
 
-	function setRef(index, subkey, childStorage, elem) {
-		if (subkey) {
-			if (childStorage[key] == null) {
-				childStorage[key] = [];
+	function setElemLength(key, subkey, elemLengths, hasChild) {
+		let outputElemLengths = [].concat(elemLengths);
+		if (subkey != null) {
+			if (outputElemLengths[key] == null) {
+				outputElemLengths[key] = [];
 			}
-			childStorage[key][subkey] = elem;
+			outputElemLengths[key][subkey] = hasChild ? 1 : 0;
 		} else {
-			childStorage[key] = elem;
+			outputElemLengths[key] = hasChild ? 1 : 0;
 		}
+		return outputElemLengths;
 	}
-
-	let existingElem = getRef(key, subkey, childStorage);
 
 	// if the child was there but got removed
 	// we need to remove the elem
@@ -110,10 +120,8 @@ function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, childSto
 		parentElem.removeChild(existingElem);
 	}
 	if (child == null) {
-		setRef(key, subkey, childStorage, null);
-		return null;
+		return setElemLength(key, subkey, elemLengths, false);
 	}
-	setRef(key, subkey, childStorage, child);
 
 	// if the element is already there then replace it
 	if (existingElem) {
@@ -124,7 +132,7 @@ function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, childSto
 	} else {
 		parentElem.prepend(child);
 	}
-	return child;
+	return setElemLength(key, subkey, elemLengths, true);
 }
 
 function manageProperties(elem, properties$) {
@@ -171,10 +179,9 @@ export function list(input$, listSelector, renderFunc) {
 				.distinct()
 		)
 		.map(([changes, inputs]) => {
-			return changes.map(({index, item}) => {
+			return changes.map(({subIndex, item}) => {
 				return {
-					index,
-					item,
+					subIndex,
 					elem: item != null ? renderFunc(item, inputs) : null
 				};
 			});
@@ -191,7 +198,7 @@ function listChanges$(arr$) {
 		for (let index = 0; index < totalLength; index++) {
 			if (!deepEqual(arr[index], oldValue[index])) {
 				changes.push({
-					index,
+					subIndex: index,
 					item: arr[index]
 				});
 			}
