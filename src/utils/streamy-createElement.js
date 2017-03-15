@@ -1,5 +1,6 @@
-import {merge$} from './streamy';
 import deepEqual from 'deep-equal';
+import {merge$, stream} from './streamy';
+import {processLargeArrayAsync, iterateAsync} from './array-utils';
 
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
@@ -38,27 +39,10 @@ function manageChildren(parentElem, children$Arr) {
 							elem: child
 						}
 					});
-					// var frag = document.createDocumentFragment();
-					// while (parentElem.length > 0) {
-					// 	frag.appendChild(parentElem[0]);
-					// }
-					// child.forEach((subChild_, subIndex) => {
-					// 	let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-					// 	addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor, elemLengths);
-					// });
-					// // remove 
-					// while (parentElem.firstChild) {
-					// 	parentElem.removeChild(parentElem.firstChild);
-					// }
-					// parentElem.appendChild(frag);
-					// elemLengths[index] = child.length;
 				} else {
 					changes = [{
 						elem: child
 					}];
-					// elemLengths[index] = child !== null ? 1 : 0;
-					// let leftNeighbor = getLeftNeighbor(index, null, elemLengths, parentElem);
-					// addOrUpdateChild(child, index, null, parentElem, leftNeighbor, elemLengths);
 				}
 				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
 			});
@@ -68,17 +52,21 @@ function manageChildren(parentElem, children$Arr) {
 
 // changes: [{index, elem}]
 function applyChanges(index, changes, parentElem, elemLengths) {
-	var outputElemLengths = [].concat(elemLengths);
-	var frag = document.createDocumentFragment();
-	while (parentElem.childNodes.length > 0) {
-		frag.appendChild(parentElem.childNodes[0]);
+	let outputElemLengths = [].concat(elemLengths);
+	// if the parent is attached to the DOM remove it while updating
+	const parentContainer = parentElem.parent;
+	let frag;
+	if (parentContainer) {
+		frag = document.createDocumentFragment();
+		frag.appendChild(parentElem);
 	}
 	changes.forEach(({ subIndex, elem }) => {
-		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, frag);
-		outputElemLengths = addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, outputElemLengths);
+		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, parentElem);
+		outputElemLengths = addOrUpdateChild(elem, index, subIndex, parentElem, leftNeighbor, outputElemLengths);
 	});
-	parentElem.appendChild(frag);
-	// outputElemLengths[index] = parentElem.childNodes.length;
+	if (parentContainer) {
+		parentContainer.appendChild(frag);
+	}
 	return outputElemLengths;
 }
 
@@ -158,52 +146,58 @@ function manageProperties(elem, properties$) {
     });
 }
 
-function insertAtPosition(newNode, parentElem, index) {
-	let parentNode = parentElem.parentNode;
-	if (parentElem.childNodes.length >= index) {
-		parentElem.appendChild(newNode);
-	} else {
-		parentNode.insertBefore(newNode, parentElem.childNodes[index - 1].nextSibling);
-	}
-}
-
 export function list(input$, listSelector, renderFunc) {
-	let output$ = merge$(
-			listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
-			input$.map(value => {
-				if (value == null) { return null; }
-				let copiedValue = Object.assign({}, value);
-				delete copiedValue[listSelector];
-				return copiedValue;
-			})
-				.distinct()
-		)
-		.map(([changes, inputs]) => {
-			return changes.map(({subIndex, item}) => {
-				return {
+	let output$ = stream([]);
+	merge$(
+		listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
+		input$.map(value => {
+			if (value == null) { return null; }
+			let copiedValue = Object.assign({}, value);
+			delete copiedValue[listSelector];
+			return copiedValue;
+		})
+			.distinct()
+	)
+	.map(([changes, inputs]) => {
+		setTimeout(() => {
+			let chunk = [];
+			processLargeArrayAsync(changes, ({subIndex, item}) => {
+				chunk.push({
 					subIndex,
 					elem: item != null ? renderFunc(item, inputs) : null
-				};
+				});
+			}, 
+			200, () => {
+				output$(chunk);
+				chunk = [];
 			});
-		});
+		}, 1);
+	});
 	output$.IS_CHANGE_STREAM = true;
 	return output$;
 }
 
 function listChanges$(arr$) {
 	let oldValue = [];
-	return arr$.map(arr => {
+	let changes$ = stream([]);
+	arr$.map(arr => {
 		let totalLength = arr.length > oldValue.length ? arr.length : oldValue.length;
 		let changes = [];
-		for (let index = 0; index < totalLength; index++) {
-			if (!deepEqual(arr[index], oldValue[index])) {
-				changes.push({
-					subIndex: index,
-					item: arr[index]
-				});
-			}
-		}
-		oldValue = arr;
-		return changes;
-	})
+		setTimeout(() => {
+			iterateAsync(totalLength, index => {
+				if (!deepEqual(arr[index], oldValue[index])) {
+					changes.push({
+						subIndex: index,
+						item: arr[index]
+					});
+				}
+			}, 200, () => {
+				changes$(changes);
+				changes = [];
+			}).then(() => {
+				oldValue = arr;
+			});
+		}, 1);
+	});
+	return changes$;
 }
