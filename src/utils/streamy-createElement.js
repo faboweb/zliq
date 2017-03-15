@@ -1,6 +1,7 @@
 import deepEqual from 'deep-equal';
 import {merge$, stream} from './streamy';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
+var ChangeWorker = require("worker-loader!./change-worker.js");
 
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
@@ -50,9 +51,8 @@ function manageChildren(parentElem, children$Arr) {
 	});
 }
 
-// changes: [{index, elem}]
-function applyChanges(index, changes, parentElem, elemLengths) {
-	let outputElemLengths = [].concat(elemLengths);
+function applyChanges(index, changes, parentElem, elemPositionsLookup) {
+	let outputElemPositions = [].concat(elemPositionsLookup);
 	// if the parent is attached to the DOM remove it while updating
 	const parentContainer = parentElem.parent;
 	let frag;
@@ -61,66 +61,82 @@ function applyChanges(index, changes, parentElem, elemLengths) {
 		frag.appendChild(parentElem);
 	}
 	changes.forEach(({ subIndex, elem }) => {
-		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, parentElem);
-		outputElemLengths = addOrUpdateChild(elem, index, subIndex, parentElem, leftNeighbor, outputElemLengths);
+		outputElemPositions = addOrUpdateChild(elem, index, subIndex, parentElem, outputElemPositions);
 	});
 	if (parentContainer) {
 		parentContainer.appendChild(frag);
 	}
-	return outputElemLengths;
+	return outputElemPositions;
 }
 
-function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
+function getLeftNeighbor(index, subIndex, elemPositionsLookup, parentElem) {
 	subIndex = subIndex || 0;
 	if (index === 0 && subIndex === 0) return null;
-	let leftElemRelativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0) -1;
-	return parentElem.childNodes[leftElemRelativePos + subIndex];
+	let elemsBefore = elemPositionsLookup[index].before;
+	let subElemsBefore = subIndex && elemPositionsLookup[index].children[subIndex].before;
+	return parentElem.childNodes[elemsBefore + subElemsBefore - 1];
 }
 
-function getExistingElem(index, subIndex, elemLengths, parentElem) {
-	// add all lengths before the index to get the position of the searched elem
-	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + (cur.length || cur), 0);
-	let relativeSubPos = subIndex && Array.isArray(elemLengths[index]) 
-		? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= subIndex ? sum :  sum + cur, 0)
-		: 0;
-	return parentElem.childNodes[relativePos + relativeSubPos];
-}
-
-function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, elemLengths) {
-	let existingElem = getExistingElem(key, subkey, elemLengths, parentElem);
-
-	function setElemLength(key, subkey, elemLengths, hasChild) {
-		let outputElemLengths = [].concat(elemLengths);
-		if (subkey != null) {
-			if (outputElemLengths[key] == null) {
-				outputElemLengths[key] = [];
-			}
-			outputElemLengths[key][subkey] = hasChild ? 1 : 0;
-		} else {
-			outputElemLengths[key] = hasChild ? 1 : 0;
-		}
-		return outputElemLengths;
+function getExistingElem(index, subIndex, elemPositionsLookup, parentElem) {
+	if (elemPositionsLookup[index] == null) {
+		return null;
 	}
+	let elemsBefore = elemPositionsLookup[index].before;
+	let subElemsBefore = subIndex && elemPositionsLookup[index].children[subIndex].before;
+	return parentElem.childNodes[elemsBefore + subElemsBefore];
+}
+
+function updateElemPositionsLookup(index, subIndex, elemPositionsLookup, hasElement) {
+	let outputLookup = [].concat(elemPositionsLookup);
+	if (outputLookup[index] == null) {
+		let before = index === 0 ? 0 : outputLookup[index - 1].before + outputLookup[index - 1].size;
+		outputLookup[index] = {
+			before,
+			size: 1,
+			children: []
+		};
+	}
+	let sizeBefore = outputLookup[index].size;
+	if (subIndex != null) {
+		outputLookup[index].children = updateElemPositionsLookup(subIndex, null, outputLookup[index].children, hasElement);
+		// TODO optimize and remove this reduce
+		outputLookup[index].size = outputLookup[index].children.reduce((sum, curr) => sum + curr.size);
+		hasElement = outputLookup[index].size > 0;
+	} else {
+		outputLookup[index].size = hasElement ? 1 : 0;
+	}
+	let sizeDiff = outputLookup[index].size - sizeBefore;
+	// update following positions
+	if (sizeDiff !== 0) {
+		for (let i = index + 1; i < outputLookup.length; i++) {
+			outputLookup[i].before = outputLookup[i].before + sizeDiff;
+		}
+	}
+	return outputLookup;
+}
+
+function addOrUpdateChild(child, key, subkey, parentElem, elemPositionsLookup) {
+	let updatedElemPositionsLookup = updateElemPositionsLookup(key, subkey, elemPositionsLookup, child != null);
+	let existingElem = getExistingElem(key, subkey, updatedElemPositionsLookup, parentElem);
+	let leftNeighbor = getLeftNeighbor(key, subkey, updatedElemPositionsLookup, parentElem);
 
 	// if the child was there but got removed
 	// we need to remove the elem
 	if (existingElem && child === null) {
 		parentElem.removeChild(existingElem);
 	}
-	if (child == null) {
-		return setElemLength(key, subkey, elemLengths, false);
+	if (child) {
+		// if the element is already there then replace it
+		if (existingElem) {
+			parentElem.removeChild(existingElem);
+		}
+		if (leftNeighbor) {
+			parentElem.insertBefore(child, leftNeighbor.nextSibling);
+		} else {
+			parentElem.prepend(child);
+		}
 	}
-
-	// if the element is already there then replace it
-	if (existingElem) {
-		parentElem.removeChild(existingElem);
-	}
-	if (leftNeighbor) {
-		parentElem.insertBefore(child, leftNeighbor.nextSibling);
-	} else {
-		parentElem.prepend(child);
-	}
-	return setElemLength(key, subkey, elemLengths, true);
+	return updatedElemPositionsLookup;
 }
 
 function manageProperties(elem, properties$) {
@@ -180,24 +196,18 @@ export function list(input$, listSelector, renderFunc) {
 function listChanges$(arr$) {
 	let oldValue = [];
 	let changes$ = stream([]);
+	let changeWorker = new ChangeWorker();
+	changeWorker.onmessage = ({ data: { changes }}) => {
+		changes$(changes.map(({index, item}) => {
+			return {
+				subIndex: index,
+				item
+			};
+		}));
+	}
 	arr$.map(arr => {
-		let totalLength = arr.length > oldValue.length ? arr.length : oldValue.length;
-		let changes = [];
-		setTimeout(() => {
-			iterateAsync(totalLength, index => {
-				if (!deepEqual(arr[index], oldValue[index])) {
-					changes.push({
-						subIndex: index,
-						item: arr[index]
-					});
-				}
-			}, 200, () => {
-				changes$(changes);
-				changes = [];
-			}).then(() => {
-				oldValue = arr;
-			});
-		}, 1);
+		changeWorker.postMessage({ newArr: arr, oldArr: oldValue });
+		oldValue = arr;
 	});
 	return changes$;
 }

@@ -32,6 +32,7 @@
     "style-loader": "^0.13.1",
     "webpack": "^2.2.1",
     "webpack-dev-server": "^2.3.0",
-    "webpack-node-externals": "^1.5.4"
+    "webpack-node-externals": "^1.5.4",
+    "worker-loader": "^0.8.0"
   }
 }
