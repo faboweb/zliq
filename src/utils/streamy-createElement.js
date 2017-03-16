@@ -1,7 +1,6 @@
 import deepEqual from 'deep-equal';
 import {merge$, stream} from './streamy';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
-var ChangeWorker = require("worker-loader!./change-worker.js");
 
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
@@ -160,54 +159,4 @@ function manageProperties(elem, properties$) {
             }
         });
     });
-}
-
-export function list(input$, listSelector, renderFunc) {
-	let output$ = stream([]);
-	merge$(
-		listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
-		input$.map(value => {
-			if (value == null) { return null; }
-			let copiedValue = Object.assign({}, value);
-			delete copiedValue[listSelector];
-			return copiedValue;
-		})
-			.distinct()
-	)
-	.map(([changes, inputs]) => {
-		setTimeout(() => {
-			let chunk = [];
-			processLargeArrayAsync(changes, ({subIndex, item}) => {
-				chunk.push({
-					subIndex,
-					elem: item != null ? renderFunc(item, inputs) : null
-				});
-			}, 
-			200, () => {
-				output$(chunk);
-				chunk = [];
-			});
-		}, 1);
-	});
-	output$.IS_CHANGE_STREAM = true;
-	return output$;
-}
-
-function listChanges$(arr$) {
-	let oldValue = [];
-	let changes$ = stream([]);
-	let changeWorker = new ChangeWorker();
-	changeWorker.onmessage = ({ data: { changes }}) => {
-		changes$(changes.map(({index, item}) => {
-			return {
-				subIndex: index,
-				item
-			};
-		}));
-	}
-	arr$.map(arr => {
-		changeWorker.postMessage({ newArr: arr, oldArr: oldValue });
-		oldValue = arr;
-	});
-	return changes$;
 }
