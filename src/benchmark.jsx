@@ -1,4 +1,5 @@
 import { h } from './utils/streamy-hyperscript';
+import { list } from './utils/streamy-createElement';
 import { stream, merge$} from './utils/streamy';
 import { render } from './utils/streamy-render';
 
@@ -85,7 +86,7 @@ function selectItem(evt) {
 	Operations.SelectItem(parseInt(el.id))();
 }
 
-render(
+let app =
 	<div className='container'>
 		<div className='jumbotron'>
 			<div className='row'>
@@ -125,7 +126,7 @@ render(
 		<table className='table table-hover table-striped test-data'>
 			<tbody>
 			{
-				state$.map(({items, selected}) => items.map(item =>
+				list(state$, 'items', (item, {selected}) =>
 					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
 						<td className='col-md-1'>{item.id}</td>
 						<td className='col-md-4'>
@@ -136,10 +137,11 @@ render(
 						</td>
 						<td className='col-md-6'/>
 					</tr>
-				))
+				)
 			}
 			</tbody>
 		</table>
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
 	</div>
-, document.querySelector('#main'));
+;
+document.querySelector('#main').appendChild(app);
