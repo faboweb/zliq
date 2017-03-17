@@ -5,7 +5,6 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 ### Tech
 
 ZLIQ only uses a only view dependencies:
- - [virtual-dom](https://github.com/Matt-Esch/virtual-dom)
  - [deep-equal](https://github.com/substack/node-deep-equal) to diff states
  
 ZLIQ is written with:
@@ -53,7 +52,6 @@ $ npm start
  - Refactor to make easier to understand
  - Make NPM Module
  - Add optional router
- - Try own DOM manipulation
 
 License
 ----
