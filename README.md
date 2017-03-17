@@ -20,7 +20,7 @@ ZLIQ implementes itself in a slim way:
 
 ### How It Works
 
-Every component is a function returning a stream of vdom-nodes! 
+Every component is a function returning a stream of dom elements! Changes will trigger a rerender of the element and pass it to the stream. 
 
 ```js
 export const CleverComponent = ({sinks: {store}}) => {
@@ -30,11 +30,22 @@ export const CleverComponent = ({sinks: {store}}) => {
 };
 ```
 
-You can also just return a vdom-node. ZLIQ will wrap it in a stream for you.
+You can also just return a dom element (written in jsx). ZLIQ will wrap it in a stream for you.
 
 ```js
 export const DumbComponent = ({sinks: {store}}) =>
 	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
+```
+
+For long lists there is a helper, that will rerender only changes in an array.
+
+```js
+export const ListComponent = () =>
+	<ul>
+		list(state$, 'items', (item, {selected}) =>
+			<li>{item.name} {selected ? '<--' : ''}</li>
+		)
+	</ul>;
 ```
 
 Please check out 'src/demo_app.jsx' if you want to see how an application is set up.
