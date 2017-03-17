@@ -1,11 +1,9 @@
-import {Queue} from './queue';
 import { stream, merge$} from './streamy';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
 var ChangeWorker = require("worker-loader!./change-worker.js");
 
 export function list(input$, listSelector, renderFunc) {
 	let output$ = stream([]);
-	let queue = Queue();
 	merge$(
 		listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
 		input$.map(value => {
@@ -17,22 +15,20 @@ export function list(input$, listSelector, renderFunc) {
 			.distinct()
 	)
 	.map(([changes, inputs]) => {
-		queue.add(function() {
-			let chunk = [];
-			return processLargeArrayAsync(
-				changes, 
-				({subIndex, item}) => {
-					chunk.push({
-						subIndex,
-						elem: item != null ? renderFunc(item, inputs) : null
-					});
-				}, 
-				200, 
-				() => {
-					output$(chunk);
-					chunk = [];
+		let chunk = [];
+		return processLargeArrayAsync(
+			changes, 
+			({subIndex, item}) => {
+				chunk.push({
+					subIndex,
+					elem: item != null ? renderFunc(item, inputs) : null
 				});
-		}());
+			}, 
+			200, 
+			() => {
+				output$(chunk);
+				chunk = [];
+			});
 	});
 	output$.IS_CHANGE_STREAM = true;
 	return output$;

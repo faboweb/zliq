@@ -1,5 +1,6 @@
 import deepEqual from 'deep-equal';
 import {merge$, stream} from './streamy';
+import {Queue} from './queue';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
 
 const DOM_EVENT_LISTENERS = [
@@ -18,14 +19,14 @@ export function createElement(tagName, properties$, children$Arr) {
 
 // IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
+	let queue = Queue([]);
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
-	let elemLengths = [];
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				if (changes.length) {
-					elemLengths = applyChanges(index, changes, parentElem, elemLengths);
+					queue.add((elemLengths) => applyChanges(index, changes, parentElem, elemLengths));
 				}
 			});
 		} else {
@@ -44,7 +45,7 @@ function manageChildren(parentElem, children$Arr) {
 						elem: child
 					}];
 				}
-				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
+				queue.add((elemLengths) => applyChanges(index, changes, parentElem, elemLengths));
 			});
 		}
 	});
