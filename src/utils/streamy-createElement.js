@@ -1,4 +1,5 @@
 import {merge$} from './streamy';
+import {BinarySearchTree} from './binary-tree';
 import deepEqual from 'deep-equal';
 
 const DOM_EVENT_LISTENERS = [
@@ -19,12 +20,12 @@ export function createElement(tagName, properties$, children$Arr) {
 function manageChildren(parentElem, children$Arr) {
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
-	let elemLengths = [];
+	let elemPositionTree = new BinarySearchTree();
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				if (changes.length) {
-					elemLengths = applyChanges(index, changes, parentElem, elemLengths);
+					applyChanges(index, changes, parentElem, elemPositionTree);
 				}
 			});
 		} else {
@@ -43,59 +44,55 @@ function manageChildren(parentElem, children$Arr) {
 						elem: child
 					}];
 				}
-				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
+				applyChanges(index, changes, parentElem, elemPositionTree);
 			});
 		}
 	});
 }
 
 // changes: [{index, elem}]
-function applyChanges(index, changes, parentElem, elemLengths) {
-	var outputElemLengths = [].concat(elemLengths);
+function applyChanges(index, changes, parentElem, elemPositionsTree) {
 	var frag = document.createDocumentFragment();
 	while (parentElem.childNodes.length > 0) {
 		frag.appendChild(parentElem.childNodes[0]);
 	}
 	changes.forEach(({ subIndex, elem }) => {
-		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, frag);
-		outputElemLengths = addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, outputElemLengths);
+		updateDOMforChild(elem, index, subIndex, frag, elemPositionsTree);
 	});
 	parentElem.appendChild(frag);
-	// outputElemLengths[index] = parentElem.childNodes.length;
-	return outputElemLengths;
 }
 
-function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
+function getDomElemPosition(index, subIndex, elemPositionsTree) {
 	subIndex = subIndex || 0;
 	if (index === 0 && subIndex === 0) return null;
-	let leftElemRelativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0) -1;
-	return parentElem.childNodes[leftElemRelativePos + subIndex];
-}
-
-function getExistingElem(index, subIndex, elemLengths, parentElem) {
-	// add all lengths before the index to get the position of the searched elem
-	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + (cur.length || cur), 0);
-	let relativeSubPos = subIndex && Array.isArray(elemLengths[index]) 
-		? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= subIndex ? sum :  sum + cur, 0)
-		: 0;
-	return parentElem.childNodes[relativePos + relativeSubPos];
-}
-
-function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, elemLengths) {
-	let existingElem = getExistingElem(key, subkey, elemLengths, parentElem);
-
-	function setElemLength(key, subkey, elemLengths, hasChild) {
-		let outputElemLengths = [].concat(elemLengths);
-		if (subkey != null) {
-			if (outputElemLengths[key] == null) {
-				outputElemLengths[key] = [];
-			}
-			outputElemLengths[key][subkey] = hasChild ? 1 : 0;
-		} else {
-			outputElemLengths[key] = hasChild ? 1 : 0;
-		}
-		return outputElemLengths;
+	let elemPositionNode = elemPositionsTree.find(index);
+	if (elemPositionNode == null) {
+		return null;
 	}
+	let position = elemPositionNode.before;
+	let subPosition = subIndex > 0 && elemPositionNode.subTree ? elemPositionNode.subTree(subIndex).before : 0;
+	return position + subPosition;
+
+}
+
+function getLeftNeighbor(index, subIndex, elemPositionsTree, parentElem) {
+	let position = getDomElemPosition(index, subIndex, elemPositionsTree);
+	if (position == null) {
+		return null;
+	}
+	return parentElem.childNodes[position - 1];
+}
+
+function getExistingElem(index, subIndex, elemPositionsTree, parentElem) {
+	let position = getDomElemPosition(index, subIndex, elemPositionsTree);
+	if (position == null) {
+		return null;
+	}
+	return parentElem.childNodes[position];
+}
+
+function updateDOMforChild(child, index, subIndex, parentElem, elemPositionsTree) {
+	let existingElem = getExistingElem(index, subIndex, elemPositionsTree, parentElem);
 
 	// if the child was there but got removed
 	// we need to remove the elem
@@ -103,19 +100,23 @@ function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, elemLeng
 		parentElem.removeChild(existingElem);
 	}
 	if (child == null) {
-		return setElemLength(key, subkey, elemLengths, false);
+		elemPositionsTree.remove(index, null, subIndex);
+		return;
 	}
 
 	// if the element is already there then replace it
 	if (existingElem) {
 		parentElem.removeChild(existingElem);
 	}
+
+	let leftNeighbor = getLeftNeighbor(index, subIndex, elemPositionsTree, parentElem);
 	if (leftNeighbor) {
 		parentElem.insertBefore(child, leftNeighbor.nextSibling);
 	} else {
 		parentElem.prepend(child);
 	}
-	return setElemLength(key, subkey, elemLengths, true);
+	elemPositionsTree.add(index, null, subIndex);
+	return;
 }
 
 function manageProperties(elem, properties$) {
@@ -139,15 +140,6 @@ function manageProperties(elem, properties$) {
             }
         });
     });
-}
-
-function insertAtPosition(newNode, parentElem, index) {
-	let parentNode = parentElem.parentNode;
-	if (parentElem.childNodes.length >= index) {
-		parentElem.appendChild(newNode);
-	} else {
-		parentNode.insertBefore(newNode, parentElem.childNodes[index - 1].nextSibling);
-	}
 }
 
 export function list(input$, listSelector, renderFunc) {
