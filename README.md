@@ -40,9 +40,9 @@ export const DumbComponent = ({sinks: {store}}) =>
 For long lists there is a helper, that will rerender only changes in an array.
 
 ```js
-export const ListComponent = () =>
+export const ListComponent = ({sinks: {store}}) =>
 	<ul>
-		list(state$, 'items', (item, {selected}) =>
+		list(store.$('items'), 'items', (item, {selected}) =>
 			<li>{item.name} {selected ? '<--' : ''}</li>
 		)
 	</ul>;
