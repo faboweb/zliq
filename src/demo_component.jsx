@@ -16,3 +16,11 @@ export const DumbComponent = ({sinks: {store}}) =>
 // component not interacting with anything -> plain hyperscript
 export const SuperDumbComponent = () =>
 	<p>HELLO WORLD</p>;
+
+// component that has a long list of elements
+export const ListComponent = ({sinks: {store}}) =>
+	<ul>
+		list(store.$('items'), 'items', (item, {selected}) =>
+			<li>{item.name} {selected ? '<--' : ''}</li>
+		)
+	</ul>;
