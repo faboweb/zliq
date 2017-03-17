@@ -38,27 +38,10 @@ function manageChildren(parentElem, children$Arr) {
 							elem: child
 						}
 					});
-					// var frag = document.createDocumentFragment();
-					// while (parentElem.length > 0) {
-					// 	frag.appendChild(parentElem[0]);
-					// }
-					// child.forEach((subChild_, subIndex) => {
-					// 	let leftNeighbor = getLeftNeighbor(index, subIndex, elemLengths, frag);
-					// 	addOrUpdateChild(subChild_, index, subIndex, frag, leftNeighbor, elemLengths);
-					// });
-					// // remove 
-					// while (parentElem.firstChild) {
-					// 	parentElem.removeChild(parentElem.firstChild);
-					// }
-					// parentElem.appendChild(frag);
-					// elemLengths[index] = child.length;
 				} else {
 					changes = [{
 						elem: child
 					}];
-					// elemLengths[index] = child !== null ? 1 : 0;
-					// let leftNeighbor = getLeftNeighbor(index, null, elemLengths, parentElem);
-					// addOrUpdateChild(child, index, null, parentElem, leftNeighbor, elemLengths);
 				}
 				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
 			});
