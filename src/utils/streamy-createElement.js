@@ -108,12 +108,12 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 		children = [children];
 	}
 
+	let visibleIndex = index + (subIndex != null ? subIndex : 0);
 	switch (type) {
 		case 'add':
-			performAdd(children, parentElem, index);
+			performAdd(children, parentElem, visibleIndex);
 			break;
 		case 'set':
-			let visibleIndex = index + (subIndex != null ? subIndex : 0);
 			performSet(children[0], parentElem, visibleIndex);
 			break;
 	}
@@ -209,7 +209,7 @@ export function list(input$, listSelector, renderFunc) {
 				if (type == 'set') {
 					return {
 						type,
-						index: path[0],
+						index,
 						elems: val != null ? [renderFunc(val, inputs)] : null
 					};
 				}
@@ -223,6 +223,16 @@ function listChanges$(arr$) {
 	let oldValue = [];
 	return arr$.map(arr => {
 		let changes = odiff(oldValue, arr);
+		changes = changes.map(change => {
+			// changes in arrays are currently analysed deep
+			// but we only need the changed element
+			if (change.type === 'set' && change.path && typeof change.path[0] === 'number') {
+				let index = change.path[0];
+				change.val = arr[index];
+				change.index = index;
+			}
+			return change;
+		})
 		oldValue = arr;
 		return changes;
 	})
