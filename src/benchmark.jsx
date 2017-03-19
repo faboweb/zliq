@@ -1,7 +1,6 @@
 import { h } from './utils/streamy-hyperscript';
-import { list } from './utils/streamy-createElement';
+import { list } from './utils/streamy-list';
 import { stream, merge$} from './utils/streamy';
-import { render } from './utils/streamy-render';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;
