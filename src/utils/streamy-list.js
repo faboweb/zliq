@@ -1,9 +1,12 @@
 import { stream, merge$} from './streamy';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
+import {Queue, batchAsyncQueue} from './queue';
 var ChangeWorker = require("worker-loader!./change-worker.js");
 
 export function list(input$, listSelector, renderFunc) {
 	let output$ = stream([]);
+	let changeQueue = new Queue();
+	let startTime = new Date();
 	merge$(
 			listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
 			input$.map(value => {
@@ -14,47 +17,53 @@ export function list(input$, listSelector, renderFunc) {
 			})
 				.distinct()
 		)
-		.map(function renderChanges([changes, inputs]) {
-			let renderedChanges = [];
-			processLargeArrayAsync(changes, function renderChange({index, val, vals, type, num, path }) {
-				if (type === 'add') {
-					let renderedAddElems = [];
-					return processLargeArrayAsync(vals, function renderElement(val) { 
-							renderedAddElems.push(renderFunc(val, inputs));
-						}, 100, function onRenderedAddPatially() {
-							if (renderedAddElems.length == 0) {
-								return;
-							}
-							renderedChanges.push({
-								type,
-								index,
-								elems: renderedAddElems,
-							});
-							index += renderedAddElems.length;
-							renderedAddElems = [];
-						});
-				}
-				if (type == 'rm') {
-					renderedChanges.push({
-						type,
-						index,
-						num
-					});
-				}
-				if (type == 'set') {
-					renderedChanges.push({
-						type,
-						index,
-						elems: val != null ? [renderFunc(val, inputs)] : null
-					});
-				}
-			}, 200, function onRenderedBatch() {
-				output$(renderedChanges);
-				renderedChanges = [];
+		.map(([changes, inputs]) => {
+			changeQueue.add(function renderChanges() {
+				let renderedChanges = [];
+				let startTime = now();
+				let rendered$ = stream();
+
+				return batchAsyncQueue(changes.map(change => () => {
+					return renderChange(change, inputs, renderFunc, output$);
+				}));
 			});
 		});
 	output$.IS_CHANGE_STREAM = true;
 	return output$;
+}
+
+function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, batchCallback) {
+	if (type === 'add') {
+		let renderedAddElems = [];
+		let queue = new Queue();
+		let startTime = now();
+		return batchAsyncQueue(vals.map(val => () => {
+			return renderFunc(val, inputs);
+		}), elems => {
+			let partialAdd = {
+				type,
+				index,
+				elems,
+			};
+			index += elems.length;
+			batchCallback([partialAdd]);
+		});
+	}
+	if (type == 'rm') {
+		batchCallback([{
+			type,
+			index,
+			num
+		}]);
+	}
+	if (type == 'set') {
+		batchCallback([{
+			type,
+			index,
+			elems: val != null ? [renderFunc(val, inputs)] : null
+		}]);
+	}
+	return Promise.resolve();
 }
 
 // export function list(input$, listSelector, renderFunc) {
@@ -103,4 +112,8 @@ function listChanges$(arr$) {
 		oldValue = arr;
 	});
 	return changes$;
+}
+			
+function now() {
+	return new Date().getTime();
 }

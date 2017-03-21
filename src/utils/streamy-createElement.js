@@ -26,8 +26,8 @@ function manageChildren(parentElem, children$Arr) {
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
-				if (changes.length) {
-					queue.add((elemLengths) => applyChanges(index, changes, parentElem));
+				if (changes.length > 0) {
+					queue.add(() => applyChanges(index, changes, parentElem));
 				}
 			});
 		} else {
@@ -67,7 +67,9 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	if (type === 'rm') {
 		for(let times = 0; times<num; times++) {
 			let node = parentElem.childNodes[index];
-			parentElem.removeChild(node);
+			if (node != null) {
+				parentElem.removeChild(node);
+			}
 		}
 		return;
 	} else {
