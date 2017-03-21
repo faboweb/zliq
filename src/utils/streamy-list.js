@@ -19,10 +19,6 @@ export function list(input$, listSelector, renderFunc) {
 		)
 		.map(([changes, inputs]) => {
 			changeQueue.add(function renderChanges() {
-				let renderedChanges = [];
-				let startTime = now();
-				let rendered$ = stream();
-
 				return batchAsyncQueue(changes.map(change => () => {
 					return renderChange(change, inputs, renderFunc, output$);
 				}));
@@ -58,7 +54,7 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 	}
 	if (type == 'set') {
 		batchCallback([{
-			type,
+			type: 'add',
 			index,
 			elems: val != null ? [renderFunc(val, inputs)] : null
 		}]);

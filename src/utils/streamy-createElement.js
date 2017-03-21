@@ -20,14 +20,14 @@ export function createElement(tagName, properties$, children$Arr) {
 
 // IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
-	let queue = Queue([]);
+	let changeQueue = Queue([]);
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				if (changes.length > 0) {
-					queue.add(() => applyChanges(index, changes, parentElem));
+					changeQueue.add(() => applyChanges(index, changes, parentElem));
 				}
 			});
 		} else {
@@ -51,7 +51,7 @@ function manageChildren(parentElem, children$Arr) {
 					}];
 					oldChild = child;
 				}
-				queue.add(() => applyChanges(index, changes, parentElem));
+				changeQueue.add(() => applyChanges(index, changes, parentElem));
 			});
 		}
 	});
@@ -92,23 +92,33 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 }
 
 function performAdd(children, parentElem, index) {
-	for(let times = 0; times < children.length; times++) {
-		let existingElem = parentElem.childNodes[index];
-		existingElem && parentElem.removeChild(existingElem);
-	}
-	var frag = document.createDocumentFragment();
-	while (parentElem.childNodes.length > 0) {
-		frag.appendChild(parentElem.childNodes[0]);
-	}
-	let elementAtPosition = parentElem.childNodes[index];
-	children.forEach(child => {
-		if (elementAtPosition == null) {
-			frag.appendChild(child);
-		} else {
-			frag.insertBefore(child, elementAtPosition);
+	let isManyChildrenToAdd = children.length > 10;
+	let formerParent = parentElem.parentElement;
+	requestAnimationFrame(() => {
+		if (isManyChildrenToAdd) {
+			// add rest of children to document fragment to speed up rendering
+			var frag = document.createDocumentFragment();
+			frag.appendChild(parentElem);
+			// remove elemens that will be overwritten
+			for(let times = 0; times < children.length; times++) {
+				let existingElem = parentElem.childNodes[index];
+				existingElem && parentElem.removeChild(existingElem);
+			}
 		}
-	});
-	parentElem.appendChild(frag);
+		// get right border element and insert one after another before this element
+		// index is now on position of insertion as we removed the element from this position before
+		let elementAtPosition = parentElem.childNodes[index];
+		children.forEach(child => {
+			if (elementAtPosition == null) {
+				parentElem.appendChild(child);
+			} else {
+				parentElem.insertBefore(child, elementAtPosition);
+			}
+		});
+		if (formerParent && isManyChildrenToAdd) {
+			formerParent.appendChild(parentElem);
+		}
+	})
 }
 
 

@@ -13,8 +13,8 @@ export function Queue() {
             }
             running = true;
             let fn = queue.shift();
-            let result = fn();
             setImmediate(() => {
+                let result = fn();
                 // enable usage of promises in queue for async behaviour
                 if (result != null && typeof result.then === "function") {
                     result.then(() => run().then(resolve));

@@ -125,6 +125,7 @@ let app =
 		<table className='table table-hover table-striped test-data'>
 			<tbody>
 			{
+				// as array: state$.map(({items, selected}) => items.map(item =>
 				list(state$, 'items', (item, {selected}) =>
 					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
 						<td className='col-md-1'>{item.id}</td>
