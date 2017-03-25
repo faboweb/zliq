@@ -4,7 +4,7 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 
 ### Tech
 
-ZLIQ only uses a only view dependencies:
+ZLIQ only uses a view dependencies:
  - [odiff](https://github.com/Tixit/odiff) to diff arrays
  
 ZLIQ is written with:
