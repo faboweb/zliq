@@ -6,17 +6,14 @@
   "scripts": {
     "test": "mocha-webpack --webpack-config webpack.tests.config.js \"test/**/*.spec.js\"",
     "tdd": "mocha-webpack --webpack-config webpack.tests.config.js --watch \"test/**/*.spec.js\"",
-    "start": "webpack-dev-server --config webpack.config.benchmark.js",
-    "build-prod": "webpack --config webpack.config.benchmark.js"
+    "start": "webpack-dev-server --config webpack.config.js",
+    "build-benchmark": "webpack --config webpack.config.benchmark.js",
+    "build-prod": "npm run build-benchmark"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "deep-diff": "^0.3.4",
-    "deep-equal": "^1.0.1",
-    "easy-promise-queue": "^0.2.1",
-    "promise-queue": "^2.2.3",
-    "virtual-dom": "^2.1.1"
+    "odiff": "0.0.2"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

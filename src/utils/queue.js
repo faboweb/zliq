@@ -1,6 +1,6 @@
 // run a queue that runs while it has members
 // members can be functions or promises
-export function Queue() {
+export function PromiseQueue() {
     var current = Promise.resolve();
 
     return {
@@ -21,8 +21,8 @@ export function Queue() {
     }
 }
 
-export function batchAsyncQueue(queueFnArr, batchCallback, maxTimePerChunk) {
-    let queue = Queue();
+export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk) {
+    let queue = PromiseQueue();
     let results = [];
     maxTimePerChunk = maxTimePerChunk || 200;
     

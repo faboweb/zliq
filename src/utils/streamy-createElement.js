@@ -1,7 +1,6 @@
-import deepEqual from 'deep-equal';
 import odiff from 'odiff';
 import {merge$, stream} from './streamy';
-import {Queue} from './queue';
+import {PromiseQueue} from './queue';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
 
 // js DOM events. add which ones you need
@@ -21,7 +20,7 @@ export function createElement(tagName, properties$, children$Arr) {
 
 // IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
-	let changeQueue = Queue([]);
+	let changeQueue = PromiseQueue([]);
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {

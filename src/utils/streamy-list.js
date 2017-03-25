@@ -1,11 +1,11 @@
 import { stream, merge$} from './streamy';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
-import {Queue, batchAsyncQueue} from './queue';
+import {PromiseQueue, timedBatchProcessing} from './queue';
 var ChangeWorker = require("worker-loader!./change-worker.js");
 
 export function list(input$, listSelector, renderFunc) {
 	let output$ = stream([]);
-	let changeQueue = new Queue();
+	let changeQueue = new PromiseQueue();
 	let startTime = new Date();
 	merge$(
 			listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
@@ -40,9 +40,9 @@ export function list(input$, listSelector, renderFunc) {
 function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, batchCallback) {
 	if (type === 'add') {
 		let renderedAddElems = [];
-		let queue = new Queue();
+		let queue = new PromiseQueue();
 		let startTime = now();
-		return batchAsyncQueue(vals.map(val => () => {
+		return timedBatchProcessing(vals.map(val => () => {
 			return renderFunc(val, inputs);
 		}), elems => {
 			let partialAdd = {
