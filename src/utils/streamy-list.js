@@ -18,10 +18,19 @@ export function list(input$, listSelector, renderFunc) {
 				.distinct()
 		)
 		.map(([changes, inputs]) => {
-			changeQueue.add(function renderChanges() {
-				return batchAsyncQueue(changes.map(change => () => {
-					return renderChange(change, inputs, renderFunc, output$);
-				}));
+			changes.forEach(change => {
+				changeQueue.add(() => {
+					return renderChange(change, inputs, renderFunc, (renderedChange) => {
+						// console.log('outputting rendered change', renderedChange);
+						output$(renderedChange);
+					})
+					// .then(() => {
+					// 	console.log('rendered change', change);
+					// });
+				})
+				// .then(() => {
+				// 	console.log('resolved changes', changes);
+				// })
 			});
 		});
 	output$.IS_CHANGE_STREAM = true;
@@ -43,7 +52,10 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 			};
 			index += elems.length;
 			batchCallback([partialAdd]);
-		});
+		})
+		// .then(() => {
+		// 	console.log('finished rendering add bulk', vals);
+		// });
 	}
 	if (type == 'rm') {
 		batchCallback([{
@@ -52,47 +64,8 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 			num
 		}]);
 	}
-	if (type == 'set') {
-		batchCallback([{
-			type: 'add',
-			index,
-			elems: val != null ? [renderFunc(val, inputs)] : null
-		}]);
-	}
 	return Promise.resolve();
 }
-
-// export function list(input$, listSelector, renderFunc) {
-// 	let output$ = stream([]);
-// 	merge$(
-// 		listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
-// 		input$.map(value => {
-// 			if (value == null) { return null; }
-// 			let copiedValue = Object.assign({}, value);
-// 			delete copiedValue[listSelector];
-// 			return copiedValue;
-// 		})
-// 			.distinct()
-// 	)
-// 	.map(([changes, inputs]) => {
-// 		let chunk = [];
-// 		return processLargeArrayAsync(
-// 			changes, 
-// 			({subIndex, item}) => {
-// 				chunk.push({
-// 					subIndex,
-// 					elem: item != null ? renderFunc(item, inputs) : null
-// 				});
-// 			}, 
-// 			200, 
-// 			() => {
-// 				output$(chunk);
-// 				chunk = [];
-// 			});
-// 	});
-// 	output$.IS_CHANGE_STREAM = true;
-// 	return output$;
-// }
 
 // calculate the difference in the array
 // do the calculation in a worker to not block UI-thread

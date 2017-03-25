@@ -1,36 +1,22 @@
 // run a queue that runs while it has members
 // members can be functions or promises
 export function Queue() {
-    let running = false;
-    let queue = [];
-
-    function run() {
-        return new Promise((resolve, reject) => {
-            if (queue.length < 1) {
-                running = false;
-                resolve();
-                return;
-            }
-            running = true;
-            let fn = queue.shift();
-            setImmediate(() => {
-                let result = fn();
-                // enable usage of promises in queue for async behaviour
-                if (result != null && typeof result.then === "function") {
-                    result.then(() => run().then(resolve));
-                } else {
-                    run().then(resolve);
-                }
-            });
-        })
-    }
+    var current = Promise.resolve();
 
     return {
         add: (fn) => {
-            queue.push(fn);
-            if (!running) {
-                run();
-            }
+            current = current.then(() => {
+                return new Promise((_resolve_, _reject_) => {
+                    let result = fn();
+                    // enable usage of promises in queue for async behaviour
+                    if (result != null && typeof result.then === "function") {
+                        result.then(_resolve_);
+                    } else {
+                        setImmediate(_resolve_)
+                    }
+                })
+            });
+            return current;
         }
     }
 }
@@ -41,27 +27,24 @@ export function batchAsyncQueue(queueFnArr, batchCallback, maxTimePerChunk) {
     maxTimePerChunk = maxTimePerChunk || 200;
     
     let startTime = now();
-    return new Promise((resolve, reject) => {
-        queueFnArr.forEach(fn => {
-            queue.add(() => {
-                if ((now() - startTime) > maxTimePerChunk) {
-                    startTime = now();
-                    batchCallback && batchCallback(results);
-                    results = [];
-                }
-                if (typeof fn.then === 'function') {
-                    return fn.then(partial => results.concat(fn))
-                }
-                results.push(fn());
-            })
-        });
+    queueFnArr.forEach(fn => {
         queue.add(() => {
-            if (results.length > 0) {
+            if ((now() - startTime) > maxTimePerChunk) {
+                startTime = now();
                 batchCallback && batchCallback(results);
+                results = [];
             }
-            resolve();
-        });
-    })
+            if (typeof fn.then === 'function') {
+                return fn.then(partial => results = results.concat(fn))
+            }
+            results = results.concat(fn());
+        })
+    });
+    return queue.add(() => {
+        if (results.length > 0) {
+            batchCallback && batchCallback(results);
+        }
+    });
 } 
 			
 function now() {

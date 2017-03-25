@@ -4,6 +4,7 @@ import {merge$, stream} from './streamy';
 import {Queue} from './queue';
 import {processLargeArrayAsync, iterateAsync} from './array-utils';
 
+// js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
     'ondblclick'
@@ -26,9 +27,9 @@ function manageChildren(parentElem, children$Arr) {
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
-				if (changes.length > 0) {
-					changeQueue.add(() => applyChanges(index, changes, parentElem));
-				}
+				changes.forEach(({ index:subIndex, elems, type, num }) => {
+					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+				});
 			});
 		} else {
 			let oldChilds = [];
@@ -51,19 +52,16 @@ function manageChildren(parentElem, children$Arr) {
 					}];
 					oldChild = child;
 				}
-				changeQueue.add(() => applyChanges(index, changes, parentElem));
+				changes.forEach(({ index:subIndex, elems, type, num }) => {
+					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+				});
 			});
 		}
 	});
 }
 
-function applyChanges(index, changes, parentElem) {
-	changes.forEach(({ index:subIndex, elems, type, num }) => {
-		updateDOMforChild(elems, index, subIndex, type, num, parentElem);
-	});
-}
-
 function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
+	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
 	if (type === 'rm') {
 		for(let times = 0; times<num; times++) {
 			let node = parentElem.childNodes[index];
@@ -71,7 +69,7 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 				parentElem.removeChild(node);
 			}
 		}
-		return;
+		return Promise.resolve();
 	} else {
 		if (children == null 
 			|| (children.length != null && (typeof children[0] === 'string' || typeof children[0] === 'number'))) {
@@ -82,43 +80,31 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	let visibleIndex = index + (subIndex != null ? subIndex : 0);
 	switch (type) {
 		case 'add':
-			performAdd(children, parentElem, visibleIndex);
+			return performAdd(children, parentElem, visibleIndex);
 			break;
 		case 'set':
 			performSet(children[0], parentElem, visibleIndex);
 			break;
 	}
-	return;
+	return Promise.resolve();
 }
 
 function performAdd(children, parentElem, index) {
-	let isManyChildrenToAdd = children.length > 10;
-	let formerParent = parentElem.parentElement;
-	requestAnimationFrame(() => {
-		if (isManyChildrenToAdd) {
-			// add rest of children to document fragment to speed up rendering
-			var frag = document.createDocumentFragment();
-			frag.appendChild(parentElem);
-			// remove elemens that will be overwritten
-			for(let times = 0; times < children.length; times++) {
-				let existingElem = parentElem.childNodes[index];
-				existingElem && parentElem.removeChild(existingElem);
-			}
-		}
-		// get right border element and insert one after another before this element
-		// index is now on position of insertion as we removed the element from this position before
-		let elementAtPosition = parentElem.childNodes[index];
-		children.forEach(child => {
-			if (elementAtPosition == null) {
-				parentElem.appendChild(child);
-			} else {
-				parentElem.insertBefore(child, elementAtPosition);
-			}
-		});
-		if (formerParent && isManyChildrenToAdd) {
-			formerParent.appendChild(parentElem);
-		}
-	})
+	return new Promise((resolve, reject) => {
+		requestAnimationFrame(() => {
+			// get right border element and insert one after another before this element
+			// index is now on position of insertion as we removed the element from this position before
+			let elementAtPosition = parentElem.childNodes[index];
+			children.forEach(child => {
+				if (elementAtPosition == null) {
+					parentElem.appendChild(child);
+				} else {
+					parentElem.insertBefore(child, elementAtPosition);
+				}
+			});
+			resolve();
+		})
+	});
 }
 
 

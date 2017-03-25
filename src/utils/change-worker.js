@@ -11,6 +11,8 @@ onmessage = function({data: {
             let index = change.path[0];
             change.val = newArr[index];
             change.index = index;
+            // we interprete set like add to reduce complexity
+            change.type === 'add';
         }
         return change;
     });
