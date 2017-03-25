@@ -21,6 +21,8 @@ export function PromiseQueue() {
     }
 }
 
+// collect the results from running a set of functions one after another
+// call a functions with the results until the end of a certain timeframe
 export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk) {
     let queue = PromiseQueue();
     let results = [];

@@ -147,7 +147,7 @@ function manageProperties(elem, properties$) {
                 let eventName = property.substr(2);
                 elem.removeEventListener(eventName, value);
                 elem.addEventListener(eventName, value);
-            } else if (property === 'class') {
+            } else if (property === 'class' || property.toLowerCase() === 'classname') {
                 elem.className = value;
             } else if (property === 'style') {
                 Object.assign(elem.style, value);
