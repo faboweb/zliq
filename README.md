@@ -5,7 +5,7 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 ### Tech
 
 ZLIQ only uses a only view dependencies:
- - [deep-equal](https://github.com/substack/node-deep-equal) to diff states
+ - [odiff](https://github.com/Tixit/odiff) to diff arrays
  
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
@@ -16,7 +16,7 @@ ZLIQ is written with:
 ZLIQ implementes itself in a slim way:
  - streams
  - redux
- - dom rendering and updates for streams
+ - change based rendering
 
 ### How It Works
 

@@ -4,7 +4,7 @@ import './demo_component.scss';
 
 // component returning a stream
 export const CleverComponent = ({sinks: {store}}) => {
-	return store.$('clicks.clicks').flatMap(clicks => {
+	return store.$('clicks.clicks').map(clicks => {
 		return <div>Clicks again {clicks}</div>;
 	});
 };
@@ -16,3 +16,11 @@ export const DumbComponent = ({sinks: {store}}) =>
 // component not interacting with anything -> plain hyperscript
 export const SuperDumbComponent = () =>
 	<p>HELLO WORLD</p>;
+
+// component that has a long list of elements
+export const ListComponent = ({sinks: {store}}) =>
+	<ul>
+		list(store.$('items'), 'items', (item, {selected}) =>
+			<li>{item.name} {selected ? '<--' : ''}</li>
+		)
+	</ul>;

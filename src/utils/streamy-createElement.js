@@ -1,6 +1,9 @@
-import {merge$} from './streamy';
-import deepEqual from 'deep-equal';
+import odiff from 'odiff';
+import {merge$, stream} from './streamy';
+import {PromiseQueue} from './queue';
+import {processLargeArrayAsync, iterateAsync} from './array-utils';
 
+// js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
     'ondblclick'
@@ -17,105 +20,120 @@ export function createElement(tagName, properties$, children$Arr) {
 
 // IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
+	let changeQueue = PromiseQueue([]);
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
-	let elemLengths = [];
 	children$Arr.map((child$, index) => {
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
-				if (changes.length) {
-					elemLengths = applyChanges(index, changes, parentElem, elemLengths);
-				}
+				changes.forEach(({ index:subIndex, elems, type, num }) => {
+					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+				});
 			});
 		} else {
+			let oldChilds = [];
+			let oldChild = null;
 			child$.map(child => {
 				let changes;
 				// streams can return arrays of children
 				if (Array.isArray(child)) {
-					changes = child.map((child, subIndex) => {
-						return {
-							subIndex,
-							elem: child
-						}
-					});
+					changes = odiff(oldChilds, child);
+					oldChilds = child;
 				} else {
+					if (oldChild == null && child == null) return;
+
 					changes = [{
-						elem: child
+						index: 0,
+						type: oldChild != null && child == null ? 'rm' 
+							: oldChild == null && child != null ? 'add' 
+							: 'set',
+						elems: [child]
 					}];
+					oldChild = child;
 				}
-				elemLengths = applyChanges(index, changes, parentElem, elemLengths);
+				changes.forEach(({ index:subIndex, elems, type, num }) => {
+					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+				});
 			});
 		}
 	});
 }
 
-// changes: [{index, elem}]
-function applyChanges(index, changes, parentElem, elemLengths) {
-	var outputElemLengths = [].concat(elemLengths);
-	var frag = document.createDocumentFragment();
-	while (parentElem.childNodes.length > 0) {
-		frag.appendChild(parentElem.childNodes[0]);
-	}
-	changes.forEach(({ subIndex, elem }) => {
-		let leftNeighbor = getLeftNeighbor(index, subIndex, outputElemLengths, frag);
-		outputElemLengths = addOrUpdateChild(elem, index, subIndex, frag, leftNeighbor, outputElemLengths);
-	});
-	parentElem.appendChild(frag);
-	// outputElemLengths[index] = parentElem.childNodes.length;
-	return outputElemLengths;
-}
-
-function getLeftNeighbor(index, subIndex, elemLengths, parentElem) {
-	subIndex = subIndex || 0;
-	if (index === 0 && subIndex === 0) return null;
-	let leftElemRelativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + cur, 0) -1;
-	return parentElem.childNodes[leftElemRelativePos + subIndex];
-}
-
-function getExistingElem(index, subIndex, elemLengths, parentElem) {
-	// add all lengths before the index to get the position of the searched elem
-	let relativePos = elemLengths.reduce((sum, cur, _index_) => _index_ >= index ? sum :  sum + (cur.length || cur), 0);
-	let relativeSubPos = subIndex && Array.isArray(elemLengths[index]) 
-		? elemLengths[index].reduce((sum, cur, _index_) => _index_ >= subIndex ? sum :  sum + cur, 0)
-		: 0;
-	return parentElem.childNodes[relativePos + relativeSubPos];
-}
-
-function addOrUpdateChild(child, key, subkey, parentElem, leftNeighbor, elemLengths) {
-	let existingElem = getExistingElem(key, subkey, elemLengths, parentElem);
-
-	function setElemLength(key, subkey, elemLengths, hasChild) {
-		let outputElemLengths = [].concat(elemLengths);
-		if (subkey != null) {
-			if (outputElemLengths[key] == null) {
-				outputElemLengths[key] = [];
+function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
+	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
+	if (type === 'rm') {
+		for(let times = 0; times<num; times++) {
+			let node = parentElem.childNodes[index];
+			if (node != null) {
+				parentElem.removeChild(node);
 			}
-			outputElemLengths[key][subkey] = hasChild ? 1 : 0;
-		} else {
-			outputElemLengths[key] = hasChild ? 1 : 0;
 		}
-		return outputElemLengths;
-	}
-
-	// if the child was there but got removed
-	// we need to remove the elem
-	if (existingElem && child === null) {
-		parentElem.removeChild(existingElem);
-	}
-	if (child == null) {
-		return setElemLength(key, subkey, elemLengths, false);
-	}
-
-	// if the element is already there then replace it
-	if (existingElem) {
-		parentElem.removeChild(existingElem);
-	}
-	if (leftNeighbor) {
-		parentElem.insertBefore(child, leftNeighbor.nextSibling);
+		return Promise.resolve();
 	} else {
-		parentElem.prepend(child);
+		if (children == null 
+			|| (children.length != null && (typeof children[0] === 'string' || typeof children[0] === 'number'))) {
+			children = [document.createTextNode(children)];
+		}
 	}
-	return setElemLength(key, subkey, elemLengths, true);
+
+	let visibleIndex = index + (subIndex != null ? subIndex : 0);
+	switch (type) {
+		case 'add':
+			return performAdd(children, parentElem, visibleIndex);
+			break;
+		case 'set':
+			performSet(children[0], parentElem, visibleIndex);
+			break;
+	}
+	return Promise.resolve();
+}
+
+function performAdd(children, parentElem, index) {
+	return new Promise((resolve, reject) => {
+		function addElement() {
+			// get right border element and insert one after another before this element
+			// index is now on position of insertion as we removed the element from this position before
+			let elementAtPosition = parentElem.childNodes[index];
+			children.forEach(child => {
+				if (elementAtPosition == null) {
+					parentElem.appendChild(child);
+				} else {
+					parentElem.insertBefore(child, elementAtPosition);
+				}
+			});
+			resolve();
+		}
+
+		// only request an animation frame for inserts of many elements
+		// let the browser handle querying of insertion of single elements
+		if (children.length > 5) {
+			requestAnimationFrame(addElement);
+		} else {
+			addElement();
+		}
+	});
+}
+
+
+function performSet(child, parentElem, index) {
+	let elementAtPosition = parentElem.childNodes[index];
+	let nextElement = elementAtPosition ? elementAtPosition.nextSibling : null;
+	if (child == null) {
+		if (elementAtPosition != null) {
+			parentElem.removeChild(elementAtPosition);
+		}
+		return;
+	}
+	if (elementAtPosition == null) {
+		parentElem.appendChild(child)
+	} else {
+		parentElem.removeChild(elementAtPosition);
+		if (nextElement == null) {
+			parentElem.appendChild(child)
+		} else {
+			nextElement.parentNode.insertBefore(child, nextElement);
+		}
+	}
 }
 
 function manageProperties(elem, properties$) {
@@ -139,54 +157,4 @@ function manageProperties(elem, properties$) {
             }
         });
     });
-}
-
-function insertAtPosition(newNode, parentElem, index) {
-	let parentNode = parentElem.parentNode;
-	if (parentElem.childNodes.length >= index) {
-		parentElem.appendChild(newNode);
-	} else {
-		parentNode.insertBefore(newNode, parentElem.childNodes[index - 1].nextSibling);
-	}
-}
-
-export function list(input$, listSelector, renderFunc) {
-	let output$ = merge$(
-			listChanges$(input$.map(value => value != null ? value[listSelector] : null)),
-			input$.map(value => {
-				if (value == null) { return null; }
-				let copiedValue = Object.assign({}, value);
-				delete copiedValue[listSelector];
-				return copiedValue;
-			})
-				.distinct()
-		)
-		.map(([changes, inputs]) => {
-			return changes.map(({subIndex, item}) => {
-				return {
-					subIndex,
-					elem: item != null ? renderFunc(item, inputs) : null
-				};
-			});
-		});
-	output$.IS_CHANGE_STREAM = true;
-	return output$;
-}
-
-function listChanges$(arr$) {
-	let oldValue = [];
-	return arr$.map(arr => {
-		let totalLength = arr.length > oldValue.length ? arr.length : oldValue.length;
-		let changes = [];
-		for (let index = 0; index < totalLength; index++) {
-			if (!deepEqual(arr[index], oldValue[index])) {
-				changes.push({
-					subIndex: index,
-					item: arr[index]
-				});
-			}
-		}
-		oldValue = arr;
-		return changes;
-	})
 }

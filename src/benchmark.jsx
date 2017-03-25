@@ -1,7 +1,6 @@
 import { h } from './utils/streamy-hyperscript';
-import { list } from './utils/streamy-createElement';
+import { list } from './utils/streamy-list';
 import { stream, merge$} from './utils/streamy';
-import { render } from './utils/streamy-render';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;
@@ -126,6 +125,7 @@ let app =
 		<table className='table table-hover table-striped test-data'>
 			<tbody>
 			{
+				// as array: state$.map(({items, selected}) => items.map(item =>
 				list(state$, 'items', (item, {selected}) =>
 					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
 						<td className='col-md-1'>{item.id}</td>
