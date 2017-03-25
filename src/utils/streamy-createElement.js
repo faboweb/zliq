@@ -91,7 +91,7 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 
 function performAdd(children, parentElem, index) {
 	return new Promise((resolve, reject) => {
-		requestAnimationFrame(() => {
+		function addElement() {
 			// get right border element and insert one after another before this element
 			// index is now on position of insertion as we removed the element from this position before
 			let elementAtPosition = parentElem.childNodes[index];
@@ -103,7 +103,15 @@ function performAdd(children, parentElem, index) {
 				}
 			});
 			resolve();
-		})
+		}
+
+		// only request an animation frame for inserts of many elements
+		// let the browser handle querying of insertion of single elements
+		if (children.length > 5) {
+			requestAnimationFrame(addElement);
+		} else {
+			addElement();
+		}
 	});
 }
 
