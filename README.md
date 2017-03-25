@@ -1,11 +1,15 @@
 # ZLIQ
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on virtual-dom, redux, reactive-streams.
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering.
 
 ### Tech
 
 ZLIQ only uses a only view dependencies:
+<<<<<<< HEAD
  - [odiff](https://github.com/Tixit/odiff) to diff arrays
+=======
+ - [deep-equal](https://github.com/substack/node-deep-equal) to diff states
+>>>>>>> master
  
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
@@ -16,11 +20,15 @@ ZLIQ is written with:
 ZLIQ implementes itself in a slim way:
  - streams
  - redux
+<<<<<<< HEAD
  - change based rendering
+=======
+ - dom rendering and updates for streams
+>>>>>>> master
 
 ### How It Works
 
-Every component is a function returning a stream of vdom-nodes! 
+Every component is a function returning a stream of dom elements! Changes will trigger a rerender of the element and pass it to the stream. 
 
 ```js
 export const CleverComponent = ({sinks: {store}}) => {
@@ -30,14 +38,25 @@ export const CleverComponent = ({sinks: {store}}) => {
 };
 ```
 
-You can also just return a vdom-node. ZLIQ will wrap it in a stream for you.
+You can also just return a dom element (written in jsx). ZLIQ will wrap it in a stream for you.
 
 ```js
 export const DumbComponent = ({sinks: {store}}) =>
 	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
 ```
 
-Please check out 'src/demo_app.jsx' if you want to see, how an application is set up.
+For long lists there is a helper, that will rerender only changes in an array.
+
+```js
+export const ListComponent = ({sinks: {store}}) =>
+	<ul>
+		list(store.$('items'), 'items', (item, {selected}) =>
+			<li>{item.name} {selected ? '<--' : ''}</li>
+		)
+	</ul>;
+```
+
+Please check out 'src/demo_app.jsx' if you want to see how an application is set up.
 
 ### Development
 
@@ -51,6 +70,7 @@ $ npm start
 
  - Refactor to make easier to understand
  - Make NPM Module
+ - Add optional router
 
 License
 ----
