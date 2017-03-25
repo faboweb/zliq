@@ -1,5 +1,4 @@
 import deepEqual from 'deep-equal';
-import {replace} from './array-utils';
 
 /*
 * stream constructor

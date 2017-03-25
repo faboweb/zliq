@@ -1,7 +1,6 @@
 import odiff from 'odiff';
 import {merge$, stream} from './streamy';
-import {PromiseQueue} from './queue';
-import {processLargeArrayAsync, iterateAsync} from './array-utils';
+import {PromiseQueue} from './promise-queue';
 
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [

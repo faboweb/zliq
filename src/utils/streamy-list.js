@@ -1,6 +1,5 @@
 import { stream, merge$} from './streamy';
-import {processLargeArrayAsync, iterateAsync} from './array-utils';
-import {PromiseQueue, timedBatchProcessing} from './queue';
+import {PromiseQueue, timedBatchProcessing} from './promise-queue';
 var ChangeWorker = require("worker-loader!./change-worker.js");
 
 export function list(input$, listSelector, renderFunc) {
