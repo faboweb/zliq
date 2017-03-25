@@ -18,7 +18,7 @@ ZLIQ implementes itself in a slim way:
  - redux
  - change based rendering
 
-### How It Works (deprecated)
+### How It Works
 
 Every component is a function returning a stream of vdom-nodes! 
 
