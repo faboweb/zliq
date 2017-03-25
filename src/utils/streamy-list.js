@@ -20,9 +20,9 @@ export function list(input$, listSelector, renderFunc) {
 		.map(([changes, inputs]) => {
 			changes.forEach(change => {
 				changeQueue.add(() => {
-					return renderChange(change, inputs, renderFunc, (renderedChange) => {
+					return renderChange(change, inputs, renderFunc, (partialRenderedChange) => {
 						// console.log('outputting rendered change', renderedChange);
-						output$(renderedChange);
+						output$(partialRenderedChange);
 					})
 					// .then(() => {
 					// 	console.log('rendered change', change);
@@ -56,6 +56,13 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 		// .then(() => {
 		// 	console.log('finished rendering add bulk', vals);
 		// });
+	}
+	if (type == 'set') {
+		batchCallback([{
+			type,
+			index,
+			elems: [renderFunc(val, inputs)]
+		}]);
 	}
 	if (type == 'rm') {
 		batchCallback([{
