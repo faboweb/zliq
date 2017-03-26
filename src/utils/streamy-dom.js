@@ -75,16 +75,15 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 		}
 	}
 
-	let visibleIndex = index + (subIndex != null ? subIndex : 0);
-	switch (type) {
-		case 'add':
-			return performAdd(children, parentElem, visibleIndex);
-			break;
-		case 'set':
-			performSet(children[0], parentElem, visibleIndex);
-			break;
+	if (type === 'add') {
+		let visibleIndex = index + (subIndex != null ? subIndex : 0);
+		return performAdd(children, parentElem, visibleIndex);
 	}
-	return Promise.resolve();
+
+	if (type === 'set') {
+		performSet(children, index, subIndex, parentElem);
+		return Promise.resolve();
+	}
 }
 
 function performAdd(children, parentElem, index) {
@@ -114,7 +113,36 @@ function performAdd(children, parentElem, index) {
 }
 
 
-function performSet(child, parentElem, index) {
+function performSet(children, index, subIndexArr, parentElem) {
+	return new Promise((resolve, reject) => {
+		if (!Array.isArray(children)) {
+			children = [children];
+		}
+		if (!Array.isArray(subIndexArr)) {
+			subIndexArr = [subIndexArr];
+		}
+		function setElement() {
+			children.forEach((child, childIndex) => {
+				let subIndex = subIndexArr[childIndex];
+				let visibleIndex = index + (subIndex != null ? subIndex : 0);
+				let elementAtPosition = parentElem.childNodes[visibleIndex];
+				if (elementAtPosition == null) {
+					parentElem.appendChild(child);
+				} else {
+					parentElem.replaceChild(child, elementAtPosition);
+				}
+			});
+			resolve();
+		}
+
+		// only request an animation frame for inserts of many elements
+		// let the browser handle querying of insertion of single elements
+		if (children.length > 5) {
+			requestAnimationFrame(setElement);
+		} else {
+			setElement();
+		}
+	});
 	let elementAtPosition = parentElem.childNodes[index];
 	let nextElement = elementAtPosition ? elementAtPosition.nextSibling : null;
 	if (child == null) {

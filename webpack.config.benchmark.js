@@ -4,6 +4,7 @@ var path = require('path');
 module.exports = {
     entry: './src/benchmark.jsx',
     output: {
+		path: __dirname + "/benchmark",
         filename: 'benchmark.js'
     },
     module: {
@@ -24,6 +25,7 @@ module.exports = {
         }]
     },
     devServer: {
+        contentBase: path.join(__dirname, "benchmark"),
         compress: true,
         port: 8080
     }

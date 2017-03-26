@@ -37,31 +37,24 @@ export function list(input$, listSelector, renderFunc) {
 }
 
 function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, batchCallback) {
-	if (type === 'add') {
+	if (type === 'add' || type === 'set') {
 		let renderedAddElems = [];
 		let queue = new PromiseQueue();
 		let startTime = now();
 		return timedBatchProcessing(vals.map(val => () => {
 			return renderFunc(val, inputs);
 		}), elems => {
-			let partialAdd = {
+			let partialChange = {
 				type,
 				index,
 				elems,
 			};
 			index += elems.length;
-			batchCallback([partialAdd]);
+			batchCallback([partialChange]);
 		})
 		// .then(() => {
 		// 	console.log('finished rendering add bulk', vals);
 		// });
-	}
-	if (type == 'set') {
-		batchCallback([{
-			type,
-			index,
-			elems: [renderFunc(val, inputs)]
-		}]);
 	}
 	if (type == 'rm') {
 		batchCallback([{
