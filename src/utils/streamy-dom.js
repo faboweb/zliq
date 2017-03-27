@@ -23,6 +23,7 @@ function manageChildren(parentElem, children$Arr) {
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {
+		// TODO get rid of IS_CHANGE_STREAM flag
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				changes.forEach(({ index:subIndex, elems, type, num }) => {
@@ -36,7 +37,11 @@ function manageChildren(parentElem, children$Arr) {
 				let changes;
 				// streams can return arrays of children
 				if (Array.isArray(child)) {
-					changes = odiff(oldChilds, child);
+					changes = odiff(oldChilds, child).map(change => {
+						change.elems = change.vals;
+						delete change.vals;
+						return change;
+					});
 					oldChilds = child;
 				} else {
 					if (oldChild == null && child == null) return;

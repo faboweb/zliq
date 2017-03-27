@@ -3,12 +3,15 @@ import { reduxy } from './utils/reduxy';
 import { easyFetch } from './utils/fetch-helper';
 import { stream, merge$} from './utils/streamy';
 import { clicks, CLICK } from './reducers/clicks';
+import { routerReducer, initRouter, Router } from './reducers/router';
 import { CleverComponent, DumbComponent, SuperDumbComponent } from './demo_component.jsx';
 
 // create the store providing reducers
 let store = reduxy({
-	clicks
+	clicks,
+	router: routerReducer
 });
+initRouter(store);
 
 // main render function for the application
 // render provided hyperscript into a parent element
@@ -26,6 +29,14 @@ let app =
 		<hr />
 		<CleverComponent sinks={{store}} />
 		<DumbComponent sinks={{store}} />
+		<hr />
+		<h4>Router:</h4>
+		<a href='/places?place=2'>go places</a>
+		{
+			<Router store={store} route={'/places'}>
+				<p>You are at place {store.$('router.params.place')}</p>
+			</Router>
+		}
 	</div>
 ;
 document.querySelector('app').appendChild(app);
