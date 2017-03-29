@@ -1,4 +1,4 @@
-import { h } from './utils/streamy-hyperscript';
+import { h, list } from './utils';
 import { SUBTRACKED } from './reducers/clicks';
 import './demo_component.scss';
 
@@ -20,8 +20,10 @@ export const SuperDumbComponent = () =>
 
 // component that has a long list of elements
 export const ListComponent = ({sinks: {store}}) =>
-	<ul>
-		list(store.$('items'), 'items', (item, {selected}) =>
-			<li>{item.name} {selected ? '<--' : ''}</li>
-		)
+	<ul> 
+		{
+			list(store.$('items'), 'items', (item, {selected}) =>
+				<li>{item.name} {selected ? 'X' : ''}</li>
+			)
+		}
 	</ul>;

@@ -1,5 +1,5 @@
 import { h, stream, list } from '../src';
-import { CleverComponent, DumbComponent, SuperDumbComponent } from '../src/demo_component.jsx';
+import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } from '../src/demo_component.jsx';
 // import chai, { expect } from 'chai';
 import assert from 'assert';
 import { mockStore } from './helpers/mockStore';
@@ -47,15 +47,21 @@ describe('Components', () => {
 
 	it('should render a long array fast', (done) => {
 		var arr = [];
-		var length = 500;
+		var length = 200;
 		for (let i = 0; i < length; i++) {
-			arr.push(i);
+			arr.push({ name: i });
 		}
-		let listElem = h('ul', null, [ list(stream({arr}), 'arr', () =>
-			h('li', null, ['This element is empty'])) ]);
+		let store = mockStore({ items: { items: arr, selected: arr[50] }});
+		let listElem = ListComponent({sinks: { store }});
+		// it should render iteratively for a better user expirience
+		setTimeout(() => {
+			var curLength = listElem.querySelectorAll('li').length;
+			assert.ok(curLength > 0 && curLength < length);
+		}, 500);
 		setTimeout(() => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
+			assert.equal(listElem.querySelectorAll('li')[50].outerHTML, '<li>50 X</li>');
 			done();
-		}, 1500);
-	}).timeout(5000);
+		}, 700);
+	}).timeout(1000);
 });

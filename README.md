@@ -44,10 +44,12 @@ For long lists there is a helper, that will rerender only changes in an array.
 
 ```js
 export const ListComponent = ({sinks: {store}}) =>
-	<ul>
-		list(store.$('items'), 'items', (item, {selected}) =>
-			<li>{item.name} {selected ? '<--' : ''}</li>
-		)
+	<ul> 
+		{
+			list(store.$('items'), 'items', (item, {selected}) =>
+				<li>{item.name} {selected ? '<--' : ''}</li>
+			)
+		}
 	</ul>;
 ```
 
@@ -63,9 +65,9 @@ $ npm start
 
 ### Todos
 
- - Refactor to make easier to understand
+ - Refactor to make easier to understand (need reviewers)
  - Make NPM Module
- - Add optional router
+ - Create some callbacks for rendering life cycle
 
 License
 ----
