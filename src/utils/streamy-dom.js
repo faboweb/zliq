@@ -65,6 +65,7 @@ function manageChildren(parentElem, children$Arr) {
 */
 function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
+	// remove all the elements starting from a certain index
 	if (type === 'rm') {
 		for(let times = 0; times<num; times++) {
 			let node = parentElem.childNodes[index];
@@ -74,6 +75,7 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 		}
 		return Promise.resolve();
 	} else {
+		// make sure children are document nodes 
 		if (children == null 
 			|| (children.length != null && (typeof children[0] === 'string' || typeof children[0] === 'number'))) {
 			children = [document.createTextNode(children)];

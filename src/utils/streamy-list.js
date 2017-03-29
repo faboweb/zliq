@@ -81,7 +81,7 @@ function listChanges$(arr$) {
 	});
 	return changes$;
 }
-			
+		
 function now() {
 	return new Date().getTime();
 }
