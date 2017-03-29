@@ -8,8 +8,6 @@ const DOM_EVENT_LISTENERS = [
     'ondblclick'
 ];
 
-// TODO custom rendering for classes and styles
-
 export function createElement(tagName, properties$, children$Arr) {
     let elem = document.createElement(tagName);
     manageProperties(elem, properties$)
@@ -17,7 +15,6 @@ export function createElement(tagName, properties$, children$Arr) {
     return elem;
 }
 
-// IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
 	// array to store the actual count of elements in one virtual elem
@@ -63,6 +60,9 @@ function manageChildren(parentElem, children$Arr) {
 	});
 }
 
+/*
+* perform the actual manipulation on the parentElem
+*/
 function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
 	if (type === 'rm') {
@@ -116,7 +116,6 @@ function performAdd(children, parentElem, index) {
 		}
 	});
 }
-
 
 function performSet(children, index, subIndexArr, parentElem) {
 	return new Promise((resolve, reject) => {
