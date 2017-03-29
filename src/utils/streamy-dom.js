@@ -8,8 +8,6 @@ const DOM_EVENT_LISTENERS = [
     'ondblclick'
 ];
 
-// TODO custom rendering for classes and styles
-
 export function createElement(tagName, properties$, children$Arr) {
     let elem = document.createElement(tagName);
     manageProperties(elem, properties$)
@@ -17,12 +15,12 @@ export function createElement(tagName, properties$, children$Arr) {
     return elem;
 }
 
-// IDEA add request animation frame and only update when animating
 function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {
+		// TODO get rid of IS_CHANGE_STREAM flag
 		if (child$.IS_CHANGE_STREAM) {
 			child$.map(changes => {
 				changes.forEach(({ index:subIndex, elems, type, num }) => {
@@ -36,7 +34,11 @@ function manageChildren(parentElem, children$Arr) {
 				let changes;
 				// streams can return arrays of children
 				if (Array.isArray(child)) {
-					changes = odiff(oldChilds, child);
+					changes = odiff(oldChilds, child).map(change => {
+						change.elems = change.vals;
+						delete change.vals;
+						return change;
+					});
 					oldChilds = child;
 				} else {
 					if (oldChild == null && child == null) return;
@@ -58,8 +60,12 @@ function manageChildren(parentElem, children$Arr) {
 	});
 }
 
+/*
+* perform the actual manipulation on the parentElem
+*/
 function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
+	// remove all the elements starting from a certain index
 	if (type === 'rm') {
 		for(let times = 0; times<num; times++) {
 			let node = parentElem.childNodes[index];
@@ -69,6 +75,7 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 		}
 		return Promise.resolve();
 	} else {
+		// make sure children are document nodes 
 		if (children == null 
 			|| (children.length != null && (typeof children[0] === 'string' || typeof children[0] === 'number'))) {
 			children = [document.createTextNode(children)];
@@ -111,7 +118,6 @@ function performAdd(children, parentElem, index) {
 		}
 	});
 }
-
 
 function performSet(children, index, subIndexArr, parentElem) {
 	return new Promise((resolve, reject) => {

@@ -4,8 +4,9 @@ import './demo_component.scss';
 
 // component returning a stream
 export const CleverComponent = ({sinks: {store}}) => {
-	return store.$('clicks.clicks').map(clicks => {
-		return <div>Clicks again {clicks}</div>;
+	let clicksTimes2 = store.$('clicks.clicks').map(clicks => clicks * 2);
+	return clicksTimes2.map(clicks => {
+		return <div>Clicks time 2: {clicks}</div>;
 	});
 };
 

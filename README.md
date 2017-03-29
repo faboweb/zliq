@@ -1,6 +1,6 @@
 # ZLIQ
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering.
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~650 March 2017).
 
 ### Live
 [Test Online](https://cleaner-tortoise-23337.netlify.com/)
@@ -23,7 +23,14 @@ ZLIQ implementes itself in a slim way:
 
 ### How It Works
 
-Every component is a function returning a stream of dom elements! Changes will trigger a rerender of the element and pass it to the stream. 
+Every component is a function returning a dom element (written in jsx)! Changes will trigger a rerender of that element. 
+
+```js
+export const DumbComponent = ({sinks: {store}}) =>
+	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
+```
+
+You can also return a stream of dom elements. ZLIQ will wrap children anyway in streams.
 
 ```js
 export const CleverComponent = ({sinks: {store}}) => {
@@ -31,13 +38,6 @@ export const CleverComponent = ({sinks: {store}}) => {
 		return <div>Clicks again {clicks}</div>;
 	});
 };
-```
-
-You can also just return a dom element (written in jsx). ZLIQ will wrap it in a stream for you.
-
-```js
-export const DumbComponent = ({sinks: {store}}) =>
-	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
 ```
 
 For long lists there is a helper, that will rerender only changes in an array.
