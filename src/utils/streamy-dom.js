@@ -88,8 +88,7 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 	}
 
 	if (type === 'set') {
-		performSet(children, index, subIndex, parentElem);
-		return Promise.resolve();
+		return performSet(children, index, subIndex, parentElem);
 	}
 }
 

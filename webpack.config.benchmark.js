@@ -3,6 +3,7 @@ var path = require('path');
 
 module.exports = {
     entry: './src/benchmark.jsx',
+    devtool: 'source-map',
     output: {
 		path: __dirname + "/benchmark",
         filename: 'benchmark.js'

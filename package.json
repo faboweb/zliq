@@ -1,15 +1,18 @@
 {
   "name": "zliq",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "slim and quick framework in low loc",
   "main": "index.js",
   "scripts": {
     "test": "mocha-webpack --webpack-config webpack.tests.config.js \"test/**/*.spec.js\"",
     "tdd": "webpack-dev-server --config webpack.tests.config.js",
     "start": "webpack-dev-server --config webpack.config.js",
+    "build": "webpack --config webpack.config.build.js",
+    "build:min": "webpack -p --config webpack.config.build.js --output-filename=zliq.min.js --output-path=lib/min",
     "start:benchmark": "webpack-dev-server --config webpack.config.benchmark.js",
-    "build-benchmark": "webpack --config webpack.config.benchmark.js",
-    "build-prod": "npm run build-benchmark"
+    "build:benchmark": "webpack --config webpack.config.benchmark.js",
+    "build-prod": "npm run build:benchmark",
+    "prepublish": "rimraf lib/** && npm run build && npm run build:min"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
@@ -28,6 +31,7 @@
     "mocha-webpack": "^0.7.0",
     "node-sass": "^4.5.0",
     "null-loader": "^0.1.1",
+    "rimraf": "^2.6.1",
     "sass-loader": "^5.0.1",
     "style-loader": "^0.13.1",
     "webpack": "^2.2.1",
