@@ -13,7 +13,7 @@ describe('Components', () => {
 			done();
 		});
 	});
-	it('CleverComponent should calc and show clicks', (done) => {
+	it('CleverComponent should perform inner operation and show result', (done) => {
 		// to test components dependend on state we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// clever components return a stream of streams
@@ -28,10 +28,15 @@ describe('Components', () => {
 		// to test components dependend on state we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
 		let component = <CleverComponent sinks={ {store} } />;
-		store.state$({ clicks: { clicks: 6 }});
+		let run = 0;
 		component.addEventListener(UPDATE_EVENT.DONE, () => {
-			assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
-			done();
+			if (++run == 1) {
+				assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
+				store.state$({ clicks: { clicks: 6 }});
+			} else {
+				assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
+				done();
+			}
 		});
 	});
 
