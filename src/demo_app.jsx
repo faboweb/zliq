@@ -32,11 +32,9 @@ let app =
 		<hr />
 		<h4>Router:</h4>
 		<a href='/places?place=2'>go places</a>
-		{
-			<Router store={store} route={'/places'}>
-				<p>You are at place {store.$('router.params.place')}</p>
-			</Router>
-		}
+		<Router store={store} route={'/places'}>
+			<p>You are at place {store.$('router.params.place')}</p>
+		</Router>
 	</div>
 ;
 document.querySelector('app').appendChild(app);

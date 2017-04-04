@@ -2,12 +2,10 @@ import { h, list } from './utils';
 import { SUBTRACKED } from './reducers/clicks';
 import './demo_component.scss';
 
-// component returning a stream
+// component with a local state
 export const CleverComponent = ({sinks: {store}}) => {
 	let clicksTimes2 = store.$('clicks.clicks').map(clicks => clicks * 2);
-	return clicksTimes2.map(clicks => {
-		return <div>Clicks time 2: {clicks}</div>;
-	});
+	return <div>Clicks times 2: {clicksTimes2}</div>;
 };
 
 // component returning a hyperscript element but interacting with the state

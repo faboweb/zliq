@@ -43,11 +43,12 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 		let startTime = now();
 		return timedBatchProcessing(vals.map(val => () => {
 			return renderFunc(val, inputs);
-		}), elems => {
+		}), (elems, final) => {
 			let partialChange = {
 				type,
 				index,
 				elems,
+				final
 			};
 			index += elems.length;
 			batchCallback([partialChange]);
@@ -60,7 +61,8 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 		batchCallback([{
 			type,
 			index,
-			num
+			num,
+			final: true
 		}]);
 	}
 	return Promise.resolve();

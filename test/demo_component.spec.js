@@ -1,4 +1,4 @@
-import { h, stream, list } from '../src';
+import { h, stream, list, UPDATE_EVENT } from '../src';
 import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } from '../src/demo_component.jsx';
 // import chai, { expect } from 'chai';
 import assert from 'assert';
@@ -6,10 +6,9 @@ import { mockStore } from './helpers/mockStore';
 
 describe('Components', () => {
 	it('SuperDumpComponent should show', (done) => {
-		let element = SuperDumbComponent();
+		let element = <SuperDumbComponent />;
 		// for DOM outputs we just say how the result show look like
-		setTimeout(() => {
-			debugger;
+		element.addEventListener(UPDATE_EVENT.DONE, () => {
 			assert.equal(element.outerHTML, '<p>HELLO WORLD</p>');
 			done();
 		});
@@ -18,31 +17,34 @@ describe('Components', () => {
 		// to test components dependend on state we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// clever components return a stream of streams
-		let component = CleverComponent({ sinks: { store }});
-		setTimeout(() => {
-			assert.equal(component().outerHTML, '<div>Clicks time 2: 6</div>');
+		let component = <CleverComponent sinks={ {store} } />;
+		component.addEventListener(UPDATE_EVENT.DONE, () => {
+			assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
+			done();
+		});
+	});
 
-			// it should update if we change the store value
-			store.state$({ clicks: { clicks: 6 }});
-			setTimeout(() => {
-				assert.equal(component().outerHTML, '<div>Clicks time 2: 12</div>');
-				done();
-			});
+	it('CleverComponent should update on store update', (done) => {
+		// to test components dependend on state we just manipulate the input streams
+		let store = mockStore({ clicks: { clicks: 3 }});
+		let component = <CleverComponent sinks={ {store} } />;
+		store.state$({ clicks: { clicks: 6 }});
+		component.addEventListener(UPDATE_EVENT.DONE, () => {
+			assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
+			done();
 		});
 	});
 
 	it('should react to attached events', (done) => {
 		let store = mockStore({});
 		// clever components return a stream of streams
-		let element = DumbComponent({ sinks: { store }});
-		setTimeout(() => {
-			element.click();
+		let element = <DumbComponent sinks= { { store }} />;
+		element.click();
 
-			store.action$.map(action => {
-				if (action == null) return;
-				assert.equal(action.type, 'SUBTRACKED');
-				done();
-			});
+		store.action$.map(action => {
+			if (action == null) return;
+			assert.equal(action.type, 'SUBTRACKED');
+			done();
 		});
 	});
 
@@ -53,17 +55,16 @@ describe('Components', () => {
 			arr.push({ name: i });
 		}
 		let store = mockStore({ items: { items: arr, selected: arr[50] }});
-		let listElem = ListComponent({sinks: { store }});
-		// TODO: PART FAILS!
+		let listElem = <ListComponent sinks= { { store }} />;
 		// it should render iteratively for a better user expirience
-		// setTimeout(() => {
-		// 	var curLength = listElem.querySelectorAll('li').length;
-		// 	assert.ok(curLength > 0 && curLength < length);
-		// }, 200);
-		setTimeout(() => {
+		listElem.addEventListener(UPDATE_EVENT.PARTIAL, () => {
+			var curLength = listElem.querySelectorAll('li').length;
+			assert.ok(curLength > 0 && curLength < length);
+		});
+		listElem.addEventListener(UPDATE_EVENT.DONE, () => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
 			assert.equal(listElem.querySelectorAll('li')[50].outerHTML, '<li>50 X</li>');
 			done();
-		}, 700);
-	}).timeout(1000);
+		});
+	});
 });
