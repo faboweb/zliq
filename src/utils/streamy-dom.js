@@ -2,6 +2,12 @@ import odiff from 'odiff';
 import {merge$, stream} from './streamy';
 import {PromiseQueue} from './promise-queue';
 
+export const UPDATE_EVENT = {
+	PENDING: 'update_pending',
+	DONE: 'update_done',
+	PARTIAL: 'update_partial'
+}
+
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
@@ -17,14 +23,41 @@ export function createElement(tagName, properties$, children$Arr) {
 
 function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
+	let pending_updates = 0;
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {
 		// TODO get rid of IS_CHANGE_STREAM flag
 		if (child$.IS_CHANGE_STREAM) {
-			child$.map(changes => {
-				changes.forEach(({ index:subIndex, elems, type, num }) => {
+			// iterative updates are streams of changes belonging together
+			// to notify that the update is done, we need to wait for the change with the final flag set to true
+			let isIterativeUpdate = false;
+			child$.map(changes => { 
+				if (changes.length === 0) {
+					return;
+				}
+				pending_updates++;
+				changes.forEach(({ index:subIndex, elems, type, num, final }, changeIndex) => {
+					if (!isIterativeUpdate && !final) {
+						isIterativeUpdate = true;
+					}
 					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+					changeQueue.add(() => {
+						if (!final && pending_updates > 1) {
+							notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
+						}
+						pending_updates--;
+						if (isIterativeUpdate && final) {
+							isIterativeUpdate = false;
+						}
+					});
+				});
+				changeQueue.add(() => {
+					if (!isIterativeUpdate && pending_updates === 0) {
+						notifyParent(parentElem, UPDATE_EVENT.DONE);
+					} else {
+						notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
+					}
 				});
 			});
 		} else {
@@ -48,12 +81,25 @@ function manageChildren(parentElem, children$Arr) {
 						type: oldChild != null && child == null ? 'rm' 
 							: oldChild == null && child != null ? 'add' 
 							: 'set',
-						elems: [child]
+						elems: [child],
+						final: false
 					}];
 					oldChild = child;
 				}
+				if (changes.length == 0) return;
+
+				pending_updates++;
 				changes.forEach(({ index:subIndex, elems, type, num }) => {
 					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+					changeQueue.add(() => notifyParent(parentElem, UPDATE_EVENT.PARTIAL));
+				});
+				changeQueue.add(() => {
+					pending_updates--;
+					if (pending_updates === 0) {
+						notifyParent(parentElem, UPDATE_EVENT.DONE);
+					} else {
+						notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
+					}
 				});
 			});
 		}
@@ -148,24 +194,6 @@ function performSet(children, index, subIndexArr, parentElem) {
 			setElement();
 		}
 	});
-	let elementAtPosition = parentElem.childNodes[index];
-	let nextElement = elementAtPosition ? elementAtPosition.nextSibling : null;
-	if (child == null) {
-		if (elementAtPosition != null) {
-			parentElem.removeChild(elementAtPosition);
-		}
-		return;
-	}
-	if (elementAtPosition == null) {
-		parentElem.appendChild(child)
-	} else {
-		parentElem.removeChild(elementAtPosition);
-		if (nextElement == null) {
-			parentElem.appendChild(child)
-		} else {
-			nextElement.parentNode.insertBefore(child, nextElement);
-		}
-	}
 }
 
 function manageProperties(elem, properties$) {
@@ -189,4 +217,11 @@ function manageProperties(elem, properties$) {
             }
         });
     });
+}
+
+function notifyParent(parentElem, event_name) {
+	let event = new CustomEvent(event_name, {
+		bubbles: false
+	});
+	parentElem.dispatchEvent(event);
 }

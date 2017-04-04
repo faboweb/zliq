@@ -33,7 +33,7 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
         queue.add(() => {
             if ((now() - startTime) > maxTimePerChunk) {
                 startTime = now();
-                batchCallback && batchCallback(results);
+                batchCallback && batchCallback(results, results.length === queueFnArr.length);
                 results = [];
             }
             if (typeof fn.then === 'function') {
@@ -44,7 +44,7 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
     });
     return queue.add(() => {
         if (results.length > 0) {
-            batchCallback && batchCallback(results);
+            batchCallback && batchCallback(results, true);
         }
     });
 } 
