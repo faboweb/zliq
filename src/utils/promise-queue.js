@@ -31,14 +31,17 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
     let startTime = now();
     queueFnArr.forEach(fn => {
         queue.add(() => {
+            // if max time for one batch has reached, output the results for that batch
             if ((now() - startTime) > maxTimePerChunk) {
                 startTime = now();
                 batchCallback && batchCallback(results, results.length === queueFnArr.length);
                 results = [];
             }
+            // fn is a promises 
             if (typeof fn.then === 'function') {
                 return fn.then(partial => results = results.concat(fn))
             }
+            // fn is a function
             results = results.concat(fn());
         })
     });

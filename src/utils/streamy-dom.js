@@ -32,6 +32,8 @@ function manageChildren(parentElem, children$Arr) {
 			// iterative updates are streams of changes belonging together
 			// to notify that the update is done, we need to wait for the change with the final flag set to true
 			let isIterativeUpdate = false;
+			let batchedIterativeUpdate = null;
+			let isFirst = true;
 			child$.map(changes => { 
 				if (changes.length === 0) {
 					return;
@@ -41,15 +43,42 @@ function manageChildren(parentElem, children$Arr) {
 					if (!isIterativeUpdate && !final) {
 						isIterativeUpdate = true;
 					}
-					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+					if (isIterativeUpdate && !final) {
+						if (!isFirst) {
+							if (batchedIterativeUpdate == null) {
+								batchedIterativeUpdate = { 
+									index:subIndex, elems, type
+								};
+							} else {
+								batchedIterativeUpdate = { 
+									index: [].concat(batchedIterativeUpdate.index, subIndex), 
+									elems: [].concat(batchedIterativeUpdate.elems, elems), 
+									type
+								};
+							}
+						} else {
+							changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
+							isFirst = false;
+						}
+					}
+					if (isIterativeUpdate && final) {
+						changeQueue.add(() => updateDOMforChild(
+							batchedIterativeUpdate.elems,
+							index,
+							batchedIterativeUpdate.index,
+							batchedIterativeUpdate.type,
+							null,
+							parentElem));
+
+						isIterativeUpdate = false;
+						batchedIterativeUpdate = null;
+						isFirst = false;
+					}
 					changeQueue.add(() => {
 						if (!final && pending_updates > 1) {
 							notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
 						}
 						pending_updates--;
-						if (isIterativeUpdate && final) {
-							isIterativeUpdate = false;
-						}
 					});
 				});
 				changeQueue.add(() => {
