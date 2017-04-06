@@ -66,8 +66,8 @@ $ npm start
 ### Todos
 
  - Refactor to make easier to understand (need reviewers)
- - Make NPM Module
- - Create some callbacks for rendering life cycle
+ - Test NPM Module in the wild
+ - Make rendering of long lists faster
 
 License
 ----
