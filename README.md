@@ -1,6 +1,6 @@
 # ZLIQ
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~650 March 2017).
+ZLIQ is the intent to create an easy to understand, easy to use HTML5 web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~650 March 2017).
 
 ### Live
 [Test Online](https://cleaner-tortoise-23337.netlify.com/)
@@ -20,6 +20,7 @@ ZLIQ implementes itself in a slim way:
  - streams
  - redux
  - change based rendering
+ - basic routing
 
 ### How It Works
 
