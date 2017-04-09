@@ -24,6 +24,7 @@ export const stream = function(init_value) {
 	s.notEmpty = () => notEmpty(s);
 	s.$ = (selectorArr) => query(s, selectorArr);
 	s.patch = (partialChange) => patch(s, partialChange);
+	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
 
 	return s;
 };
@@ -134,12 +135,30 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 	return newStream;
 }
 
+/*
+* update only the properties of an object passed
+* i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
+*/
 function patch(parent$, partialChange) {
 	if (parent$.value == null) {
 		parent$(partialChange);
 		return;
 	}
 	parent$(Object.assign({}, parent$.value, partialChange));
+}
+
+/*
+* reduce a stream over time
+* this will pass the last output value to the calculation function
+*/
+function reduce(parent$, fn, startValue) {
+	let aggregate = fn(startValue, parent$.value);
+	let newStream = stream(aggregate);
+	parent$.listeners.push(function reduceValue(value) {
+		aggregate = fn(startValue, parent$.value);
+		newStream(aggregate);
+	});
+	return newStream;
 }
 
 /*
