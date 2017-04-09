@@ -47,8 +47,11 @@ export function LazyList(props) {
         .reduce((scrollParent, scrollInContainer) => {
             function onScroll(e) {
                 let scrollTop = scrollParent.scrollTop || scrollParent.scrollY;
-                scrollTop = Math.round(scrollTop * 100) / 100;
-                scrollTop$(scrollTop);
+                scrollTop = Math.round(scrollTop / 100) * 100;
+                // debounce the scroll update
+                if (Math.abs(scrollTop - scrollTop$.value) > 20) {
+                    scrollTop$(scrollTop);
+                }
             }
             if (scrollParent) {
                 scrollParent.removeEventListener('scroll', onScroll);
