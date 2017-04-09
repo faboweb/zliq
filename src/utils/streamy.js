@@ -22,6 +22,8 @@ export const stream = function(init_value) {
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
 	s.notEmpty = () => notEmpty(s);
+	s.$ = (selectorArr) => query(s, selectorArr);
+	s.patch = (partialChange) => patch(s, partialChange);
 
 	return s;
 };
@@ -111,6 +113,13 @@ function deepSelect(parent$, selector) {
 	return newStream;
 };
 
+function query(parent$, selectorArr) {
+	if(!Array.isArray(selectorArr)) {
+		return deepSelect(parent$, selectorArr);
+	}
+	return merge$(...selectorArr.map(selector => deepSelect(parent$, selector)));
+}
+
 // TODO: maybe refactor with filter
 /*
 * provide a new stream that only notifys its children if the containing value actualy changes
@@ -123,6 +132,14 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 		}
 	});
 	return newStream;
+}
+
+function patch(parent$, partialChange) {
+	if (parent$.value == null) {
+		parent$(partialChange);
+		return;
+	}
+	parent$(Object.assign({}, parent$.value, partialChange));
 }
 
 /*

@@ -17,6 +17,8 @@
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "clusterize": "^0.1.2",
+    "clusterize.js": "^0.17.6",
     "odiff": "0.0.2"
   },
   "devDependencies": {

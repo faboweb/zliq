@@ -1,5 +1,5 @@
 import { h } from './utils/streamy-hyperscript';
-import { list } from './utils/streamy-list';
+import { LazyList } from './utils/lazy-list';
 import { stream, merge$} from './utils/streamy';
 
 function _random(max) {
@@ -85,6 +85,7 @@ function selectItem(evt) {
 	Operations.SelectItem(parseInt(el.id))();
 }
 
+let selected$ = state$.$('selected');
 let app =
 	<div className='container'>
 		<div className='jumbotron'>
@@ -124,9 +125,8 @@ let app =
 		</div>
 		<table className='table table-hover table-striped test-data'>
 			<tbody>
-			{
-				list(state$, 'items', (item, {selected}) =>
-					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
+				<LazyList list$={state$.$('items')} template={item =>
+					<tr id={item.id} className={selected$.map(selected => selected === item.id ? 'danger' : '')}>
 						<td className='col-md-1'>{item.id}</td>
 						<td className='col-md-4'>
 							<a className='select' onclick={selectItem}>{item.label}</a>
@@ -136,8 +136,7 @@ let app =
 						</td>
 						<td className='col-md-6'/>
 					</tr>
-				)
-			}
+				} />
 			</tbody>
 		</table>
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>

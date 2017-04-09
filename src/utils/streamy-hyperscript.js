@@ -19,6 +19,7 @@ export const h = (tag, props, children) => {
 
 /*
 * wrap all children in streams and merge those
+* we make sure that all children streams are flat arrays to make processing uniform 
 */
 function makeChildrenStreams$(children) {
 	// wrap all children in streams
@@ -29,7 +30,26 @@ function makeChildrenStreams$(children) {
 		return arr.concat(child);
 	}, []);
 
-	return children$Arr;
+	// make sure children are arrays
+	return children$Arr.map(child => flatten(makeArray(child)));
+}
+
+function makeArray(stream) {
+	return stream.map(value => {
+		if (!Array.isArray(value)) {
+			return [value];
+		}
+		return value;
+	})
+}
+
+function flatten(stream) {
+	return stream.map(arr => {
+		while (arr.some(value => Array.isArray(value))) {
+			arr = [].concat(...value);
+		}
+		return arr;
+	})
 }
 
 /*

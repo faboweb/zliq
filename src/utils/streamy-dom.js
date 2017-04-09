@@ -1,4 +1,3 @@
-import odiff from 'odiff';
 import {merge$, stream} from './streamy';
 import {PromiseQueue} from './promise-queue';
 
@@ -23,115 +22,27 @@ export function createElement(tagName, properties$, children$Arr) {
 
 function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
-	let pending_updates = 0;
-	// array to store the actual count of elements in one virtual elem
-	// one virtual elem can produce a list of elems so we can't rely on the index only
+	
+	// TODO add comment
 	children$Arr.map((child$, index) => {
-		// TODO get rid of IS_CHANGE_STREAM flag
-		if (child$.IS_CHANGE_STREAM) {
-			// iterative updates are streams of changes belonging together
-			// to notify that the update is done, we need to wait for the change with the final flag set to true
-			let isIterativeUpdate = false;
-			let batchedIterativeUpdate = null;
-			let isFirst = true;
-			child$.map(changes => { 
-				if (changes.length === 0) {
-					return;
-				}
-				pending_updates++;
-				changes.forEach(({ index:subIndex, elems, type, num, final }, changeIndex) => {
-					if (!isIterativeUpdate && !final) {
-						isIterativeUpdate = true;
-					}
-					if (isIterativeUpdate && !final) {
-						if (!isFirst) {
-							if (batchedIterativeUpdate == null) {
-								batchedIterativeUpdate = { 
-									index:subIndex, elems, type
-								};
-							} else {
-								batchedIterativeUpdate = { 
-									index: [].concat(batchedIterativeUpdate.index, subIndex), 
-									elems: [].concat(batchedIterativeUpdate.elems, elems), 
-									type
-								};
-							}
-						} else {
-							changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
-							isFirst = false;
-						}
-					}
-					if (isIterativeUpdate && final) {
-						changeQueue.add(() => updateDOMforChild(
-							batchedIterativeUpdate.elems,
-							index,
-							batchedIterativeUpdate.index,
-							batchedIterativeUpdate.type,
-							null,
-							parentElem));
-
-						isIterativeUpdate = false;
-						batchedIterativeUpdate = null;
-						isFirst = false;
-					}
-					changeQueue.add(() => {
-						if (!final && pending_updates > 1) {
-							notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
-						}
-						pending_updates--;
-					});
-				});
-				changeQueue.add(() => {
-					if (!isIterativeUpdate && pending_updates === 0) {
-						notifyParent(parentElem, UPDATE_EVENT.DONE);
-					} else {
-						notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
-					}
-				});
-			});
-		} else {
-			let oldChilds = [];
-			let oldChild = null;
-			child$.map(child => {
-				let changes;
-				// streams can return arrays of children
-				if (Array.isArray(child)) {
-					changes = odiff(oldChilds, child).map(change => {
-						change.elems = change.vals;
-						delete change.vals;
-						return change;
-					});
-					oldChilds = child;
-				} else {
-					if (oldChild == null && child == null) return;
-
-					changes = [{
-						index: 0,
-						type: oldChild != null && child == null ? 'rm' 
-							: oldChild == null && child != null ? 'add' 
-							: 'set',
-						elems: [child],
-						final: false
-					}];
-					oldChild = child;
-				}
-				if (changes.length == 0) return;
-
-				pending_updates++;
-				changes.forEach(({ index:subIndex, elems, type, num }) => {
-					changeQueue.add(() => updateDOMforChild(elems, index, subIndex, type, num, parentElem));
-					changeQueue.add(() => notifyParent(parentElem, UPDATE_EVENT.PARTIAL));
-				});
-				changeQueue.add(() => {
-					pending_updates--;
-					if (pending_updates === 0) {
-						notifyParent(parentElem, UPDATE_EVENT.DONE);
-					} else {
-						notifyParent(parentElem, UPDATE_EVENT.PARTIAL);
-					}
-				});
-			});
-		}
+		let oldChildArr = [];
+		child$.map(childArr => {
+			if (oldChildArr.length === 0 && childArr.length === 0) return;
+			
+			let subIndex = 0;
+			for (; subIndex < childArr.length; subIndex++) {
+				let oldChild = oldChildArr[subIndex];
+				let newChild = childArr[subIndex];
+				let type = oldChild != null && newChild == null ? 'rm' 
+						: oldChild == null && newChild != null ? 'add' 
+						: 'set';
+				updateDOMforChild([newChild], index, subIndex, type, 1, parentElem);
+			}
+			for (; subIndex < oldChildArr.length; subIndex++) {
+				updateDOMforChild([newChild], index, subIndex, 'rm', 1, parentElem);
+			}
+			oldChildArr = childArr;
+		});
 	});
 }
 
