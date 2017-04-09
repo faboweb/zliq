@@ -38,6 +38,7 @@ function manageChildren(parentElem, children$Arr) {
 						: 'set';
 				updateDOMforChild([newChild], index, subIndex, type, 1, parentElem);
 			}
+			// all elements that are not in the new list got deleted
 			if (subIndex < oldChildArr.length) {
 				updateDOMforChild(null, index, subIndex, 'rm',  oldChildArr.length - subIndex, parentElem);
 			}
@@ -150,7 +151,7 @@ function manageProperties(elem, properties$) {
                 elem.addEventListener(eventName, value);
             } else if (property === 'class' || property.toLowerCase() === 'classname') {
                 elem.className = value;
-            } else if (property === 'style') {
+            } else if (property === 'style' && typeof value !== "string" ) {
                 Object.assign(elem.style, value);
             } else {
                 elem.setAttribute(property, value);

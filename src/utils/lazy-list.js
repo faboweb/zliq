@@ -4,23 +4,48 @@ import {UPDATE_EVENT} from './streamy-dom';
 import {h} from './streamy-hyperscript';
 
 let DEFAULT_CHILD_HEIGHT = 30;
+let DEFAULT_CONTAINER_HEIGHT = 500;
 
 export function LazyList(props) {
-    let {store, list$, template, className, maxHeight} = props;
-    maxHeight = maxHeight || 500;
+    let {store, list$, template, className, height, maxHeight} = props;
     let children$ = stream([]);
     let renderConfig$ = stream([]);
     let containerChildren$ = stream([]);
+    let containerHeight$;
+    if (height) {
+        containerHeight$ = stream(height);
+    } else if (maxHeight) {
+        containerHeight$ = renderConfig$.$('height')
+        .map(height => maxHeight && height > maxHeight ? maxHeight + 'px' : 'auto');
+    } else {
+        containerHeight$ = stream('auto');
+    }
     let container = <lazy-list
         style={{
-            height: renderConfig$.$('height').map(height => height + 'px'),
-            overflowY: 'auto',
+            height: containerHeight$,
+            'overflow-y': 'auto',
             display: 'block' 
         }}>
             {containerChildren$}
         </lazy-list>;
+
+    // react to scrolling
     let scrollEvent$ = stream(null);
-    container.addEventListener('scroll', scrollEvent$);
+    let scrollParent;
+    merge$(children$, containerHeight$)
+    .filter(([_, height]) => height !== 'auto')
+    .distinct()
+    .map(hasHeight => {
+        function onScroll(e) {
+            scrollEvent$(scrollParent.scrollTop || scrollParent.scrollY);
+        }
+        if (scrollParent) {
+            scrollParent.removeEventListener('scroll', onScroll);
+        }
+        scrollParent = hasHeight ? container : window;
+        scrollParent.addEventListener('scroll', onScroll);
+    });
+
     let childHeight$ = stream(DEFAULT_CHILD_HEIGHT);
     children$
         .filter(children => children.length > 0)
@@ -34,10 +59,11 @@ export function LazyList(props) {
             });
         });
     let listLength$ = list$.map(children => children.length || 0).distinct();
-    merge$(childHeight$.distinct(), listLength$, scrollEvent$)
-        .map(([childHeight, childrenCount, scrollEvent]) => {
+
+    // calc render config
+    merge$(childHeight$.distinct(), listLength$, scrollEvent$.distinct())
+        .map(([childHeight, childrenCount, scrollTop]) => {
             childHeight = childHeight || DEFAULT_CHILD_HEIGHT;
-            var scrollTop = container.scrollTop;
             let offset = container.getBoundingClientRect().top;
             let windowHeight = window.innerHeight;
             let containerHeight = getHeight(childrenCount, childHeight, maxHeight || windowHeight - offset);
@@ -132,4 +158,16 @@ export function LazyList(props) {
         .map(containerChildren$);
 
     return container;
+}
+
+function getScrollParent(node) {
+  if (node === null) {
+    return null;
+  }
+
+  if (node.scrollHeight > node.clientHeight) {
+    return node;
+  } else {
+    return getScrollParent(node.parentNode);
+  }
 }

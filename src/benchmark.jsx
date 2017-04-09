@@ -123,9 +123,9 @@ let app =
 				</div>
 			</div>
 		</div>
-		<table className='table table-hover table-striped test-data'>
-			<tbody>
-				<LazyList list$={state$.$('items')} template={item =>
+		<table className='table table-hover table-striped test-data' style="display: block;">
+			<tbody style="display: block;">
+				<LazyList list$={state$.$('items')} height="400px" template={item =>
 					<tr id={item.id} className={selected$.map(selected => selected === item.id ? 'danger' : '')}>
 						<td className='col-md-1'>{item.id}</td>
 						<td className='col-md-4'>
