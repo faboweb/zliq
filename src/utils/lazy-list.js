@@ -42,23 +42,27 @@ export function LazyList(props) {
             let windowHeight = window.innerHeight;
             let containerHeight = getHeight(childrenCount, childHeight, maxHeight || windowHeight - offset);
 
-            var start = Math.floor(scrollTop / childHeight);
-            var count = Math.floor(containerHeight / childHeight);
+            let count = Math.floor(containerHeight / childHeight);
+            let start = Math.floor(scrollTop / childHeight) - count;
+            start = start > 0 ? start : 0;
+            let end = start + count * 2;
+            end = end > childrenCount ? childrenCount : end;
 
             let {start: oldStart, count: oldCount} = renderConfig$.value;
-            if (oldStart == null || oldCount < count || Math.abs(oldStart - start) > oldCount / 2) {
-                return {
-                    start,
-                    count,
-                    height: containerHeight
-                };    
+            if (oldStart == null 
+                || Math.abs(oldCount - count) > oldCount / 2 
+                || Math.abs(oldStart - start) > oldCount / 2) {
+                    return {
+                        start,
+                        count,
+                        end,
+                        height: containerHeight
+                    };    
             }
 
-            return {
-                start: oldStart,
-                count: oldCount,
+            return Object.assign({}, renderConfig$.value, {
                 height: containerHeight
-            };
+            });
         })
         .map(renderConfig$);
     function getHeight(numChildren, childHeight, maxHeight) {
@@ -76,31 +80,27 @@ export function LazyList(props) {
     let allRenderedChildren = [];
     merge$(
         renderConfig$,
-        list$
+        list$,
+        childHeight$
     ).map(render);
 
     let oldList = [];
     function render([{
         start,
-        count
-    }, newList]) {
-        if (newList == null || count == null) return;
-
-        start = start - count;
-        start = start < 0 ? 0 : start;
-        var end = start + count + count;
-        end = end > newList.length ? newList.length : end;
+        end
+    }, newList, childHeight]) {
+        if (newList == null) return;
 
         let newChildren = [];
-        for (let i = start; i < end; i++) {
-            let actualIndex = i + start;
-            // if values are equal just take the existing elem
-            if (deepEqual(oldList[actualIndex], newList[actualIndex]) && allRenderedChildren[actualIndex] != null) {
-                newChildren.push(allRenderedChildren[actualIndex]);
+        for (let i = start; i < end && i < newList.length; i++) {
+            if (deepEqual(oldList[i], newList[i]) && allRenderedChildren[i] != null) {
+                newChildren.push(allRenderedChildren[i]);
             } else {
                 // if new data, render new list item
-                let child = template(newList[actualIndex]);
-                allRenderedChildren[actualIndex] = child;
+                let child = template(newList[i]);
+                child.style.height = childHeight + 'px';
+
+                allRenderedChildren[i] = child;
                 newChildren.push(child);
             }
         }
@@ -110,17 +110,20 @@ export function LazyList(props) {
 
     // render list content
     let wrapElems$ = merge$(
-            renderConfig$.$(['start','height']).distinct(),
-            childHeight$,
+            renderConfig$.$(['start','end']).distinct(),
+            childHeight$.distinct(),
             listLength$
         )
-        .map(([[start, count], childHeight, childCount]) => {
+        .map(([[start, end], childHeight, childCount]) => {
+            // the size of the container will be extended to show a scrollbar that immitates a filled list
+            let topRows = start;
+            let bottomRows = childCount - end;
             return [
                 <div style={
-                    { height: start * childHeight + 'px' }
+                    { height: topRows * childHeight + 'px' }
                 }></div>,
                 <div style={
-                    { height: (childCount - start - count) * childHeight + 'px' }
+                    { height: bottomRows * childHeight + 'px' }
                 }></div>
             ];
         });

@@ -38,8 +38,8 @@ function manageChildren(parentElem, children$Arr) {
 						: 'set';
 				updateDOMforChild([newChild], index, subIndex, type, 1, parentElem);
 			}
-			for (; subIndex < oldChildArr.length; subIndex++) {
-				updateDOMforChild([newChild], index, subIndex, 'rm', 1, parentElem);
+			if (subIndex < oldChildArr.length) {
+				updateDOMforChild(null, index, subIndex, 'rm',  oldChildArr.length - subIndex, parentElem);
 			}
 			oldChildArr = childArr;
 		});

@@ -90,10 +90,10 @@ let app =
 	<div className='container'>
 		<div className='jumbotron'>
 			<div className='row'>
-				<div className='col-md-6'>
+				<div className='col-md-6 col-sm-12'>
 					<h1>ZLIQ</h1>
 				</div>
-				<div className="col-md-6">
+				<div className="col-md-6 col-sm-12">
 					<div className="row">
 						<div className="col-sm-6 smallpad">
 							<button type='button' className='btn btn-primary btn-block' id='run'
