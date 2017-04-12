@@ -24,24 +24,52 @@ function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
 	
 	// TODO add comment
+	// TODO batch updates
 	children$Arr.map((child$, index) => {
 		let oldChildArr = [];
 		child$.map(childArr => {
 			if (oldChildArr.length === 0 && childArr.length === 0) return;
 			
 			let subIndex = 0;
+			let changes = [];
 			for (; subIndex < childArr.length; subIndex++) {
 				let oldChild = oldChildArr[subIndex];
 				let newChild = childArr[subIndex];
 				let type = oldChild != null && newChild == null ? 'rm' 
 						: oldChild == null && newChild != null ? 'add' 
 						: 'set';
-				updateDOMforChild([newChild], index, subIndex, type, 1, parentElem);
+
+				// aggregate change-flights of the similar type to perform batch operations of these
+				let lastChange = changes.length > 0 ? changes[changes.length - 1] : null;
+				if (lastChange && lastChange.type === type) {
+					if (type == 'rm') {
+						lastChange.num++;
+					} else {
+						lastChange.indexes.push(subIndex);
+						lastChange.elems.push(newChild);
+					}
+				} else {
+					changes.push({
+						indexes: [subIndex],
+						elems: [newChild],
+						num: 1,
+						type
+					})
+				}
 			}
 			// all elements that are not in the new list got deleted
 			if (subIndex < oldChildArr.length) {
-				updateDOMforChild(null, index, subIndex, 'rm',  oldChildArr.length - subIndex, parentElem);
+				changes.push({
+					indexes: [subIndex],
+					num: oldChildArr.length - subIndex,
+					type: 'rm'
+				})
 			}
+
+			changes.forEach(({indexes, type, num, elems}) => {
+				updateDOMforChild(elems, index, indexes, type, num, parentElem);
+			});
+			
 			oldChildArr = childArr;
 		});
 	});
@@ -50,7 +78,7 @@ function manageChildren(parentElem, children$Arr) {
 /*
 * perform the actual manipulation on the parentElem
 */
-function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
+function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
 	// console.log('performing update on DOM', children, index, subIndex, type, num, parentElem);
 	// remove all the elements starting from a certain index
 	if (type === 'rm') {
@@ -61,30 +89,32 @@ function updateDOMforChild(children, index, subIndex, type, num, parentElem) {
 			}
 		}
 		return Promise.resolve();
-	} else {
-		// make sure children are document nodes 
-		if (children == null 
-			|| (children.length != null && (typeof children[0] === 'string' || typeof children[0] === 'number'))) {
-			children = [document.createTextNode(children)];
-		}
 	}
+	// make sure children are document nodes 
+	let nodeChildren = children.map(child => {
+		if (child == null || typeof child === 'string' || typeof child === 'number') {
+			return document.createTextNode(child);
+		} else {
+			return child;
+		}
+	})
 
 	if (type === 'add') {
-		let visibleIndex = index + (subIndex != null ? subIndex : 0);
-		return performAdd(children, parentElem, visibleIndex);
+		return performAdd(nodeChildren, index, subIndexes, parentElem);
 	}
 
 	if (type === 'set') {
-		return performSet(children, index, subIndex, parentElem);
+		return performSet(nodeChildren, index, subIndexes, parentElem);
 	}
 }
 
-function performAdd(children, parentElem, index) {
+function performAdd(children, index, subIndexes, parentElem) {
 	return new Promise((resolve, reject) => {
+		let visibleIndex = index + subIndexes[0];
 		function addElement() {
 			// get right border element and insert one after another before this element
 			// index is now on position of insertion as we removed the element from this position before
-			let elementAtPosition = parentElem.childNodes[index];
+			let elementAtPosition = parentElem.childNodes[visibleIndex];
 			children.forEach(child => {
 				if (elementAtPosition == null) {
 					parentElem.appendChild(child);
@@ -105,17 +135,10 @@ function performAdd(children, parentElem, index) {
 	});
 }
 
-function performSet(children, index, subIndexArr, parentElem) {
-	return new Promise((resolve, reject) => {
-		if (!Array.isArray(children)) {
-			children = [children];
-		}
-		if (!Array.isArray(subIndexArr)) {
-			subIndexArr = [subIndexArr];
-		}
-		function setElement() {
+function performSet(children, index, subIndexes, parentElem) {
+	return new Promise((resolve, reject) => {		function setElement() {
 			children.forEach((child, childIndex) => {
-				let subIndex = subIndexArr[childIndex];
+				let subIndex = subIndexes[childIndex];
 				let visibleIndex = index + (subIndex != null ? subIndex : 0);
 				let elementAtPosition = parentElem.childNodes[visibleIndex];
 				if (elementAtPosition == null) {

@@ -46,7 +46,7 @@ export function LazyList(props) {
     scrollIncontainer$
         .reduce((scrollParent, scrollInContainer) => {
             function onScroll(e) {
-                let scrollTop = scrollParent.scrollTop || scrollParent.scrollY;
+                let scrollTop = scrollParent.scrollTop == undefined ? scrollParent.scrollY : scrollParent.scrollTop;
                 scrollTop = Math.round(scrollTop / 100) * 100;
                 // debounce the scroll update
                 if (Math.abs(scrollTop - scrollTop$.value) > 20) {
@@ -132,35 +132,26 @@ export function LazyList(props) {
             return renderBounds$;
         }, renderBounds$);
 
-    let allRenderedChildren = [];
-    merge$(
+    let renderedListPart$ = merge$(
         renderBounds$,
-        list$,
-        childHeight$
-    ).reduce(render, []);
-
-    function render(oldList, [{
-        start,
-        end
-    }, newList, childHeight]) {
-        if (newList == null) return;
-
-        let newChildren = [];
-        for (let i = start; i < end && i < newList.length; i++) {
-            if (deepEqual(oldList[i], newList[i]) && allRenderedChildren[i] != null) {
-                newChildren.push(allRenderedChildren[i]);
-            } else {
-                // if new data, render new list item
-                let child = template(newList[i]);
-                child.style.height = childHeight + 'px';
-
-                allRenderedChildren[i] = child;
-                newChildren.push(child);
-            }
+        list$
+    ). map(([{
+            start,
+            end
+        }, newList]) => {
+            return newList.slice(start, end);
+        });
+    let renderedListPartLength$ = renderedListPart$.map(list => list.length).distinct();
+    renderedListPartLength$.map(length => {
+        let children = [];
+        for (let i = 0; i < length; i++) {
+            // if new data, render new list item
+            let item$ = renderedListPart$.map(list => list[i]);
+            let child = template(item$, childHeight$);
+            children.push(child);
         }
-        children$(newChildren);
-        oldList = newList;
-    }
+        return children;
+    }).map(children$);
 
     // render list content
     let wrapElems$ = merge$(

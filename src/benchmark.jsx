@@ -125,18 +125,25 @@ let app =
 		</div>
 		<table className='table table-hover table-striped test-data' style="display: block;">
 			<tbody style="display: block;">
-				<LazyList list$={state$.$('items')} height="400px" template={item =>
-					<tr id={item.id} className={selected$.map(selected => selected === item.id ? 'danger' : '')}>
-						<td className='col-md-1'>{item.id}</td>
+				<LazyList list$={state$.$('items')} height="400px" style={{width: '400px'}} template={(item$, height$) => {
+					let isSelected$ = merge$(selected$, item$).map(([selected, item]) => {
+						return selected === item.id;
+					});
+
+					return <tr id={item$.$('id')} 
+						className={isSelected$.map(selected => selected ? 'danger' : '')}
+						style={{height: height$}}
+					>
+						<td className='col-md-1'>{item$.$('id')}</td>
 						<td className='col-md-4'>
-							<a className='select' onclick={selectItem}>{item.label}</a>
+							<a className='select' onclick={selectItem}>{item$.$('label')}</a>
 						</td>
 						<td className='col-md-1'>
 							<a className='remove' onclick={removeItem}><span className='glyphicon glyphicon-remove'></span></a>
 						</td>
 						<td className='col-md-6'/>
 					</tr>
-				} />
+				}} />
 			</tbody>
 		</table>
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
