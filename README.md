@@ -1,6 +1,6 @@
 # ZLIQ
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~650 March 2017).
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~680 April 2017).
 
 ### Live
 [Test Online](https://cleaner-tortoise-23337.netlify.com/)
@@ -8,7 +8,7 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 ### Tech
 
 ZLIQ only uses a view dependencies:
- - [odiff](https://github.com/Tixit/odiff) to diff arrays
+ - [deep-equal]8https://github.com/substack/node-deep-equal) to diff objects
  
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
@@ -40,19 +40,6 @@ export const CleverComponent = ({sinks: {store}}) => {
 };
 ```
 
-For long lists there is a helper, that will rerender only changes in an array.
-
-```js
-export const ListComponent = ({sinks: {store}}) =>
-	<ul> 
-		{
-			list(store.$('items'), 'items', (item, {selected}) =>
-				<li>{item.name} {selected ? '<--' : ''}</li>
-			)
-		}
-	</ul>;
-```
-
 Please check out 'src/demo_app.jsx' if you want to see how an application is set up.
 
 ### Development
@@ -65,9 +52,8 @@ $ npm start
 
 ### Todos
 
- - Refactor to make easier to understand (need reviewers)
- - Make NPM Module
- - Create some callbacks for rendering life cycle
+ - Make a lazy loaded list work -> better rendering for many elements 
+ - Need Reviewers
 
 License
 ----

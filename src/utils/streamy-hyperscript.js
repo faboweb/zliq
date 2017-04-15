@@ -30,12 +30,16 @@ function makeChildrenStreams$(children) {
 		return arr.concat(child);
 	}, []);
 
-	// make sure children are arrays
-	return children$Arr.map(child => flatten(makeArray(child)));
+	// make sure children are arrays and not nest
+	return children$Arr.map(child$ => flatten(makeArray(child$)));
 }
 
+// converts an input into an array
 function makeArray(stream) {
 	return stream.map(value => {
+		if (value == null) {
+			return [];
+		}
 		if (!Array.isArray(value)) {
 			return [value];
 		}
@@ -43,6 +47,7 @@ function makeArray(stream) {
 	})
 }
 
+// flattens an array
 function flatten(stream) {
 	return stream.map(arr => {
 		while (arr.some(value => Array.isArray(value))) {

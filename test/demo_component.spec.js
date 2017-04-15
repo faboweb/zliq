@@ -11,22 +11,22 @@ import { mockStore } from './helpers/mockStore';
 describe('Components', () => {
 	it('SuperDumpComponent should show', () => {
 		let element = <SuperDumbComponent />;
-		// here they are not yet there
 		assert.equal(element.outerHTML, '<p>HELLO WORLD</p>');
 	});
+
 	it('CleverComponent should perform inner operation and show result', () => {
 		// to test components dependend on state we just manipulate the input streams
 		// for the store we use a mocking object
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// this component calculates the clicks * 2 inside and shows the result
-		let component = <CleverComponent sinks={ {store} } />;
+		let component = <CleverComponent store= {store} />;
 		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
 	});
 
 	it('CleverComponent should update on store update', () => {
 		// to test that components react to their inputs we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
-		let component = <CleverComponent sinks={ {store} } />;
+		let component = <CleverComponent store= {store} />;
 		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
 		store.state$({ clicks: { clicks: 6 }});
 		assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
@@ -35,7 +35,7 @@ describe('Components', () => {
 	it('should react to attached events', (done) => {
 		let store = mockStore({});
 		// this component fires a action on the store when clicked
-		let element = <DumbComponent sinks= { { store }} />;
+		let element = <DumbComponent store= {store} />;
 		// perform the actions on the element
 		element.click();
 

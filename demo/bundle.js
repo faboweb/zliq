@@ -63,89 +63,11 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 44);
+/******/ 	return __webpack_require__(__webpack_require__.s = 21);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = isWidget;
-
-function isWidget(w) {
-    return w && w.type === "Widget";
-}
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var version = __webpack_require__(2);
-
-module.exports = isVirtualNode;
-
-function isVirtualNode(x) {
-    return x && x.type === "VirtualNode" && x.version === version;
-}
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = "2";
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = isThunk;
-
-function isThunk(t) {
-    return t && t.type === "Thunk";
-}
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = isHook;
-
-function isHook(hook) {
-  return hook && (typeof hook.hook === "function" && !hook.hasOwnProperty("hook") || typeof hook.unhook === "function" && !hook.hasOwnProperty("unhook"));
-}
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var version = __webpack_require__(2);
-
-module.exports = isVirtualText;
-
-function isVirtualText(x) {
-    return x && x.type === "VirtualText" && x.version === version;
-}
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -158,13 +80,13 @@ exports.stream = undefined;
 exports.merge$ = merge$;
 exports.isStream = isStream;
 
-var _deepEqual = __webpack_require__(20);
+var _deepEqual = __webpack_require__(10);
 
 var _deepEqual2 = _interopRequireDefault(_deepEqual);
 
-var _arrayUtils = __webpack_require__(42);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 /*
 * stream constructor
@@ -185,6 +107,9 @@ var stream = exports.stream = function stream(init_value) {
 	s.map = function (fn) {
 		return map(s, fn);
 	};
+	s.flatMap = function (fn) {
+		return flatMap(s, fn);
+	};
 	s.filter = function (fn) {
 		return filter(s, fn);
 	};
@@ -196,6 +121,15 @@ var stream = exports.stream = function stream(init_value) {
 	};
 	s.notEmpty = function () {
 		return notEmpty(s);
+	};
+	s.$ = function (selectorArr) {
+		return query(s, selectorArr);
+	};
+	s.patch = function (partialChange) {
+		return patch(s, partialChange);
+	};
+	s.reduce = function (fn, startValue) {
+		return reduce(s, fn, startValue);
 	};
 
 	return s;
@@ -240,6 +174,19 @@ function map(parent$, fn) {
 }
 
 /*
+* provides a new stream applying a transformation function to the value of a parent stream
+*/
+function flatMap(parent$, fn) {
+	var newStream = stream(fn(parent$.value)());
+	parent$.listeners.push(function mapValue(value) {
+		fn(value).map(function updateOuterStream(result) {
+			newStream(result);
+		});
+	});
+	return newStream;
+}
+
+/*
 * provides a new stream that only serves the values that a filter function returns true for
 * still a stream ALWAYS has a value -> so it starts at least with NULL
 */
@@ -267,11 +214,20 @@ function deepSelect(parent$, selector) {
 	}
 
 	var newStream = stream(select(parent$.value, selectors));
-	parent$.listeners.push(function deepSelectValue(value) {
-		newStream(select(value, selectors));
+	parent$.listeners.push(function deepSelectValue(newValue) {
+		newStream(select(newValue, selectors), newStream.value);
 	});
 	return newStream;
 };
+
+function query(parent$, selectorArr) {
+	if (!Array.isArray(selectorArr)) {
+		return deepSelect(parent$, selectorArr);
+	}
+	return merge$.apply(undefined, _toConsumableArray(selectorArr.map(function (selector) {
+		return deepSelect(parent$, selector);
+	})));
+}
 
 // TODO: maybe refactor with filter
 /*
@@ -285,8 +241,34 @@ function distinct(parent$) {
 	var newStream = stream(parent$.value);
 	parent$.listeners.push(function deepSelectValue(value) {
 		if (fn(newStream.value, value)) {
-			newStream(value);
+			newStream(value, newStream.value);
 		}
+	});
+	return newStream;
+}
+
+/*
+* update only the properties of an object passed
+* i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
+*/
+function patch(parent$, partialChange) {
+	if (parent$.value == null) {
+		parent$(partialChange);
+		return;
+	}
+	parent$(Object.assign({}, parent$.value, partialChange));
+}
+
+/*
+* reduce a stream over time
+* this will pass the last output value to the calculation function
+*/
+function reduce(parent$, fn, startValue) {
+	var aggregate = fn(startValue, parent$.value);
+	var newStream = stream(aggregate);
+	parent$.listeners.push(function reduceValue(value) {
+		aggregate = fn(aggregate, parent$.value);
+		newStream(aggregate);
 	});
 	return newStream;
 }
@@ -318,319 +300,7 @@ function isStream(parent$) {
 }
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var nativeIsArray = Array.isArray;
-var toString = Object.prototype.toString;
-
-module.exports = nativeIsArray || isArray;
-
-function isArray(obj) {
-    return toString.call(obj) === "[object Array]";
-}
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
-
-var topLevel = typeof global !== 'undefined' ? global : typeof window !== 'undefined' ? window : {};
-var minDoc = __webpack_require__(43);
-
-if (typeof document !== 'undefined') {
-    module.exports = document;
-} else {
-    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
-
-    if (!doccy) {
-        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
-    }
-
-    module.exports = doccy;
-}
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14)))
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-module.exports = function isObject(x) {
-	return (typeof x === "undefined" ? "undefined" : _typeof(x)) === "object" && x !== null;
-};
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isObject = __webpack_require__(9);
-var isHook = __webpack_require__(4);
-
-module.exports = applyProperties;
-
-function applyProperties(node, props, previous) {
-    for (var propName in props) {
-        var propValue = props[propName];
-
-        if (propValue === undefined) {
-            removeProperty(node, propName, propValue, previous);
-        } else if (isHook(propValue)) {
-            removeProperty(node, propName, propValue, previous);
-            if (propValue.hook) {
-                propValue.hook(node, propName, previous ? previous[propName] : undefined);
-            }
-        } else {
-            if (isObject(propValue)) {
-                patchObject(node, props, previous, propName, propValue);
-            } else {
-                node[propName] = propValue;
-            }
-        }
-    }
-}
-
-function removeProperty(node, propName, propValue, previous) {
-    if (previous) {
-        var previousValue = previous[propName];
-
-        if (!isHook(previousValue)) {
-            if (propName === "attributes") {
-                for (var attrName in previousValue) {
-                    node.removeAttribute(attrName);
-                }
-            } else if (propName === "style") {
-                for (var i in previousValue) {
-                    node.style[i] = "";
-                }
-            } else if (typeof previousValue === "string") {
-                node[propName] = "";
-            } else {
-                node[propName] = null;
-            }
-        } else if (previousValue.unhook) {
-            previousValue.unhook(node, propName, propValue);
-        }
-    }
-}
-
-function patchObject(node, props, previous, propName, propValue) {
-    var previousValue = previous ? previous[propName] : undefined;
-
-    // Set attributes
-    if (propName === "attributes") {
-        for (var attrName in propValue) {
-            var attrValue = propValue[attrName];
-
-            if (attrValue === undefined) {
-                node.removeAttribute(attrName);
-            } else {
-                node.setAttribute(attrName, attrValue);
-            }
-        }
-
-        return;
-    }
-
-    if (previousValue && isObject(previousValue) && getPrototype(previousValue) !== getPrototype(propValue)) {
-        node[propName] = propValue;
-        return;
-    }
-
-    if (!isObject(node[propName])) {
-        node[propName] = {};
-    }
-
-    var replacer = propName === "style" ? "" : undefined;
-
-    for (var k in propValue) {
-        var value = propValue[k];
-        node[propName][k] = value === undefined ? replacer : value;
-    }
-}
-
-function getPrototype(value) {
-    if (Object.getPrototypeOf) {
-        return Object.getPrototypeOf(value);
-    } else if (value.__proto__) {
-        return value.__proto__;
-    } else if (value.constructor) {
-        return value.constructor.prototype;
-    }
-}
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var document = __webpack_require__(8);
-
-var applyProperties = __webpack_require__(10);
-
-var isVNode = __webpack_require__(1);
-var isVText = __webpack_require__(5);
-var isWidget = __webpack_require__(0);
-var handleThunk = __webpack_require__(12);
-
-module.exports = createElement;
-
-function createElement(vnode, opts) {
-    var doc = opts ? opts.document || document : document;
-    var warn = opts ? opts.warn : null;
-
-    vnode = handleThunk(vnode).a;
-
-    if (isWidget(vnode)) {
-        return vnode.init();
-    } else if (isVText(vnode)) {
-        return doc.createTextNode(vnode.text);
-    } else if (!isVNode(vnode)) {
-        if (warn) {
-            warn("Item is not a valid virtual dom node", vnode);
-        }
-        return null;
-    }
-
-    var node = vnode.namespace === null ? doc.createElement(vnode.tagName) : doc.createElementNS(vnode.namespace, vnode.tagName);
-
-    var props = vnode.properties;
-    applyProperties(node, props);
-
-    var children = vnode.children;
-
-    for (var i = 0; i < children.length; i++) {
-        var childNode = createElement(children[i], opts);
-        if (childNode) {
-            node.appendChild(childNode);
-        }
-    }
-
-    return node;
-}
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isVNode = __webpack_require__(1);
-var isVText = __webpack_require__(5);
-var isWidget = __webpack_require__(0);
-var isThunk = __webpack_require__(3);
-
-module.exports = handleThunk;
-
-function handleThunk(a, b) {
-    var renderedA = a;
-    var renderedB = b;
-
-    if (isThunk(b)) {
-        renderedB = renderThunk(b, a);
-    }
-
-    if (isThunk(a)) {
-        renderedA = renderThunk(a, null);
-    }
-
-    return {
-        a: renderedA,
-        b: renderedB
-    };
-}
-
-function renderThunk(thunk, previous) {
-    var renderedThunk = thunk.vnode;
-
-    if (!renderedThunk) {
-        renderedThunk = thunk.vnode = thunk.render(previous);
-    }
-
-    if (!(isVNode(renderedThunk) || isVText(renderedThunk) || isWidget(renderedThunk))) {
-        throw new Error("thunk did not return a valid node");
-    }
-
-    return renderedThunk;
-}
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var version = __webpack_require__(2);
-
-VirtualPatch.NONE = 0;
-VirtualPatch.VTEXT = 1;
-VirtualPatch.VNODE = 2;
-VirtualPatch.WIDGET = 3;
-VirtualPatch.PROPS = 4;
-VirtualPatch.ORDER = 5;
-VirtualPatch.INSERT = 6;
-VirtualPatch.REMOVE = 7;
-VirtualPatch.THUNK = 8;
-
-module.exports = VirtualPatch;
-
-function VirtualPatch(type, vNode, patch) {
-    this.type = Number(type);
-    this.vNode = vNode;
-    this.patch = patch;
-}
-
-VirtualPatch.prototype.version = version;
-VirtualPatch.prototype.type = "VirtualPatch";
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var g;
-
-// This works in non-strict mode
-g = function () {
-	return this;
-}();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1, eval)("this");
-} catch (e) {
-	// This works if the window reference is available
-	if ((typeof window === "undefined" ? "undefined" : _typeof(window)) === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-/***/ }),
-/* 15 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -707,7 +377,182 @@ function fetchMiddleware(prefix, reducer) {
 }
 
 /***/ }),
-/* 16 */
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.h = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _streamy = __webpack_require__(0);
+
+var _streamyDom = __webpack_require__(6);
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+/*
+* wrap hyperscript elements in reactive streams dependent on their children streams
+*/
+var h = exports.h = function h(tag, props, children) {
+	// jsx usally resolves known tags as strings and unknown tags as functions
+	// if it is a sub component, resolve that component
+	if (typeof tag === 'function') {
+		return tag(props, children);
+	}
+	return (0, _streamyDom.createElement)(tag, wrapProps$(props), makeChildrenStreams$(children));
+};
+
+/*
+* wrap all children in streams and merge those
+* we make sure that all children streams are flat arrays to make processing uniform 
+*/
+function makeChildrenStreams$(children) {
+	// wrap all children in streams
+	var children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
+		if (child === null || !(0, _streamy.isStream)(child)) {
+			return arr.concat((0, _streamy.stream)(child));
+		}
+		return arr.concat(child);
+	}, []);
+
+	// make sure children are arrays and not nest
+	return children$Arr.map(function (child$) {
+		return flatten(makeArray(child$));
+	});
+}
+
+// converts an input into an array
+function makeArray(stream) {
+	return stream.map(function (value) {
+		if (value == null) {
+			return [];
+		}
+		if (!Array.isArray(value)) {
+			return [value];
+		}
+		return value;
+	});
+}
+
+// flattens an array
+function flatten(stream) {
+	return stream.map(function (arr) {
+		while (arr.some(function (value) {
+			return Array.isArray(value);
+		})) {
+			var _ref;
+
+			arr = (_ref = []).concat.apply(_ref, _toConsumableArray(value));
+		}
+		return arr;
+	});
+}
+
+/*
+* Wrap props into one stream
+*/
+function wrapProps$(props) {
+	if (props === null) return (0, _streamy.stream)();
+	if ((0, _streamy.isStream)(props)) {
+		return props;
+	}
+
+	// go through all the props and make them a stream
+	// if they are objects, traverse them to check if they include streams	
+	var props$Arr = Object.keys(props).map(function (propName, index) {
+		var value = props[propName];
+		if ((0, _streamy.isStream)(value)) {
+			return value.map(function (value) {
+				return {
+					key: propName,
+					value: value
+				};
+			});
+		} else {
+			// if it's an object, traverse the sub-object making it a stream
+			if (value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+				return wrapProps$(value).map(function (value) {
+					return {
+						key: propName,
+						value: value
+					};
+				});
+			}
+			// if it's a plain value wrap it in a stream
+			return (0, _streamy.stream)({
+				key: propName,
+				value: value
+			});
+		}
+	});
+	// merge streams of all properties
+	// on changes, reconstruct the properties object from the properties
+	return _streamy.merge$.apply(undefined, _toConsumableArray(props$Arr)).map(function (props) {
+		return props.reduce(function (obj, _ref2) {
+			var key = _ref2.key,
+			    value = _ref2.value;
+
+			obj[key] = value;
+			return obj;
+		}, {});
+	});
+}
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.clicks = exports.SUBTRACKED = exports.FETCHED = exports.CLICK = undefined;
+
+var _fetchHelper = __webpack_require__(1);
+
+var CLICK = exports.CLICK = 'CLICK';
+var FETCHED = exports.FETCHED = 'FETCHED';
+var SUBTRACKED = exports.SUBTRACKED = 'SUBTRACKED';
+
+var INITIAL_STORE = {
+	clicks: 0
+};
+
+function clicksReducer(_state, _ref) {
+	var type = _ref.type,
+	    payload = _ref.payload;
+
+	var state = _state || INITIAL_STORE;
+	switch (type) {
+		case CLICK:
+			return Object.assign({}, state, {
+				clicks: ++state.clicks
+			});
+		case SUBTRACKED:
+			return Object.assign({}, state, {
+				clicks: --state.clicks
+			});
+		case FETCHED:
+			return Object.assign({}, state, {
+				fetched: payload
+			});
+	}
+
+	return state;
+}
+
+var clicks = exports.clicks = (0, _fetchHelper.fetchMiddleware)(FETCHED, clicksReducer);
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -717,8 +562,9 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.reduxy = reduxy;
+exports.queryStore = queryStore;
 
-var _streamy = __webpack_require__(6);
+var _streamy = __webpack_require__(0);
 
 /*
 * simple action -> reducers -> state mashine
@@ -737,7 +583,7 @@ function reduxy(reducers) {
 		// as we probably render according to the values of this store only serve distinct values
 		// query format: {reducer}.{property}.{subproperty}
 		$: function $(query) {
-			return queryStore(state$, query).distinct();
+			return state$.$(query).distinct();
 		},
 		dispatch: function dispatch(action) {
 			action$(action);
@@ -769,283 +615,567 @@ function queryStore(state$, query) {
 };
 
 /***/ }),
-/* 17 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(setImmediate) {
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+    value: true
 });
-exports.h = undefined;
+exports.PromiseQueue = PromiseQueue;
+exports.timedBatchProcessing = timedBatchProcessing;
+// run a queue that runs while it has members
+// members can be functions or promises
+function PromiseQueue() {
+    var current = Promise.resolve();
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _h = __webpack_require__(28);
-
-var _h2 = _interopRequireDefault(_h);
-
-var _streamy = __webpack_require__(6);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-// TODO check for props are children
-/*
-* wrap hyperscript elements in reactive streams dependent on their children streams
-*/
-var h = exports.h = function h(tag, props, children) {
-	if (!children) {
-		return (0, _streamy.stream)((0, _h2.default)(tag, props));
-	}
-	return (0, _streamy.merge$)(makeChildrenStreams$(children), wrapProps$(props)).map(function updateElement(_ref) {
-		var _ref2 = _slicedToArray(_ref, 2),
-		    children = _ref2[0],
-		    props = _ref2[1];
-
-		return (0, _h2.default)(tag, props, [].concat(children));
-	});
-};
-
-/*
-* wrap all children in streams and merge those
-*/
-function makeChildrenStreams$(children) {
-	// wrap all children in streams
-	var children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
-		if (child === null || !(0, _streamy.isStream)(child)) {
-			return arr.concat((0, _streamy.stream)(child));
-		}
-		return arr.concat(child);
-	}, []);
-
-	return _streamy.merge$.apply(undefined, _toConsumableArray(children$Arr)).map(function (children) {
-		// flatten children array
-		children = children.reduce(function (_children, child) {
-			return _children.concat(child);
-		}, []);
-		// TODO maybe add flatmap
-		// check if result has streams and if so hook into those streams
-		// acts as flatmap from rxjs
-		if (children.reduce(function (hasStream, child) {
-			if (hasStream) return true;
-			return (0, _streamy.isStream)(child) || Array.isArray(child);
-		}, false)) {
-			return makeChildrenStreams$(children)();
-		}
-		return children;
-	});
+    return {
+        add: function add(fn) {
+            current = current.then(function () {
+                return new Promise(function (_resolve_, _reject_) {
+                    var result = fn();
+                    // enable usage of promises in queue for async behaviour
+                    if (result != null && typeof result.then === "function") {
+                        result.then(_resolve_);
+                    } else {
+                        setImmediate(_resolve_);
+                    }
+                });
+            });
+            return current;
+        }
+    };
 }
 
-// TODO: refactor, make more understandable
-function wrapProps$(props) {
-	if (props === null) return (0, _streamy.stream)();
-	if ((0, _streamy.isStream)(props)) {
-		return props;
-	}
-	var props$ = Object.keys(props).map(function (propName, index) {
-		var value = props[propName];
-		if ((0, _streamy.isStream)(value)) {
-			return value.map(function (value) {
-				return {
-					key: propName,
-					value: value
-				};
-			});
-		} else {
-			if (value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
-				return wrapProps$(value).map(function (value) {
-					return {
-						key: propName,
-						value: value
-					};
-				});
-			}
-			return (0, _streamy.stream)({
-				key: propName,
-				value: value
-			});
-		}
-	});
-	return _streamy.merge$.apply(undefined, _toConsumableArray(props$)).map(function (props) {
-		return props.reduce(function (obj, _ref3) {
-			var key = _ref3.key,
-			    value = _ref3.value;
+// collect the results from running a set of functions one after another
+// call a functions with the results until the end of a certain timeframe
+function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk) {
+    var queue = PromiseQueue();
+    var results = [];
+    maxTimePerChunk = maxTimePerChunk || 200;
 
-			obj[key] = value;
-			return obj;
-		}, {});
-	});
-}
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.render = undefined;
-
-var _diff = __webpack_require__(27);
-
-var _diff2 = _interopRequireDefault(_diff);
-
-var _patch = __webpack_require__(29);
-
-var _patch2 = _interopRequireDefault(_patch);
-
-var _createElement = __webpack_require__(26);
-
-var _createElement2 = _interopRequireDefault(_createElement);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/*
-* render a virtual dom stream into a parent element
-*/
-var render = exports.render = function render(tree$, parentElem) {
-	var oldTree = tree$();
-	var rootNode = (0, _createElement2.default)(oldTree);
-	parentElem.appendChild(rootNode);
-
-	// on updates of the virtual dom stream update the actual dom
-	tree$.map(function (tree) {
-		var patches = (0, _diff2.default)(oldTree, tree);
-		(0, _patch2.default)(rootNode, patches);
-		oldTree = tree;
-	});
-};
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/*!
- * Cross-Browser Split 1.1.1
- * Copyright 2007-2012 Steven Levithan <stevenlevithan.com>
- * Available under the MIT License
- * ECMAScript compliant, uniform cross-browser split method
- */
-
-/**
- * Splits a string into an array of strings using a regex or string separator. Matches of the
- * separator are not included in the result array. However, if `separator` is a regex that contains
- * capturing groups, backreferences are spliced into the result each time `separator` is matched.
- * Fixes browser bugs compared to the native `String.prototype.split` and can be used reliably
- * cross-browser.
- * @param {String} str String to split.
- * @param {RegExp|String} separator Regex or string to use for separating the string.
- * @param {Number} [limit] Maximum number of items to include in the result array.
- * @returns {Array} Array of substrings.
- * @example
- *
- * // Basic use
- * split('a b c d', ' ');
- * // -> ['a', 'b', 'c', 'd']
- *
- * // With limit
- * split('a b c d', ' ', 2);
- * // -> ['a', 'b']
- *
- * // Backreferences in result array
- * split('..word1 word2..', /([a-z]+)(\d+)/i);
- * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
- */
-module.exports = function split(undef) {
-
-  var nativeSplit = String.prototype.split,
-      compliantExecNpcg = /()??/.exec("")[1] === undef,
-
-  // NPCG: nonparticipating capturing group
-  self;
-
-  self = function self(str, separator, limit) {
-    // If `separator` is not a regex, use `nativeSplit`
-    if (Object.prototype.toString.call(separator) !== "[object RegExp]") {
-      return nativeSplit.call(str, separator, limit);
-    }
-    var output = [],
-        flags = (separator.ignoreCase ? "i" : "") + (separator.multiline ? "m" : "") + (separator.extended ? "x" : "") + ( // Proposed for ES6
-    separator.sticky ? "y" : ""),
-
-    // Firefox 3+
-    lastLastIndex = 0,
-
-    // Make `global` and avoid `lastIndex` issues by working with a copy
-    separator = new RegExp(separator.source, flags + "g"),
-        separator2,
-        match,
-        lastIndex,
-        lastLength;
-    str += ""; // Type-convert
-    if (!compliantExecNpcg) {
-      // Doesn't need flags gy, but they don't hurt
-      separator2 = new RegExp("^" + separator.source + "$(?!\\s)", flags);
-    }
-    /* Values for `limit`, per the spec:
-     * If undefined: 4294967295 // Math.pow(2, 32) - 1
-     * If 0, Infinity, or NaN: 0
-     * If positive number: limit = Math.floor(limit); if (limit > 4294967295) limit -= 4294967296;
-     * If negative number: 4294967296 - Math.floor(Math.abs(limit))
-     * If other: Type-convert, then use the above rules
-     */
-    limit = limit === undef ? -1 >>> 0 : // Math.pow(2, 32) - 1
-    limit >>> 0; // ToUint32(limit)
-    while (match = separator.exec(str)) {
-      // `separator.lastIndex` is not reliable cross-browser
-      lastIndex = match.index + match[0].length;
-      if (lastIndex > lastLastIndex) {
-        output.push(str.slice(lastLastIndex, match.index));
-        // Fix browsers whose `exec` methods don't consistently return `undefined` for
-        // nonparticipating capturing groups
-        if (!compliantExecNpcg && match.length > 1) {
-          match[0].replace(separator2, function () {
-            for (var i = 1; i < arguments.length - 2; i++) {
-              if (arguments[i] === undef) {
-                match[i] = undef;
-              }
+    var startTime = new Date();
+    queueFnArr.forEach(function (fn) {
+        queue.add(function () {
+            // if max time for one batch has reached, output the results for that batch
+            var now = new Date();
+            if (now - startTime > maxTimePerChunk) {
+                startTime = now;
+                batchCallback && batchCallback(results, results.length === queueFnArr.length);
+                results = [];
             }
-          });
+            // fn is a promises 
+            if (typeof fn.then === 'function') {
+                return fn.then(function (partial) {
+                    return results = results.concat(fn);
+                });
+            }
+            // fn is a function
+            results = results.concat(fn());
+        });
+    });
+    // when the queue is empty return all the results not yet send
+    return queue.add(function () {
+        if (results.length > 0) {
+            batchCallback && batchCallback(results, true);
         }
-        if (match.length > 1 && match.index < str.length) {
-          Array.prototype.push.apply(output, match.slice(1));
-        }
-        lastLength = match[0].length;
-        lastLastIndex = lastIndex;
-        if (output.length >= limit) {
-          break;
-        }
-      }
-      if (separator.lastIndex === match.index) {
-        separator.lastIndex++; // Avoid an infinite loop
-      }
-    }
-    if (lastLastIndex === str.length) {
-      if (lastLength || !separator.test("")) {
-        output.push("");
-      }
-    } else {
-      output.push(str.slice(lastLastIndex));
-    }
-    return output.length > limit ? output.slice(0, limit) : output;
-  };
-
-  return self;
-}();
+    });
+}
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15).setImmediate))
 
 /***/ }),
-/* 20 */
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.UPDATE_EVENT = undefined;
+exports.createElement = createElement;
+
+var _streamy = __webpack_require__(0);
+
+var _promiseQueue = __webpack_require__(5);
+
+var UPDATE_EVENT = exports.UPDATE_EVENT = {
+	PENDING: 'update_pending',
+	DONE: 'update_done',
+	PARTIAL: 'update_partial'
+};
+
+// js DOM events. add which ones you need
+var DOM_EVENT_LISTENERS = ['onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload', 'ondblclick'];
+
+var BATCH_CHILD_CHANGE_TRASHHOLD = 5;
+
+/*
+* Entry point for the streamy-dom
+* creates a DOM element attaches handler for property changes and child changes and returns it immediatly
+* this way we already pass around the actual dom element
+*/
+function createElement(tagName, properties$, children$Arr) {
+	var elem = document.createElement(tagName);
+	manageProperties(elem, properties$);
+	manageChildren(elem, children$Arr);
+	return elem;
+}
+
+// reacts to property changes and applies these changes to the dom element
+function manageProperties(elem, properties$) {
+	properties$.map(function (properties) {
+		if (!properties) return;
+		Object.getOwnPropertyNames(properties).map(function (property) {
+			var value = properties[property];
+			// check if event
+			if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
+				// we can't pass the function as a property
+				// so we bind to the event
+
+				// property event binder start with 'on' but events not so we need to strip that
+				var eventName = property.substr(2);
+				elem.removeEventListener(eventName, value);
+				elem.addEventListener(eventName, value);
+			} else if (property === 'class' || property.toLowerCase() === 'classname') {
+				elem.className = value;
+				// we leave the possibility to define styles as strings
+				// but we allow styles to be defined as an object
+			} else if (property === 'style' && typeof value !== "string") {
+				Object.assign(elem.style, value);
+				// other propertys are just added as is to the DOM
+			} else {
+				elem.setAttribute(property, value);
+			}
+		});
+	});
+}
+
+// manage changes in the childrens (not deep changes, those are handled by the children)
+function manageChildren(parentElem, children$Arr) {
+	var changeQueue = (0, _promiseQueue.PromiseQueue)([]);
+
+	// hook into every child stream for changes
+	// children can be arrays and are always treated like such
+	// changes are then performed on the parent
+	children$Arr.map(function (child$, index) {
+		child$.reduce(function (oldChildArr, childArr) {
+			// the default childArr will be [null]
+			var changes = calcChanges(childArr, oldChildArr);
+
+			if (changes.length === 0) {
+				return childArr;
+			}
+			// apply the changes
+			Promise.all(changes.map(function (_ref) {
+				var indexes = _ref.indexes,
+				    type = _ref.type,
+				    num = _ref.num,
+				    elems = _ref.elems;
+
+				return updateDOMforChild(elems, index, indexes, type, num, parentElem);
+			}))
+			// after changes are done notify listeners
+			.then(function () {
+				notifyParent(parentElem, UPDATE_EVENT.DONE);
+			});
+
+			return childArr;
+		}, []);
+	});
+}
+
+// very simple change detection
+// if the children objects are not the same, they changed
+// if there was an element before and there is no one know it got removed 
+function calcChanges(childArr, oldChildArr) {
+	var subIndex = 0;
+	var changes = [];
+
+	if (oldChildArr.length === 0 && childArr.length === 0) {
+		return [];
+	}
+
+	for (; subIndex < childArr.length; subIndex++) {
+		var oldChild = oldChildArr[subIndex];
+		var newChild = childArr[subIndex];
+		if (oldChild === newChild) {
+			continue;
+		};
+		var type = oldChild != null && newChild == null ? 'rm' : oldChild == null && newChild != null ? 'add' : 'set';
+
+		// aggregate consecutive changes of the similar type to perform batch operations
+		var lastChange = changes.length > 0 ? changes[changes.length - 1] : null;
+		// if there was a similiar change we add this change to the last change
+		if (lastChange && lastChange.type === type) {
+			if (type == 'rm') {
+				// we just count the positions
+				lastChange.num++;
+			} else {
+				// for add and set operations we need the exact index of the child and the child element to insert
+				lastChange.indexes.push(subIndex);
+				lastChange.elems.push(newChild);
+			}
+		} else {
+			// if we couldn't aggregate we push a new change
+			changes.push({
+				indexes: [subIndex],
+				elems: [newChild],
+				num: 1,
+				type: type
+			});
+		}
+	}
+	// all elements that are not in the new list got deleted
+	if (subIndex < oldChildArr.length) {
+		changes.push({
+			indexes: [subIndex],
+			num: oldChildArr.length - subIndex,
+			type: 'rm'
+		});
+	}
+
+	return changes;
+}
+
+// list of operations
+// remove all the elements starting from a certain index
+function removeElements(index, subIndexes, children, parentElem, resolve) {
+	for (var times = 0; times < num; times++) {
+		var node = parentElem.childNodes[index];
+		if (node != null) {
+			parentElem.removeChild(node);
+		}
+	}
+	resolve();
+}
+// replace elements with new ones
+function setElements(index, subIndexes, children, parentElem, resolve) {
+	children.forEach(function (child, childIndex) {
+		var actualIndex = index + subIndexes[childIndex];
+		var elementAtPosition = parentElem.childNodes[actualIndex];
+		parentElem.replaceChild(child, elementAtPosition);
+	});
+	resolve();
+};
+// add elements at a certain index
+function addElements(index, subIndexes, children, parentElem, resolve) {
+	// get right neighbor element and insert one after another before this element
+	// index is now on position of insertion as we removed the element from this position before
+	var elementAtPosition = parentElem.childNodes[index + subIndexes[0]];
+	children.forEach(function (child) {
+		if (elementAtPosition == null) {
+			parentElem.appendChild(child);
+		} else {
+			parentElem.insertBefore(child, elementAtPosition);
+		}
+	});
+	resolve();
+}
+
+// perform the actual manipulation on the parentElem
+function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
+	var _this = this;
+
+	// make sure children are document nodes as we insert them into the DOM
+	var nodeChildren = makeChildrenNodes(children);
+
+	// choose witch change to perform
+	var operation = void 0;
+	switch (type) {
+		case 'add':
+			operation = addElements;
+			break;
+		case 'set':
+			operation = setElements;
+			break;
+		case 'rm':
+			operation = removeElements;
+			break;
+		default:
+			return Promise.reject('Trying to perform a change with unknown change-type:', type);
+	}
+
+	// to minor changes directly but bundle long langes with many elements into one animationFrame to speed things update_done
+	// if we do this for every change, this slows things down as we have to wait for the animationframe
+	return new Promise(function (resolve, reject) {
+		if (nodeChildren && nodeChildren.length > BATCH_CHILD_CHANGE_TRASHHOLD) {
+			requestAnimationFrame(operation.bind(_this, index, subIndexes, nodeChildren, parentElem, resolve));
+		} else {
+			operation(index, subIndexes, nodeChildren, parentElem, resolve);
+		}
+	});
+}
+
+// transforms children into elements
+// children can be calculated child elements or strings and numbers
+function makeChildrenNodes(children) {
+	return children == null ? [] : children.map(function (child) {
+		if (child == null || typeof child === 'string' || typeof child === 'number') {
+			return document.createTextNode(child);
+		} else {
+			return child;
+		}
+	});
+}
+
+// emit an event on the handled parent element
+// this helps to test asynchronous rendered elements
+function notifyParent(parentElem, event_name) {
+	var event = new CustomEvent(event_name, {
+		bubbles: false
+	});
+	parentElem.dispatchEvent(event);
+}
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.SuperDumbComponent = exports.DumbComponent = exports.CleverComponent = undefined;
+
+var _utils = __webpack_require__(17);
+
+var _demo_clicks = __webpack_require__(3);
+
+__webpack_require__(20);
+
+// component with a local state
+var CleverComponent = exports.CleverComponent = function CleverComponent(_ref) {
+	var store = _ref.store;
+
+	var clicksTimes2 = store.$('clicks.clicks').map(function (clicks) {
+		return clicks * 2;
+	});
+	return (0, _utils.h)(
+		'div',
+		null,
+		['Clicks times 2: ', clicksTimes2]
+	);
+};
+
+// component returning an element that interacts with the state
+var DumbComponent = exports.DumbComponent = function DumbComponent(_ref2) {
+	var store = _ref2.store;
+	return (0, _utils.h)(
+		'button',
+		{ onclick: function onclick() {
+				return store.dispatch({ type: _demo_clicks.SUBTRACKED });
+			} },
+		['subtracked']
+	);
+};
+
+// component not interacting with anything -> plain hyperscript returns an element
+var SuperDumbComponent = exports.SuperDumbComponent = function SuperDumbComponent() {
+	return (0, _utils.h)(
+		'p',
+		null,
+		['HELLO WORLD']
+	);
+};
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.NEW_ROUTE = undefined;
+exports.routerReducer = routerReducer;
+exports.initRouter = initRouter;
+exports.Router = Router;
+
+var _streamyHyperscript = __webpack_require__(2);
+
+var NEW_ROUTE = exports.NEW_ROUTE = 'NEW_ROUTE';
+
+var INITIAL_STORE = {
+    route: '/',
+    params: {}
+};
+
+// we use a reducer to unify the way we check for information
+function routerReducer(_state, _ref) {
+    var type = _ref.type,
+        payload = _ref.payload;
+
+    var state = _state || INITIAL_STORE;
+    switch (type) {
+        case NEW_ROUTE:
+            return Object.assign({}, state, {
+                route: payload.route,
+                params: payload.params
+            });
+    }
+
+    return state;
+}
+
+function initRouter(store) {
+    // intercepts clicks on links
+    // if the link is local '/...' we change the location hash instead
+    function interceptClickEvent(e) {
+        var href;
+        var target = e.target || e.srcElement;
+        if (target.tagName === 'A') {
+            href = target.getAttribute('href');
+            var isLocal = href != null && href.startsWith('/');
+
+            //put your logic here...
+            if (isLocal) {
+                location.hash = href;
+
+                //tell the browser not to respond to the link click
+                e.preventDefault();
+            }
+        }
+    }
+
+    // callback for HTML5 navigation events
+    // save the routing info in the store
+    function dispatchRouteChange() {
+        var href = location.hash.substr(1, location.hash.length - 1);
+        store.dispatch({ type: NEW_ROUTE, payload: {
+                route: href === '' ? '/' : href.split('?')[0],
+                params: getUrlParams(href)
+            } });
+    }
+
+    // react to HTML5 go back and forward events
+    window.onpopstate = function () {
+        dispatchRouteChange();
+    };
+
+    // listen for link click events at the document level
+    document.addEventListener('click', interceptClickEvent);
+
+    // react to initial routing info
+    if (location.hash != '') {
+        dispatchRouteChange();
+    }
+}
+
+// src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
+function getUrlParams(href) {
+    var params = {};
+    if (href === '') {
+        return params;
+    };
+    var splitHref = href.split('?');
+    if (splitHref.length == 0) {
+        return params;
+    }
+    var query = splitHref[1];
+    var vars = query.split("&");
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        // If first entry with this name
+        if (typeof params[pair[0]] === "undefined") {
+            params[pair[0]] = decodeURIComponent(pair[1]);
+            // If second entry with this name
+        } else if (typeof params[pair[0]] === "string") {
+            var arr = [params[pair[0]], decodeURIComponent(pair[1])];
+            params[pair[0]] = arr;
+            // If third or later entry with this name
+        } else {
+            params[pair[0]].push(decodeURIComponent(pair[1]));
+        }
+    }
+    return params;
+}
+
+// this is an element that shows it's content only if the expected route is met
+function Router(_ref2, children) {
+    var store = _ref2.store,
+        route = _ref2.route;
+
+    if (store == null) {
+        console.log('The Router component needs the store as attribute.');
+        return null;
+    }
+    if (route == null) {
+        console.log('The Router component needs the route as attribute.');
+        return null;
+    }
+    return store.$('router.route').map(function (curRoute) {
+        return curRoute === route;
+    }).map(function (hitRoute) {
+        return hitRoute ? children : [];
+    });
+}
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function () {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		var result = [];
+		for (var i = 0; i < this.length; i++) {
+			var item = this[i];
+			if (item[2]) {
+				result.push("@media " + item[2] + "{" + item[1] + "}");
+			} else {
+				result.push(item[1]);
+			}
+		}
+		return result.join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function (modules, mediaQuery) {
+		if (typeof modules === "string") modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for (var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if (typeof id === "number") alreadyImportedModules[id] = true;
+		}
+		for (i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if (typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if (mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if (mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1054,8 +1184,8 @@ module.exports = function split(undef) {
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(22);
-var isArguments = __webpack_require__(21);
+var objectKeys = __webpack_require__(12);
+var isArguments = __webpack_require__(11);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -1146,7 +1276,7 @@ function objEquiv(a, b, opts) {
 }
 
 /***/ }),
-/* 21 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1171,7 +1301,7 @@ function unsupported(object) {
 };
 
 /***/ }),
-/* 22 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1188,1328 +1318,474 @@ function shim(obj) {
 }
 
 /***/ }),
-/* 23 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var OneVersionConstraint = __webpack_require__(25);
+// shim for using process in browser
+var process = module.exports = {};
 
-var MY_VERSION = '7';
-OneVersionConstraint('ev-store', MY_VERSION);
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
 
-var hashKey = '__EV_STORE_KEY@' + MY_VERSION;
+var cachedSetTimeout;
+var cachedClearTimeout;
 
-module.exports = EvStore;
-
-function EvStore(elem) {
-    var hash = elem[hashKey];
-
-    if (!hash) {
-        hash = elem[hashKey] = {};
-    }
-
-    return hash;
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
 }
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
-
-/*global window, global*/
-
-var root = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : {};
-
-module.exports = Individual;
-
-function Individual(key, value) {
-    if (key in root) {
-        return root[key];
-    }
-
-    root[key] = value;
-
-    return value;
+function defaultClearTimeout() {
+    throw new Error('clearTimeout has not been defined');
 }
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14)))
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Individual = __webpack_require__(24);
-
-module.exports = OneVersion;
-
-function OneVersion(moduleName, version, defaultValue) {
-    var key = '__INDIVIDUAL_ONE_VERSION_' + moduleName;
-    var enforceKey = key + '_ENFORCE_SINGLETON';
-
-    var versionValue = Individual(enforceKey, version);
-
-    if (versionValue !== version) {
-        throw new Error('Can only have one copy of ' + moduleName + '.\n' + 'You already have version ' + versionValue + ' installed.\n' + 'This means you cannot install version ' + version);
-    }
-
-    return Individual(key, defaultValue);
-}
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var createElement = __webpack_require__(11);
-
-module.exports = createElement;
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var diff = __webpack_require__(41);
-
-module.exports = diff;
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var h = __webpack_require__(36);
-
-module.exports = h;
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var patch = __webpack_require__(32);
-
-module.exports = patch;
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-// Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
-// We don't want to read all of the DOM nodes in the tree so we use
-// the in-order tree indexing to eliminate recursion down certain branches.
-// We only recurse into a DOM node if we know that it contains a child of
-// interest.
-
-var noChild = {};
-
-module.exports = domIndex;
-
-function domIndex(rootNode, tree, indices, nodes) {
-    if (!indices || indices.length === 0) {
-        return {};
-    } else {
-        indices.sort(ascending);
-        return recurse(rootNode, tree, indices, nodes, 0);
-    }
-}
-
-function recurse(rootNode, tree, indices, nodes, rootIndex) {
-    nodes = nodes || {};
-
-    if (rootNode) {
-        if (indexInRange(indices, rootIndex, rootIndex)) {
-            nodes[rootIndex] = rootNode;
-        }
-
-        var vChildren = tree.children;
-
-        if (vChildren) {
-
-            var childNodes = rootNode.childNodes;
-
-            for (var i = 0; i < tree.children.length; i++) {
-                rootIndex += 1;
-
-                var vChild = vChildren[i] || noChild;
-                var nextIndex = rootIndex + (vChild.count || 0);
-
-                // skip recursion down the tree if there are no nodes down here
-                if (indexInRange(indices, rootIndex, nextIndex)) {
-                    recurse(childNodes[i], vChild, indices, nodes, rootIndex);
-                }
-
-                rootIndex = nextIndex;
-            }
-        }
-    }
-
-    return nodes;
-}
-
-// Binary search for an index in the interval [left, right]
-function indexInRange(indices, left, right) {
-    if (indices.length === 0) {
-        return false;
-    }
-
-    var minIndex = 0;
-    var maxIndex = indices.length - 1;
-    var currentIndex;
-    var currentItem;
-
-    while (minIndex <= maxIndex) {
-        currentIndex = (maxIndex + minIndex) / 2 >> 0;
-        currentItem = indices[currentIndex];
-
-        if (minIndex === maxIndex) {
-            return currentItem >= left && currentItem <= right;
-        } else if (currentItem < left) {
-            minIndex = currentIndex + 1;
-        } else if (currentItem > right) {
-            maxIndex = currentIndex - 1;
-        } else {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function ascending(a, b) {
-    return a > b ? 1 : -1;
-}
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var applyProperties = __webpack_require__(10);
-
-var isWidget = __webpack_require__(0);
-var VPatch = __webpack_require__(13);
-
-var updateWidget = __webpack_require__(33);
-
-module.exports = applyPatch;
-
-function applyPatch(vpatch, domNode, renderOptions) {
-    var type = vpatch.type;
-    var vNode = vpatch.vNode;
-    var patch = vpatch.patch;
-
-    switch (type) {
-        case VPatch.REMOVE:
-            return removeNode(domNode, vNode);
-        case VPatch.INSERT:
-            return insertNode(domNode, patch, renderOptions);
-        case VPatch.VTEXT:
-            return stringPatch(domNode, vNode, patch, renderOptions);
-        case VPatch.WIDGET:
-            return widgetPatch(domNode, vNode, patch, renderOptions);
-        case VPatch.VNODE:
-            return vNodePatch(domNode, vNode, patch, renderOptions);
-        case VPatch.ORDER:
-            reorderChildren(domNode, patch);
-            return domNode;
-        case VPatch.PROPS:
-            applyProperties(domNode, patch, vNode.properties);
-            return domNode;
-        case VPatch.THUNK:
-            return replaceRoot(domNode, renderOptions.patch(domNode, patch, renderOptions));
-        default:
-            return domNode;
-    }
-}
-
-function removeNode(domNode, vNode) {
-    var parentNode = domNode.parentNode;
-
-    if (parentNode) {
-        parentNode.removeChild(domNode);
-    }
-
-    destroyWidget(domNode, vNode);
-
-    return null;
-}
-
-function insertNode(parentNode, vNode, renderOptions) {
-    var newNode = renderOptions.render(vNode, renderOptions);
-
-    if (parentNode) {
-        parentNode.appendChild(newNode);
-    }
-
-    return parentNode;
-}
-
-function stringPatch(domNode, leftVNode, vText, renderOptions) {
-    var newNode;
-
-    if (domNode.nodeType === 3) {
-        domNode.replaceData(0, domNode.length, vText.text);
-        newNode = domNode;
-    } else {
-        var parentNode = domNode.parentNode;
-        newNode = renderOptions.render(vText, renderOptions);
-
-        if (parentNode && newNode !== domNode) {
-            parentNode.replaceChild(newNode, domNode);
-        }
-    }
-
-    return newNode;
-}
-
-function widgetPatch(domNode, leftVNode, widget, renderOptions) {
-    var updating = updateWidget(leftVNode, widget);
-    var newNode;
-
-    if (updating) {
-        newNode = widget.update(leftVNode, domNode) || domNode;
-    } else {
-        newNode = renderOptions.render(widget, renderOptions);
-    }
-
-    var parentNode = domNode.parentNode;
-
-    if (parentNode && newNode !== domNode) {
-        parentNode.replaceChild(newNode, domNode);
-    }
-
-    if (!updating) {
-        destroyWidget(domNode, leftVNode);
-    }
-
-    return newNode;
-}
-
-function vNodePatch(domNode, leftVNode, vNode, renderOptions) {
-    var parentNode = domNode.parentNode;
-    var newNode = renderOptions.render(vNode, renderOptions);
-
-    if (parentNode && newNode !== domNode) {
-        parentNode.replaceChild(newNode, domNode);
-    }
-
-    return newNode;
-}
-
-function destroyWidget(domNode, w) {
-    if (typeof w.destroy === "function" && isWidget(w)) {
-        w.destroy(domNode);
-    }
-}
-
-function reorderChildren(domNode, moves) {
-    var childNodes = domNode.childNodes;
-    var keyMap = {};
-    var node;
-    var remove;
-    var insert;
-
-    for (var i = 0; i < moves.removes.length; i++) {
-        remove = moves.removes[i];
-        node = childNodes[remove.from];
-        if (remove.key) {
-            keyMap[remove.key] = node;
-        }
-        domNode.removeChild(node);
-    }
-
-    var length = childNodes.length;
-    for (var j = 0; j < moves.inserts.length; j++) {
-        insert = moves.inserts[j];
-        node = keyMap[insert.key];
-        // this is the weirdest bug i've ever seen in webkit
-        domNode.insertBefore(node, insert.to >= length++ ? null : childNodes[insert.to]);
-    }
-}
-
-function replaceRoot(oldRoot, newRoot) {
-    if (oldRoot && newRoot && oldRoot !== newRoot && oldRoot.parentNode) {
-        oldRoot.parentNode.replaceChild(newRoot, oldRoot);
-    }
-
-    return newRoot;
-}
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var document = __webpack_require__(8);
-var isArray = __webpack_require__(7);
-
-var render = __webpack_require__(11);
-var domIndex = __webpack_require__(30);
-var patchOp = __webpack_require__(31);
-module.exports = patch;
-
-function patch(rootNode, patches, renderOptions) {
-    renderOptions = renderOptions || {};
-    renderOptions.patch = renderOptions.patch && renderOptions.patch !== patch ? renderOptions.patch : patchRecursive;
-    renderOptions.render = renderOptions.render || render;
-
-    return renderOptions.patch(rootNode, patches, renderOptions);
-}
-
-function patchRecursive(rootNode, patches, renderOptions) {
-    var indices = patchIndices(patches);
-
-    if (indices.length === 0) {
-        return rootNode;
-    }
-
-    var index = domIndex(rootNode, patches.a, indices);
-    var ownerDocument = rootNode.ownerDocument;
-
-    if (!renderOptions.document && ownerDocument !== document) {
-        renderOptions.document = ownerDocument;
-    }
-
-    for (var i = 0; i < indices.length; i++) {
-        var nodeIndex = indices[i];
-        rootNode = applyPatch(rootNode, index[nodeIndex], patches[nodeIndex], renderOptions);
-    }
-
-    return rootNode;
-}
-
-function applyPatch(rootNode, domNode, patchList, renderOptions) {
-    if (!domNode) {
-        return rootNode;
-    }
-
-    var newNode;
-
-    if (isArray(patchList)) {
-        for (var i = 0; i < patchList.length; i++) {
-            newNode = patchOp(patchList[i], domNode, renderOptions);
-
-            if (domNode === rootNode) {
-                rootNode = newNode;
-            }
-        }
-    } else {
-        newNode = patchOp(patchList, domNode, renderOptions);
-
-        if (domNode === rootNode) {
-            rootNode = newNode;
-        }
-    }
-
-    return rootNode;
-}
-
-function patchIndices(patches) {
-    var indices = [];
-
-    for (var key in patches) {
-        if (key !== "a") {
-            indices.push(Number(key));
-        }
-    }
-
-    return indices;
-}
-
-/***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isWidget = __webpack_require__(0);
-
-module.exports = updateWidget;
-
-function updateWidget(a, b) {
-    if (isWidget(a) && isWidget(b)) {
-        if ("name" in a && "name" in b) {
-            return a.id === b.id;
-        } else {
-            return a.init === b.init;
-        }
-    }
-
-    return false;
-}
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var EvStore = __webpack_require__(23);
-
-module.exports = EvHook;
-
-function EvHook(value) {
-    if (!(this instanceof EvHook)) {
-        return new EvHook(value);
-    }
-
-    this.value = value;
-}
-
-EvHook.prototype.hook = function (node, propertyName) {
-    var es = EvStore(node);
-    var propName = propertyName.substr(3);
-
-    es[propName] = this.value;
-};
-
-EvHook.prototype.unhook = function (node, propertyName) {
-    var es = EvStore(node);
-    var propName = propertyName.substr(3);
-
-    es[propName] = undefined;
-};
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = SoftSetHook;
-
-function SoftSetHook(value) {
-    if (!(this instanceof SoftSetHook)) {
-        return new SoftSetHook(value);
-    }
-
-    this.value = value;
-}
-
-SoftSetHook.prototype.hook = function (node, propertyName) {
-    if (node[propertyName] !== this.value) {
-        node[propertyName] = this.value;
-    }
-};
-
-/***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isArray = __webpack_require__(7);
-
-var VNode = __webpack_require__(38);
-var VText = __webpack_require__(39);
-var isVNode = __webpack_require__(1);
-var isVText = __webpack_require__(5);
-var isWidget = __webpack_require__(0);
-var isHook = __webpack_require__(4);
-var isVThunk = __webpack_require__(3);
-
-var parseTag = __webpack_require__(37);
-var softSetHook = __webpack_require__(35);
-var evHook = __webpack_require__(34);
-
-module.exports = h;
-
-function h(tagName, properties, children) {
-    var childNodes = [];
-    var tag, props, key, namespace;
-
-    if (!children && isChildren(properties)) {
-        children = properties;
-        props = {};
-    }
-
-    props = props || properties || {};
-    tag = parseTag(tagName, props);
-
-    // support keys
-    if (props.hasOwnProperty('key')) {
-        key = props.key;
-        props.key = undefined;
-    }
-
-    // support namespace
-    if (props.hasOwnProperty('namespace')) {
-        namespace = props.namespace;
-        props.namespace = undefined;
-    }
-
-    // fix cursor bug
-    if (tag === 'INPUT' && !namespace && props.hasOwnProperty('value') && props.value !== undefined && !isHook(props.value)) {
-        props.value = softSetHook(props.value);
-    }
-
-    transformProperties(props);
-
-    if (children !== undefined && children !== null) {
-        addChild(children, childNodes, tag, props);
-    }
-
-    return new VNode(tag, props, childNodes, key, namespace);
-}
-
-function addChild(c, childNodes, tag, props) {
-    if (typeof c === 'string') {
-        childNodes.push(new VText(c));
-    } else if (typeof c === 'number') {
-        childNodes.push(new VText(String(c)));
-    } else if (isChild(c)) {
-        childNodes.push(c);
-    } else if (isArray(c)) {
-        for (var i = 0; i < c.length; i++) {
-            addChild(c[i], childNodes, tag, props);
-        }
-    } else if (c === null || c === undefined) {
-        return;
-    } else {
-        throw UnexpectedVirtualElement({
-            foreignObject: c,
-            parentVnode: {
-                tagName: tag,
-                properties: props
-            }
-        });
-    }
-}
-
-function transformProperties(props) {
-    for (var propName in props) {
-        if (props.hasOwnProperty(propName)) {
-            var value = props[propName];
-
-            if (isHook(value)) {
-                continue;
-            }
-
-            if (propName.substr(0, 3) === 'ev-') {
-                // add ev-foo support
-                props[propName] = evHook(value);
-            }
-        }
-    }
-}
-
-function isChild(x) {
-    return isVNode(x) || isVText(x) || isWidget(x) || isVThunk(x);
-}
-
-function isChildren(x) {
-    return typeof x === 'string' || isArray(x) || isChild(x);
-}
-
-function UnexpectedVirtualElement(data) {
-    var err = new Error();
-
-    err.type = 'virtual-hyperscript.unexpected.virtual-element';
-    err.message = 'Unexpected virtual child passed to h().\n' + 'Expected a VNode / Vthunk / VWidget / string but:\n' + 'got:\n' + errorString(data.foreignObject) + '.\n' + 'The parent vnode is:\n' + errorString(data.parentVnode);
-    '\n' + 'Suggested fix: change your `h(..., [ ... ])` callsite.';
-    err.foreignObject = data.foreignObject;
-    err.parentVnode = data.parentVnode;
-
-    return err;
-}
-
-function errorString(obj) {
+(function () {
     try {
-        return JSON.stringify(obj, null, '    ');
-    } catch (e) {
-        return String(obj);
-    }
-}
-
-/***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var split = __webpack_require__(19);
-
-var classIdSplit = /([\.#]?[a-zA-Z0-9\u007F-\uFFFF_:-]+)/;
-var notClassId = /^\.|#/;
-
-module.exports = parseTag;
-
-function parseTag(tag, props) {
-    if (!tag) {
-        return 'DIV';
-    }
-
-    var noId = !props.hasOwnProperty('id');
-
-    var tagParts = split(tag, classIdSplit);
-    var tagName = null;
-
-    if (notClassId.test(tagParts[1])) {
-        tagName = 'DIV';
-    }
-
-    var classes, part, type, i;
-
-    for (i = 0; i < tagParts.length; i++) {
-        part = tagParts[i];
-
-        if (!part) {
-            continue;
-        }
-
-        type = part.charAt(0);
-
-        if (!tagName) {
-            tagName = part;
-        } else if (type === '.') {
-            classes = classes || [];
-            classes.push(part.substring(1, part.length));
-        } else if (type === '#' && noId) {
-            props.id = part.substring(1, part.length);
-        }
-    }
-
-    if (classes) {
-        if (props.className) {
-            classes.push(props.className);
-        }
-
-        props.className = classes.join(' ');
-    }
-
-    return props.namespace ? tagName : tagName.toUpperCase();
-}
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var version = __webpack_require__(2);
-var isVNode = __webpack_require__(1);
-var isWidget = __webpack_require__(0);
-var isThunk = __webpack_require__(3);
-var isVHook = __webpack_require__(4);
-
-module.exports = VirtualNode;
-
-var noProperties = {};
-var noChildren = [];
-
-function VirtualNode(tagName, properties, children, key, namespace) {
-    this.tagName = tagName;
-    this.properties = properties || noProperties;
-    this.children = children || noChildren;
-    this.key = key != null ? String(key) : undefined;
-    this.namespace = typeof namespace === "string" ? namespace : null;
-
-    var count = children && children.length || 0;
-    var descendants = 0;
-    var hasWidgets = false;
-    var hasThunks = false;
-    var descendantHooks = false;
-    var hooks;
-
-    for (var propName in properties) {
-        if (properties.hasOwnProperty(propName)) {
-            var property = properties[propName];
-            if (isVHook(property) && property.unhook) {
-                if (!hooks) {
-                    hooks = {};
-                }
-
-                hooks[propName] = property;
-            }
-        }
-    }
-
-    for (var i = 0; i < count; i++) {
-        var child = children[i];
-        if (isVNode(child)) {
-            descendants += child.count || 0;
-
-            if (!hasWidgets && child.hasWidgets) {
-                hasWidgets = true;
-            }
-
-            if (!hasThunks && child.hasThunks) {
-                hasThunks = true;
-            }
-
-            if (!descendantHooks && (child.hooks || child.descendantHooks)) {
-                descendantHooks = true;
-            }
-        } else if (!hasWidgets && isWidget(child)) {
-            if (typeof child.destroy === "function") {
-                hasWidgets = true;
-            }
-        } else if (!hasThunks && isThunk(child)) {
-            hasThunks = true;
-        }
-    }
-
-    this.count = count + descendants;
-    this.hasWidgets = hasWidgets;
-    this.hasThunks = hasThunks;
-    this.hooks = hooks;
-    this.descendantHooks = descendantHooks;
-}
-
-VirtualNode.prototype.version = version;
-VirtualNode.prototype.type = "VirtualNode";
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var version = __webpack_require__(2);
-
-module.exports = VirtualText;
-
-function VirtualText(text) {
-    this.text = String(text);
-}
-
-VirtualText.prototype.version = version;
-VirtualText.prototype.type = "VirtualText";
-
-/***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isObject = __webpack_require__(9);
-var isHook = __webpack_require__(4);
-
-module.exports = diffProps;
-
-function diffProps(a, b) {
-    var diff;
-
-    for (var aKey in a) {
-        if (!(aKey in b)) {
-            diff = diff || {};
-            diff[aKey] = undefined;
-        }
-
-        var aValue = a[aKey];
-        var bValue = b[aKey];
-
-        if (aValue === bValue) {
-            continue;
-        } else if (isObject(aValue) && isObject(bValue)) {
-            if (getPrototype(bValue) !== getPrototype(aValue)) {
-                diff = diff || {};
-                diff[aKey] = bValue;
-            } else if (isHook(bValue)) {
-                diff = diff || {};
-                diff[aKey] = bValue;
-            } else {
-                var objectDiff = diffProps(aValue, bValue);
-                if (objectDiff) {
-                    diff = diff || {};
-                    diff[aKey] = objectDiff;
-                }
-            }
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
         } else {
-            diff = diff || {};
-            diff[aKey] = bValue;
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+})();
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch (e) {
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch (e) {
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
         }
     }
-
-    for (var bKey in b) {
-        if (!(bKey in a)) {
-            diff = diff || {};
-            diff[bKey] = b[bKey];
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e) {
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e) {
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
         }
     }
-
-    return diff;
 }
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
 
-function getPrototype(value) {
-    if (Object.getPrototypeOf) {
-        return Object.getPrototypeOf(value);
-    } else if (value.__proto__) {
-        return value.__proto__;
-    } else if (value.constructor) {
-        return value.constructor.prototype;
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
     }
 }
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while (len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () {
+    return '/';
+};
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function () {
+    return 0;
+};
 
 /***/ }),
-/* 41 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(global, process) {
 
+(function (global, undefined) {
+    "use strict";
 
-var isArray = __webpack_require__(7);
-
-var VPatch = __webpack_require__(13);
-var isVNode = __webpack_require__(1);
-var isVText = __webpack_require__(5);
-var isWidget = __webpack_require__(0);
-var isThunk = __webpack_require__(3);
-var handleThunk = __webpack_require__(12);
-
-var diffProps = __webpack_require__(40);
-
-module.exports = diff;
-
-function diff(a, b) {
-    var patch = { a: a };
-    walk(a, b, patch, 0);
-    return patch;
-}
-
-function walk(a, b, patch, index) {
-    if (a === b) {
+    if (global.setImmediate) {
         return;
     }
 
-    var apply = patch[index];
-    var applyClear = false;
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
 
-    if (isThunk(a) || isThunk(b)) {
-        thunks(a, b, patch, index);
-    } else if (b == null) {
-
-        // If a is a widget we will add a remove patch for it
-        // Otherwise any child widgets/hooks must be destroyed.
-        // This prevents adding two remove patches for a widget.
-        if (!isWidget(a)) {
-            clearState(a, patch, index);
-            apply = patch[index];
+    function setImmediate(callback) {
+        // Callback can either be a function or a string
+        if (typeof callback !== "function") {
+            callback = new Function("" + callback);
         }
+        // Copy function arguments
+        var args = new Array(arguments.length - 1);
+        for (var i = 0; i < args.length; i++) {
+            args[i] = arguments[i + 1];
+        }
+        // Store and register the task
+        var task = { callback: callback, args: args };
+        tasksByHandle[nextHandle] = task;
+        registerImmediate(nextHandle);
+        return nextHandle++;
+    }
 
-        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b));
-    } else if (isVNode(b)) {
-        if (isVNode(a)) {
-            if (a.tagName === b.tagName && a.namespace === b.namespace && a.key === b.key) {
-                var propsPatch = diffProps(a.properties, b.properties);
-                if (propsPatch) {
-                    apply = appendPatch(apply, new VPatch(VPatch.PROPS, a, propsPatch));
-                }
-                apply = diffChildren(a, b, patch, apply, index);
-            } else {
-                apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b));
-                applyClear = true;
-            }
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+            case 0:
+                callback();
+                break;
+            case 1:
+                callback(args[0]);
+                break;
+            case 2:
+                callback(args[0], args[1]);
+                break;
+            case 3:
+                callback(args[0], args[1], args[2]);
+                break;
+            default:
+                callback.apply(undefined, args);
+                break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
         } else {
-            apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b));
-            applyClear = true;
-        }
-    } else if (isVText(b)) {
-        if (!isVText(a)) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b));
-            applyClear = true;
-        } else if (a.text !== b.text) {
-            apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b));
-        }
-    } else if (isWidget(b)) {
-        if (!isWidget(a)) {
-            applyClear = true;
-        }
-
-        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b));
-    }
-
-    if (apply) {
-        patch[index] = apply;
-    }
-
-    if (applyClear) {
-        clearState(a, patch, index);
-    }
-}
-
-function diffChildren(a, b, patch, apply, index) {
-    var aChildren = a.children;
-    var orderedSet = reorder(aChildren, b.children);
-    var bChildren = orderedSet.children;
-
-    var aLen = aChildren.length;
-    var bLen = bChildren.length;
-    var len = aLen > bLen ? aLen : bLen;
-
-    for (var i = 0; i < len; i++) {
-        var leftNode = aChildren[i];
-        var rightNode = bChildren[i];
-        index += 1;
-
-        if (!leftNode) {
-            if (rightNode) {
-                // Excess nodes in b need to be added
-                apply = appendPatch(apply, new VPatch(VPatch.INSERT, null, rightNode));
-            }
-        } else {
-            walk(leftNode, rightNode, patch, index);
-        }
-
-        if (isVNode(leftNode) && leftNode.count) {
-            index += leftNode.count;
-        }
-    }
-
-    if (orderedSet.moves) {
-        // Reorder nodes last
-        apply = appendPatch(apply, new VPatch(VPatch.ORDER, a, orderedSet.moves));
-    }
-
-    return apply;
-}
-
-function clearState(vNode, patch, index) {
-    // TODO: Make this a single walk, not two
-    unhook(vNode, patch, index);
-    destroyWidgets(vNode, patch, index);
-}
-
-// Patch records for all destroyed widgets must be added because we need
-// a DOM node reference for the destroy function
-function destroyWidgets(vNode, patch, index) {
-    if (isWidget(vNode)) {
-        if (typeof vNode.destroy === "function") {
-            patch[index] = appendPatch(patch[index], new VPatch(VPatch.REMOVE, vNode, null));
-        }
-    } else if (isVNode(vNode) && (vNode.hasWidgets || vNode.hasThunks)) {
-        var children = vNode.children;
-        var len = children.length;
-        for (var i = 0; i < len; i++) {
-            var child = children[i];
-            index += 1;
-
-            destroyWidgets(child, patch, index);
-
-            if (isVNode(child) && child.count) {
-                index += child.count;
-            }
-        }
-    } else if (isThunk(vNode)) {
-        thunks(vNode, null, patch, index);
-    }
-}
-
-// Create a sub-patch for thunks
-function thunks(a, b, patch, index) {
-    var nodes = handleThunk(a, b);
-    var thunkPatch = diff(nodes.a, nodes.b);
-    if (hasPatches(thunkPatch)) {
-        patch[index] = new VPatch(VPatch.THUNK, null, thunkPatch);
-    }
-}
-
-function hasPatches(patch) {
-    for (var index in patch) {
-        if (index !== "a") {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// Execute hooks when two nodes are identical
-function unhook(vNode, patch, index) {
-    if (isVNode(vNode)) {
-        if (vNode.hooks) {
-            patch[index] = appendPatch(patch[index], new VPatch(VPatch.PROPS, vNode, undefinedKeys(vNode.hooks)));
-        }
-
-        if (vNode.descendantHooks || vNode.hasThunks) {
-            var children = vNode.children;
-            var len = children.length;
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
-                index += 1;
-
-                unhook(child, patch, index);
-
-                if (isVNode(child) && child.count) {
-                    index += child.count;
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
                 }
             }
         }
-    } else if (isThunk(vNode)) {
-        thunks(vNode, null, patch, index);
-    }
-}
-
-function undefinedKeys(obj) {
-    var result = {};
-
-    for (var key in obj) {
-        result[key] = undefined;
     }
 
-    return result;
-}
-
-// List diff, naive left to right reordering
-function reorder(aChildren, bChildren) {
-    // O(M) time, O(M) memory
-    var bChildIndex = keyIndex(bChildren);
-    var bKeys = bChildIndex.keys;
-    var bFree = bChildIndex.free;
-
-    if (bFree.length === bChildren.length) {
-        return {
-            children: bChildren,
-            moves: null
+    function installNextTickImplementation() {
+        registerImmediate = function registerImmediate(handle) {
+            process.nextTick(function () {
+                runIfPresent(handle);
+            });
         };
     }
 
-    // O(N) time, O(N) memory
-    var aChildIndex = keyIndex(aChildren);
-    var aKeys = aChildIndex.keys;
-    var aFree = aChildIndex.free;
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function () {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
 
-    if (aFree.length === aChildren.length) {
-        return {
-            children: bChildren,
-            moves: null
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function onGlobalMessage(event) {
+            if (event.source === global && typeof event.data === "string" && event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function registerImmediate(handle) {
+            global.postMessage(messagePrefix + handle, "*");
         };
     }
 
-    // O(MAX(N, M)) memory
-    var newChildren = [];
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function (event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
 
-    var freeIndex = 0;
-    var freeCount = bFree.length;
-    var deletedItems = 0;
-
-    // Iterate through a and match a node in b
-    // O(N) time,
-    for (var i = 0; i < aChildren.length; i++) {
-        var aItem = aChildren[i];
-        var itemIndex;
-
-        if (aItem.key) {
-            if (bKeys.hasOwnProperty(aItem.key)) {
-                // Match up the old keys
-                itemIndex = bKeys[aItem.key];
-                newChildren.push(bChildren[itemIndex]);
-            } else {
-                // Remove old keyed items
-                itemIndex = i - deletedItems++;
-                newChildren.push(null);
-            }
-        } else {
-            // Match the item in a with the next free item in b
-            if (freeIndex < freeCount) {
-                itemIndex = bFree[freeIndex++];
-                newChildren.push(bChildren[itemIndex]);
-            } else {
-                // There are no free items in b to match with
-                // the free items in a, so the extra free nodes
-                // are deleted.
-                itemIndex = i - deletedItems++;
-                newChildren.push(null);
-            }
-        }
-    }
-
-    var lastFreeIndex = freeIndex >= bFree.length ? bChildren.length : bFree[freeIndex];
-
-    // Iterate through b and append any new keys
-    // O(M) time
-    for (var j = 0; j < bChildren.length; j++) {
-        var newItem = bChildren[j];
-
-        if (newItem.key) {
-            if (!aKeys.hasOwnProperty(newItem.key)) {
-                // Add any new keyed items
-                // We are adding new items to the end and then sorting them
-                // in place. In future we should insert new items in place.
-                newChildren.push(newItem);
-            }
-        } else if (j >= lastFreeIndex) {
-            // Add any leftover non-keyed items
-            newChildren.push(newItem);
-        }
-    }
-
-    var simulate = newChildren.slice();
-    var simulateIndex = 0;
-    var removes = [];
-    var inserts = [];
-    var simulateItem;
-
-    for (var k = 0; k < bChildren.length;) {
-        var wantedItem = bChildren[k];
-        simulateItem = simulate[simulateIndex];
-
-        // remove items
-        while (simulateItem === null && simulate.length) {
-            removes.push(remove(simulate, simulateIndex, null));
-            simulateItem = simulate[simulateIndex];
-        }
-
-        if (!simulateItem || simulateItem.key !== wantedItem.key) {
-            // if we need a key in this position...
-            if (wantedItem.key) {
-                if (simulateItem && simulateItem.key) {
-                    // if an insert doesn't put this key in place, it needs to move
-                    if (bKeys[simulateItem.key] !== k + 1) {
-                        removes.push(remove(simulate, simulateIndex, simulateItem.key));
-                        simulateItem = simulate[simulateIndex];
-                        // if the remove didn't put the wanted item in place, we need to insert it
-                        if (!simulateItem || simulateItem.key !== wantedItem.key) {
-                            inserts.push({ key: wantedItem.key, to: k });
-                        }
-                        // items are matching, so skip ahead
-                        else {
-                                simulateIndex++;
-                            }
-                    } else {
-                        inserts.push({ key: wantedItem.key, to: k });
-                    }
-                } else {
-                    inserts.push({ key: wantedItem.key, to: k });
-                }
-                k++;
-            }
-            // a key in simulate has no matching wanted key, remove it
-            else if (simulateItem && simulateItem.key) {
-                    removes.push(remove(simulate, simulateIndex, simulateItem.key));
-                }
-        } else {
-            simulateIndex++;
-            k++;
-        }
-    }
-
-    // remove all the remaining nodes from simulate
-    while (simulateIndex < simulate.length) {
-        simulateItem = simulate[simulateIndex];
-        removes.push(remove(simulate, simulateIndex, simulateItem && simulateItem.key));
-    }
-
-    // If the only moves we have are deletes then we can just
-    // let the delete patch remove these items.
-    if (removes.length === deletedItems && !inserts.length) {
-        return {
-            children: newChildren,
-            moves: null
+        registerImmediate = function registerImmediate(handle) {
+            channel.port2.postMessage(handle);
         };
     }
 
-    return {
-        children: newChildren,
-        moves: {
-            removes: removes,
-            inserts: inserts
-        }
-    };
-}
-
-function remove(arr, index, key) {
-    arr.splice(index, 1);
-
-    return {
-        from: index,
-        key: key
-    };
-}
-
-function keyIndex(children) {
-    var keys = {};
-    var free = [];
-    var length = children.length;
-
-    for (var i = 0; i < length; i++) {
-        var child = children[i];
-
-        if (child.key) {
-            keys[child.key] = i;
-        } else {
-            free.push(i);
-        }
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function registerImmediate(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
     }
 
-    return {
-        keys: keys, // A hash of key name to index
-        free: free // An array of unkeyed item indices
-    };
-}
+    function installSetTimeoutImplementation() {
+        registerImmediate = function registerImmediate(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
 
-function appendPatch(apply, patch) {
-    if (apply) {
-        if (isArray(apply)) {
-            apply.push(patch);
-        } else {
-            apply = [apply, patch];
-        }
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
 
-        return apply;
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
     } else {
-        return patch;
+        // For older browsers
+        installSetTimeoutImplementation();
     }
-}
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+})(typeof self === "undefined" ? typeof global === "undefined" ? undefined : global : self);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16), __webpack_require__(13)))
 
 /***/ }),
-/* 42 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.replace = replace;
-/*
-* replaces a value at a specific index in an array
-*/
-function replace(arr, index, value) {
-	var newArr = [].concat(arr);
-	newArr.splice(index, 1, value);
-	return newArr;
+var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function () {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function () {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout = exports.clearInterval = function (timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function () {};
+Timeout.prototype.close = function () {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function (item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function (item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function (item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout) item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(14);
+exports.setImmediate = setImmediate;
+exports.clearImmediate = clearImmediate;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var g;
+
+// This works in non-strict mode
+g = function () {
+	return this;
+}();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1, eval)("this");
+} catch (e) {
+	// This works if the window reference is available
+	if ((typeof window === "undefined" ? "undefined" : _typeof(window)) === "object") g = window;
 }
 
-/***/ }),
-/* 43 */
-/***/ (function(module, exports) {
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
 
-/* (ignored) */
+module.exports = g;
 
 /***/ }),
-/* 44 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2519,7 +1795,31 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _reduxy = __webpack_require__(16);
+var _fetchHelper = __webpack_require__(1);
+
+Object.keys(_fetchHelper).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _fetchHelper[key];
+    }
+  });
+});
+
+var _promiseQueue = __webpack_require__(5);
+
+Object.keys(_promiseQueue).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _promiseQueue[key];
+    }
+  });
+});
+
+var _reduxy = __webpack_require__(4);
 
 Object.keys(_reduxy).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -2531,7 +1831,7 @@ Object.keys(_reduxy).forEach(function (key) {
   });
 });
 
-var _streamy = __webpack_require__(6);
+var _streamy = __webpack_require__(0);
 
 Object.keys(_streamy).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -2543,7 +1843,19 @@ Object.keys(_streamy).forEach(function (key) {
   });
 });
 
-var _streamyHyperscript = __webpack_require__(17);
+var _streamyDom = __webpack_require__(6);
+
+Object.keys(_streamyDom).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _streamyDom[key];
+    }
+  });
+});
+
+var _streamyHyperscript = __webpack_require__(2);
 
 Object.keys(_streamyHyperscript).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -2555,29 +1867,418 @@ Object.keys(_streamyHyperscript).forEach(function (key) {
   });
 });
 
-var _streamyRender = __webpack_require__(18);
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
 
-Object.keys(_streamyRender).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _streamyRender[key];
-    }
-  });
+exports = module.exports = __webpack_require__(9)();
+// imports
+
+
+// module
+exports.push([module.i, "button {\n  border: 2px solid green; }\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+var stylesInDom = {},
+	memoize = function(fn) {
+		var memo;
+		return function () {
+			if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+			return memo;
+		};
+	},
+	isOldIE = memoize(function() {
+		return /msie [6-9]\b/.test(self.navigator.userAgent.toLowerCase());
+	}),
+	getHeadElement = memoize(function () {
+		return document.head || document.getElementsByTagName("head")[0];
+	}),
+	singletonElement = null,
+	singletonCounter = 0,
+	styleElementsInsertedAtTop = [];
+
+module.exports = function(list, options) {
+	if(typeof DEBUG !== "undefined" && DEBUG) {
+		if(typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (typeof options.singleton === "undefined") options.singleton = isOldIE();
+
+	// By default, add <style> tags to the bottom of <head>.
+	if (typeof options.insertAt === "undefined") options.insertAt = "bottom";
+
+	var styles = listToStyles(list);
+	addStylesToDom(styles, options);
+
+	return function update(newList) {
+		var mayRemove = [];
+		for(var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+		if(newList) {
+			var newStyles = listToStyles(newList);
+			addStylesToDom(newStyles, options);
+		}
+		for(var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+			if(domStyle.refs === 0) {
+				for(var j = 0; j < domStyle.parts.length; j++)
+					domStyle.parts[j]();
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+}
+
+function addStylesToDom(styles, options) {
+	for(var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+		if(domStyle) {
+			domStyle.refs++;
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles(list) {
+	var styles = [];
+	var newStyles = {};
+	for(var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+		if(!newStyles[id])
+			styles.push(newStyles[id] = {id: id, parts: [part]});
+		else
+			newStyles[id].parts.push(part);
+	}
+	return styles;
+}
+
+function insertStyleElement(options, styleElement) {
+	var head = getHeadElement();
+	var lastStyleElementInsertedAtTop = styleElementsInsertedAtTop[styleElementsInsertedAtTop.length - 1];
+	if (options.insertAt === "top") {
+		if(!lastStyleElementInsertedAtTop) {
+			head.insertBefore(styleElement, head.firstChild);
+		} else if(lastStyleElementInsertedAtTop.nextSibling) {
+			head.insertBefore(styleElement, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			head.appendChild(styleElement);
+		}
+		styleElementsInsertedAtTop.push(styleElement);
+	} else if (options.insertAt === "bottom") {
+		head.appendChild(styleElement);
+	} else {
+		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+	}
+}
+
+function removeStyleElement(styleElement) {
+	styleElement.parentNode.removeChild(styleElement);
+	var idx = styleElementsInsertedAtTop.indexOf(styleElement);
+	if(idx >= 0) {
+		styleElementsInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement(options) {
+	var styleElement = document.createElement("style");
+	styleElement.type = "text/css";
+	insertStyleElement(options, styleElement);
+	return styleElement;
+}
+
+function createLinkElement(options) {
+	var linkElement = document.createElement("link");
+	linkElement.rel = "stylesheet";
+	insertStyleElement(options, linkElement);
+	return linkElement;
+}
+
+function addStyle(obj, options) {
+	var styleElement, update, remove;
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+		styleElement = singletonElement || (singletonElement = createStyleElement(options));
+		update = applyToSingletonTag.bind(null, styleElement, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, styleElement, styleIndex, true);
+	} else if(obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function") {
+		styleElement = createLinkElement(options);
+		update = updateLink.bind(null, styleElement);
+		remove = function() {
+			removeStyleElement(styleElement);
+			if(styleElement.href)
+				URL.revokeObjectURL(styleElement.href);
+		};
+	} else {
+		styleElement = createStyleElement(options);
+		update = applyToTag.bind(null, styleElement);
+		remove = function() {
+			removeStyleElement(styleElement);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle(newObj) {
+		if(newObj) {
+			if(newObj.css === obj.css && newObj.media === obj.media && newObj.sourceMap === obj.sourceMap)
+				return;
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag(styleElement, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (styleElement.styleSheet) {
+		styleElement.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = styleElement.childNodes;
+		if (childNodes[index]) styleElement.removeChild(childNodes[index]);
+		if (childNodes.length) {
+			styleElement.insertBefore(cssNode, childNodes[index]);
+		} else {
+			styleElement.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag(styleElement, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		styleElement.setAttribute("media", media)
+	}
+
+	if(styleElement.styleSheet) {
+		styleElement.styleSheet.cssText = css;
+	} else {
+		while(styleElement.firstChild) {
+			styleElement.removeChild(styleElement.firstChild);
+		}
+		styleElement.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink(linkElement, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	if(sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = linkElement.href;
+
+	linkElement.href = URL.createObjectURL(blob);
+
+	if(oldSrc)
+		URL.revokeObjectURL(oldSrc);
+}
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(18);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(19)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./demo_component.scss", function() {
+			var newContent = require("!!../node_modules/css-loader/index.js!../node_modules/sass-loader/lib/loader.js!./demo_component.scss");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _streamyHyperscript = __webpack_require__(2);
+
+var _reduxy = __webpack_require__(4);
+
+var _fetchHelper = __webpack_require__(1);
+
+var _streamy = __webpack_require__(0);
+
+var _demo_clicks = __webpack_require__(3);
+
+var _router = __webpack_require__(8);
+
+var _demo_component = __webpack_require__(7);
+
+// create the store providing reducers
+var store = (0, _reduxy.reduxy)({
+	clicks: _demo_clicks.clicks,
+	router: _router.routerReducer
 });
+(0, _router.initRouter)(store);
 
-var _fetchHelper = __webpack_require__(15);
+// main render function for the application
+// render provided hyperscript into a parent element
+// zliq passes around HTMLElement elements so you can decide what to do with them
+var app = (0, _streamyHyperscript.h)(
+	'div',
+	{ id: 'foo', className: 'bar' },
+	[(0, _streamyHyperscript.h)(
+		'p',
+		{ className: store.$('clicks.clicks').map(function (clicks) {
+				return 'clicks-' + clicks;
+			}),
+			style: {
+				'color': store.$('clicks.clicks').map(function (clicks) {
+					return clicks > 0 ? 'red' : 'blue';
+				})
+			} },
+		[(0, _streamyHyperscript.h)(
+			_demo_component.SuperDumbComponent,
+			null,
+			[]
+		)]
+	), (0, _streamyHyperscript.h)(
+		'button',
+		{ onclick: function onclick(e) {
+				return store.dispatch({ type: _demo_clicks.CLICK });
+			} },
+		['Click To Count']
+	), (0, _streamyHyperscript.h)(
+		'p',
+		null,
+		[store.$('clicks.clicks')]
+	), (0, _streamyHyperscript.h)(
+		'hr',
+		null,
+		[]
+	), (0, _streamyHyperscript.h)(
+		'button',
+		{ onclick: function onclick(e) {
+				return fetchStuff();
+			} },
+		['Fetch Quote']
+	), (0, _streamyHyperscript.h)(
+		'p',
+		null,
+		[store.$('clicks.fetched').map(function (payload) {
+			return !payload ? null : JSON.stringify(payload);
+		})]
+	), (0, _streamyHyperscript.h)(
+		'hr',
+		null,
+		[]
+	), (0, _streamyHyperscript.h)(
+		_demo_component.CleverComponent,
+		{ store: store },
+		[]
+	), (0, _streamyHyperscript.h)(
+		_demo_component.DumbComponent,
+		{ store: store },
+		[]
+	), (0, _streamyHyperscript.h)(
+		'hr',
+		null,
+		[]
+	), (0, _streamyHyperscript.h)(
+		'h4',
+		null,
+		['Router:']
+	), (0, _streamyHyperscript.h)(
+		'a',
+		{ href: '/places?place=2' },
+		['go places']
+	), (0, _streamyHyperscript.h)(
+		_router.Router,
+		{ store: store, route: '/places' },
+		[(0, _streamyHyperscript.h)(
+			'p',
+			null,
+			['You are at place ', store.$('router.params.place')]
+		)]
+	)]
+);
+document.querySelector('#app').appendChild(app);
 
-Object.keys(_fetchHelper).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _fetchHelper[key];
-    }
-  });
-});
+// easy fetch is a little helper to handle requests and how they are handled by redux
+// it has a counterpart in your reducer to listen for the actions
+// it sets the {x}_loading and {x}_message properties in the store
+function fetchStuff() {
+	(0, _fetchHelper.easyFetch)(store, null)({
+		method: 'GET',
+		url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
+	}, 'FETCHED');
+}
 
 /***/ })
 /******/ ]);

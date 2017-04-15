@@ -28,12 +28,13 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
     let results = [];
     maxTimePerChunk = maxTimePerChunk || 200;
     
-    let startTime = now();
+    let startTime = new Date();
     queueFnArr.forEach(fn => {
         queue.add(() => {
             // if max time for one batch has reached, output the results for that batch
-            if ((now() - startTime) > maxTimePerChunk) {
-                startTime = now();
+            let now = new Date();
+            if ((now - startTime) > maxTimePerChunk) {
+                startTime = now;
                 batchCallback && batchCallback(results, results.length === queueFnArr.length);
                 results = [];
             }
@@ -45,13 +46,10 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
             results = results.concat(fn());
         })
     });
+    // when the queue is empty return all the results not yet send
     return queue.add(() => {
         if (results.length > 0) {
             batchCallback && batchCallback(results, true);
         }
     });
-} 
-			
-function now() {
-	return new Date().getTime();
 }

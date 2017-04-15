@@ -7,6 +7,7 @@ const INITIAL_STORE = {
 	params: {}
 };
 
+// we use a reducer to unify the way we check for information
 export function routerReducer(_state, {type, payload}) {
 	let state = _state || INITIAL_STORE;
 	switch (type) {
@@ -20,6 +21,8 @@ export function routerReducer(_state, {type, payload}) {
 }
 
 export function initRouter(store) {
+    // intercepts clicks on links
+    // if the link is local '/...' we change the location hash instead
 	function interceptClickEvent(e) {
         var href;
         var target = e.target || e.srcElement;
@@ -37,11 +40,13 @@ export function initRouter(store) {
         }
     }
 
+    // callback for HTML5 navigation events
+    // save the routing info in the store
     function dispatchRouteChange() {
         let href = location.hash.substr(1, location.hash.length - 1);
         store.dispatch({ type: NEW_ROUTE, payload: {
             route: href === '' ? '/' : href.split('?')[0],
-            params: getParams(href)
+            params: getUrlParams(href)
         }});
     }
 
@@ -49,15 +54,18 @@ export function initRouter(store) {
     window.onpopstate = function() {
         dispatchRouteChange();
     };
-    //listen for link click events at the document level
+
+    // listen for link click events at the document level
     document.addEventListener('click', interceptClickEvent);
+
+    // react to initial routing info
     if (location.hash != '') {
         dispatchRouteChange();
     }
 }
 
 // src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
-function getParams(href) {
+function getUrlParams(href) {
     var params = {};
     if (href === '') {
         return params;
@@ -85,6 +93,7 @@ function getParams(href) {
     return params;
 }
 
+// this is an element that shows it's content only if the expected route is met
 export function Router({store, route}, children) {
     if (store == null) {
         console.log('The Router component needs the store as attribute.')
