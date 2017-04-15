@@ -155,7 +155,7 @@ function reduce(parent$, fn, startValue) {
 	let aggregate = fn(startValue, parent$.value);
 	let newStream = stream(aggregate);
 	parent$.listeners.push(function reduceValue(value) {
-		aggregate = fn(startValue, parent$.value);
+		aggregate = fn(aggregate, parent$.value);
 		newStream(aggregate);
 	});
 	return newStream;

@@ -3,47 +3,33 @@ import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } fro
 import assert from 'assert';
 import { mockStore } from './helpers/mockStore';
 
+// ATTENTION
+// the rendering of children is sometimes deferred to an animationframe (if there are to many changes)
+// in that case we have to wait till the children are rendered
+// checkout the list example for this case
+
 describe('Components', () => {
-	it('SuperDumpComponent should show', (done) => {
+	it('SuperDumpComponent should show', () => {
 		let element = <SuperDumbComponent />;
-		// the rendering of children is deferred, we have to wait till the children are rendered
 		// here they are not yet there
-		assert.equal(element.outerHTML, '<p></p>');
-		// we can listen to zliq genereated update events to wait for an element to be rendered
-		element.addEventListener(UPDATE_EVENT.DONE, () => {
-			// for DOM outputs we just say how the result show look like
-			assert.equal(element.outerHTML, '<p>HELLO WORLD</p>');
-			done();
-		});
+		assert.equal(element.outerHTML, '<p>HELLO WORLD</p>');
 	});
-	it('CleverComponent should perform inner operation and show result', (done) => {
+	it('CleverComponent should perform inner operation and show result', () => {
 		// to test components dependend on state we just manipulate the input streams
-		// for the store there we use a mokking obect
+		// for the store we use a mocking object
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// this component calculates the clicks * 2 inside and shows the result
 		let component = <CleverComponent sinks={ {store} } />;
-		component.addEventListener(UPDATE_EVENT.DONE, () => {
-			assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
-			done();
-		});
+		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
 	});
 
-	it('CleverComponent should update on store update', (done) => {
+	it('CleverComponent should update on store update', () => {
 		// to test that components react to their inputs we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
 		let component = <CleverComponent sinks={ {store} } />;
-		// we use a counter to check which update we are currently testing
-		let update = 0;
-		component.addEventListener(UPDATE_EVENT.DONE, () => {
-			if (++update == 1) {
-				assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
-				// here we can activate consecutive updates
-				store.state$({ clicks: { clicks: 6 }});
-			} else {
-				assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
-				done();
-			}
-		});
+		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
+		store.state$({ clicks: { clicks: 6 }});
+		assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
 	});
 
 	it('should react to attached events', (done) => {
@@ -61,24 +47,21 @@ describe('Components', () => {
 		});
 	});
 
-	it('should render a long array faster', (done) => {
+	it('should render a list of changes in an animationframe', (done) => {
 		var arr = [];
-		var length = 500;
+		var length = 20;
 		for (let i = 0; i < length; i++) {
 			arr.push({ name: i });
 		}
-		let store = mockStore({ items: { items: arr, selected: arr[50] }});
-		// this component renders a list of items dependend on the store
-		let listElem = <ListComponent sinks= { { store }} />;
-		// it renders the array iteratively for a better user expirience
-		// on those iterations it emits also an event
-		listElem.addEventListener(UPDATE_EVENT.PARTIAL, () => {
-			var curLength = listElem.querySelectorAll('li').length;
-			assert.ok(curLength > 0 && curLength < length);
-		});
+		let listElems = arr.map(x => <li>{x.name}</li>);
+		let listElem = <ul>
+			{ listElems }
+		</ul>;
+		// list items are not rendered yet as they are bundled into one animation frame
+		assert.equal(listElem.querySelectorAll('li').length, 0);
+		// we wait for the updates on the parent to have happend
 		listElem.addEventListener(UPDATE_EVENT.DONE, () => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
-			assert.equal(listElem.querySelectorAll('li')[50].outerHTML, '<li>50 X</li>');
 			done();
 		});
 	}); 

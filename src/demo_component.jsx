@@ -16,12 +16,13 @@ export const DumbComponent = ({sinks: {store}}) =>
 export const SuperDumbComponent = () =>
 	<p>HELLO WORLD</p>;
 
+// OBJECT TO CHANGE
 // component that has a long list of elements
-export const ListComponent = ({sinks: {store}}) =>
+/*export const ListComponent = ({sinks: {store}}) =>
 	<ul> 
 		{
 			list(store.$('items'), 'items', (item, {selected}) =>
 				<li>{item.name} {selected ? 'X' : ''}</li>
 			)
 		}
-	</ul>;
+	</ul>;*/

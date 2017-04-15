@@ -4,10 +4,10 @@ import {UPDATE_EVENT} from './streamy-dom';
 import {h} from './streamy-hyperscript';
 
 let DEFAULT_CHILD_HEIGHT = 30;
-let DEFAULT_ELEM_PADDING = 30;
+let DEFAULT_ELEM_PADDING = 6;
 
 export function LazyList(props) {
-    let {store, list$, template, className, height, maxHeight} = props;
+    let {store, list$, template, className, height, childHeight} = props;
     let children$ = stream([]);
     let renderBounds$ = stream({
         start: 0,
@@ -15,52 +15,17 @@ export function LazyList(props) {
         visibleChildren: 0
     });
     let containerChildren$ = stream([]);
-    let containerHeight$ = stream(0);
-    let containerHeightStyle$ = chooseContainerHeightStyle(height, maxHeight, containerHeight$);
-    let scrollTop$ = stream(0);
-
-    function chooseContainerHeightStyle(height, maxHeight, containerHeight$) {
-        if (height) {
-            return stream(height);
-        } else if (maxHeight) {
-            return containerHeight$
-            .map(height => maxHeight && height > maxHeight ? maxHeight + 'px' : 'auto');
-        } else {
-            return stream('auto');
-        }
-    };
+    let debouncedScrollTop$ = stream(0);
+    let repaint$ = stream(true);
 
     let container = <lazy-list
         style={{
-            height: containerHeightStyle$,
+            height: height + 'px',
             'overflow-y': 'auto',
             display: 'block' 
         }}>
             {containerChildren$}
         </lazy-list>;
-
-    // react to scrolling
-    let scrollIncontainer$ = merge$(children$, containerHeight$)
-        .filter(([_, height]) => height !== 'auto')
-        .distinct();
-    scrollIncontainer$
-        .reduce((scrollParent, scrollInContainer) => {
-            function onScroll(e) {
-                let scrollTop = scrollParent.scrollTop == undefined ? scrollParent.scrollY : scrollParent.scrollTop;
-                scrollTop = Math.round(scrollTop / 100) * 100;
-                // debounce the scroll update
-                if (Math.abs(scrollTop - scrollTop$.value) > 20) {
-                    scrollTop$(scrollTop);
-                }
-            }
-            if (scrollParent) {
-                scrollParent.removeEventListener('scroll', onScroll);
-            }
-            scrollParent = scrollInContainer ? container : window;
-            scrollParent.addEventListener('scroll', onScroll);
-
-            return scrollParent;
-        }, null);
         
     function getElementHeight(element) {
         return element.getBoundingClientRect().bottom - element.getBoundingClientRect().top;
@@ -69,7 +34,7 @@ export function LazyList(props) {
     let childHeight$ = children$
         .filter(children => children.length > 0)
         .flatMap(children => {
-            let output$ = stream(DEFAULT_CHILD_HEIGHT);
+            let output$ = stream(childHeight || DEFAULT_CHILD_HEIGHT);
             
             if (children != null && children.length > 0) {
                 children[0].addEventListener(UPDATE_EVENT.DONE, () => {
@@ -81,56 +46,94 @@ export function LazyList(props) {
 
             return output$;
         }).distinct();
-    let listLength$ = list$.map(children => children.length || 0).distinct();
+    let containerScrollTop$ = stream();
+    function onScroll(e) {
+        if (repaint$.value) return;
+        let scrollTop = container.scrollTop;
+        scrollTop = Math.floor(scrollTop / 10) * 10;
+        containerScrollTop$(scrollTop);
+    }
+    container.addEventListener('scroll', onScroll);
+    
+    // let scrollContainer$ = scrollIncontainer$
+    //     .reduce((scrollParent, scrollInContainer) => {
+    //         if (scrollParent) {
+    //             scrollParent.removeEventListener('scroll', onScroll);
+    //         }
+    //         scrollParent = scrollInContainer ? container : window;
+    //         scrollParent.addEventListener('scroll', onScroll);
 
-    // calculate the height of the container
-    merge$(childHeight$, listLength$, scrollTop$)
-        .map(([childHeight, childrenCount, scrollTop]) => {
-            let offset = container.getBoundingClientRect().top;
-            let windowHeight = window.innerHeight;
-            let fullHeight = childrenCount * childHeight;
-            if (height && fullHeight > height) {
-                return height;
-            } else if(maxHeight && fullHeight > maxHeight) {
-                return maxHeight;
-            } else if (fullHeight > windowHeight - offset) {
-                return windowHeight - offset;
-            }
+    //         return scrollParent;
+    //     }, null);
+    merge$(childHeight$.distinct(), containerScrollTop$.distinct(), renderBounds$.distinct())
+        .map(([childHeight, scrollTop, {start, end, visibleChildren}]) => {
+            let firstVisibleChild = Math.floor(scrollTop / childHeight);
+            let lastVisibleChild = firstVisibleChild + visibleChildren;
+            return end == 0 
+                || firstVisibleChild <= start -1
+                || lastVisibleChild >= end -1;
         })
-        .distinct()
-        .map(containerHeight$);
+        .map(repaint$);
+    let listLength$ = list$.map(children => children.length || 0).distinct();
         
     // calc render config
-    merge$(childHeight$, listLength$, scrollTop$)
+    let currentRenderBounds$ = merge$(childHeight$, listLength$, containerScrollTop$.distinct())
         .map(([childHeight, childrenCount, scrollTop]) => {
             let visibleSpace = getElementHeight(container);
             let visibleChildren = Math.floor(visibleSpace / childHeight);
-            // we render the some amount of children to the top and bottom to scroll smoother
-            let start = Math.floor(scrollTop / childHeight) - DEFAULT_ELEM_PADDING;
-            start = start > 0 ? start : 0;
-            let end = start + visibleChildren + DEFAULT_ELEM_PADDING * 2;
-            end = end > childrenCount ? childrenCount : end;
+            let newStart = Math.floor((scrollTop || 0) / childHeight);
+            // we render some elements on top and bottom to smooth the scrolling
+            let paddedNewStart = newStart - DEFAULT_ELEM_PADDING;
+            paddedNewStart = paddedNewStart > 0 ? paddedNewStart : 0;
+            let newEnd = newStart + visibleChildren;
+            let paddedNewEnd = newEnd + DEFAULT_ELEM_PADDING;
+            paddedNewEnd = paddedNewEnd > childrenCount ? childrenCount : paddedNewEnd;
 
             return {
-                start,
+                start: paddedNewStart,
                 visibleChildren,
-                end
+                end: paddedNewEnd
             };
         })
-        .reduce((renderBounds$, { start, visibleChildren, end }) => {
-            let {start: oldStart, visibleChildren: oldCount} = renderBounds$.value;
-            if (oldStart == null 
-                || Math.abs(oldCount - visibleChildren) > oldCount / 2 
-                || Math.abs(oldStart - start) > DEFAULT_ELEM_PADDING - 5) {
-                    renderBounds$({
-                        start,
-                        visibleChildren,
-                        end
-                    });    
-            }
+        .distinct();
+    merge$(currentRenderBounds$, repaint$)
+        .map(([currentRenderBounds, repaint]) => {
+            if (!repaint) return;
+            renderBounds$(currentRenderBounds);
+            repaint$(false);
+        });
+        // .filter(({ start, visibleChildren, end }) => {
+        //     let {start: oldStart, end: oldEnd, visibleChildren: oldCount} = renderBounds$.value;
+        //     return (oldStart == 0 && oldEnd == 0) // initial 
+        //         || Math.abs(oldCount - visibleChildren) > 2 
+        //         || (
+        //             Math.abs(oldStart - start) > DEFAULT_ELEM_PADDING - 2
+        //             && Math.abs(oldEnd - end) > DEFAULT_ELEM_PADDING - 2
+        //         );
+        // })
+        // .map(renderBounds$);
+        // .reduce((renderBounds$, { start, visibleChildren, end }) => {
+        //     let {start: oldStart, end: oldEnd, visibleChildren: oldCount} = renderBounds$.value;
+        //     // if (oldStart == null 
+        //     //     || Math.abs(oldCount - visibleChildren) > 2 
+        //     //     || (
+        //     //         Math.abs(oldStart - start) > DEFAULT_ELEM_PADDING - 5
+        //     //         && Math.abs(oldEnd - end) > DEFAULT_ELEM_PADDING - 5
+        //     //     )) {
+        //     //         renderBounds$({
+        //     //             start,
+        //     //             visibleChildren,
+        //     //             end
+        //     //         });    
+        //     // }
+        //     renderBounds$({
+        //         start,
+        //         visibleChildren,
+        //         end
+        //     }); 
 
-            return renderBounds$;
-        }, renderBounds$);
+        //     return renderBounds$;
+        // }, renderBounds$);
 
     let renderedListPart$ = merge$(
         renderBounds$,
@@ -147,7 +150,7 @@ export function LazyList(props) {
         for (let i = 0; i < length; i++) {
             // if new data, render new list item
             let item$ = renderedListPart$.map(list => list[i]);
-            let child = template(item$, childHeight$);
+            let child = template(item$, childHeight$.map(height => height + 'px'));
             children.push(child);
         }
         return children;
@@ -170,7 +173,7 @@ export function LazyList(props) {
         });
     merge$(wrapElems$, children$)
         .map(([[top, bottom], children]) => [].concat(top, ...children, bottom))
-        .map(containerChildren$);
+        .map(containerChildren$)
 
     return container;
 }

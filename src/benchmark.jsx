@@ -125,14 +125,13 @@ let app =
 		</div>
 		<table className='table table-hover table-striped test-data' style="display: block;">
 			<tbody style="display: block;">
-				<LazyList list$={state$.$('items')} height="400px" style={{width: '400px'}} template={(item$, height$) => {
+				<LazyList list$={state$.$('items')} height={400} childHeight={34.55} style={{width: '400px'}} template={(item$, height$) => {
 					let isSelected$ = merge$(selected$, item$).map(([selected, item]) => {
 						return selected === item.id;
 					});
 
 					return <tr id={item$.$('id')} 
 						className={isSelected$.map(selected => selected ? 'danger' : '')}
-						style={{height: height$}}
 					>
 						<td className='col-md-1'>{item$.$('id')}</td>
 						<td className='col-md-4'>

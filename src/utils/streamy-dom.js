@@ -24,7 +24,6 @@ function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
 	
 	// TODO add comment
-	// TODO batch updates
 	children$Arr.map((child$, index) => {
 		let oldChildArr = [];
 		child$.map(childArr => {
@@ -66,10 +65,15 @@ function manageChildren(parentElem, children$Arr) {
 				})
 			}
 
-			changes.forEach(({indexes, type, num, elems}) => {
-				updateDOMforChild(elems, index, indexes, type, num, parentElem);
-			});
-			
+			// after changes are done notify listeners
+			Promise.all(
+				changes.map(({indexes, type, num, elems}) => {
+					return updateDOMforChild(elems, index, indexes, type, num, parentElem)
+				})
+			).then(() => {
+				notifyParent(parentElem, UPDATE_EVENT.DONE);
+			})
+
 			oldChildArr = childArr;
 		});
 	});
