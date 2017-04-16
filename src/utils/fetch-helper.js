@@ -32,7 +32,10 @@ export const easyFetch = (store, token$) => (request, actionType) => {
 		.then(res => res.json())
 		.then(body => {
 			store.dispatch({ type: actionType + '_SUCCESS', payload: body });
-		});
+		})
+		.catch(e => {
+			store.dispatch({ type: actionType + '_FAILURE', payload: e });
+		})
 };
 
 /*
@@ -46,15 +49,16 @@ export function fetchMiddleware(prefix, reducer) {
 	return (state, {type, payload}) => {
 		let output = state;
 		switch (type) {
-			case prefix + '_LOAD':
+			case prefix + '_LOADING':
 				output[prefix.toLowerCase() + '_loading'] = true;
+				break;
 			case prefix + '_SUCCESS':
 				output[prefix.toLowerCase() + '_loading'] = false;
-
-				type = prefix;
+				break;
 			case prefix + '_FAILURE':
 				output[prefix.toLowerCase() + '_loading'] = false;
-				output[prefix.toLowerCase() + '_message'] = payload.message;
+				output[prefix.toLowerCase() + '_error'] = payload.message;
+				break;
 		}
 		return reducer(output, {type, payload});
 	};

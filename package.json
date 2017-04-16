@@ -31,6 +31,7 @@
     "karma-mocha": "^1.3.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.3",
+    "materialize-css": "^0.98.2",
     "mocha": "^3.2.0",
     "mocha-loader": "^1.1.1",
     "mocha-webpack": "^0.7.0",

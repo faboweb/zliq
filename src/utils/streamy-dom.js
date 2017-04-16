@@ -144,8 +144,8 @@ function calcChanges(childArr, oldChildArr) {
 
 // list of operations
 // remove all the elements starting from a certain index
-function removeElements(index, subIndexes, children, parentElem, resolve) {
-	for(let times = 0; times<num; times++) {
+function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, resolve) {
+	for(let times = 0; times<countOfElementsToRemove; times++) {
 		let node = parentElem.childNodes[index];
 		if (node != null) {
 			parentElem.removeChild(node);
@@ -199,9 +199,22 @@ function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
 	// if we do this for every change, this slows things down as we have to wait for the animationframe
 	return new Promise((resolve, reject) => {
 		if (nodeChildren && nodeChildren.length > BATCH_CHILD_CHANGE_TRASHHOLD) {
-			requestAnimationFrame(operation.bind(this, index, subIndexes, nodeChildren, parentElem, resolve));
+			requestAnimationFrame(operation.bind(
+				this,
+				index,
+				subIndexes,
+				type === 'rm' ? num : nodeChildren,
+				parentElem,
+				resolve
+			));
 		} else {
-			operation(index, subIndexes, nodeChildren, parentElem, resolve);
+			operation(
+				index,
+				subIndexes,
+				type === 'rm' ? num : nodeChildren,
+				parentElem,
+				resolve
+			);
 		}
 	})
 }
