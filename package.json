@@ -6,11 +6,11 @@
   "scripts": {
     "test": "karma start --single-run",
     "tdd": "karma start",
-    "start": "webpack-dev-server --config webpack.config.js",
-    "build": "webpack --config webpack.config.build.js",
-    "build:min": "webpack -p --config webpack.config.build.js --output-filename=zliq.min.js --output-path=lib/min",
-    "start:benchmark": "webpack-dev-server --config webpack.config.benchmark.js",
-    "build:benchmark": "webpack --config webpack.config.benchmark.js",
+    "start": "webpack-dev-server --config webpack/demo.js",
+    "build": "webpack --config webpack/build.js",
+    "build:min": "webpack -p --config webpack/build.js --output-filename=zliq.min.js --output-path=lib/min",
+    "start:benchmark": "webpack-dev-server --config webpack/benchmark.js",
+    "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
     "prepublish": "npm test && rimraf lib/** && npm run build && npm run build:min"
   },

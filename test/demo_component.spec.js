@@ -1,5 +1,6 @@
 import { h, stream, list, UPDATE_EVENT } from '../src';
-import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } from '../src/demo_component.jsx';
+import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } from '../demo/demo_component.jsx';
+import { SUBTRACKED } from '../demo/reducers/clicks.js';
 import assert from 'assert';
 import { mockStore } from './helpers/mockStore';
 
@@ -20,29 +21,29 @@ describe('Components', () => {
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// this component calculates the clicks * 2 inside and shows the result
 		let component = <CleverComponent store= {store} />;
-		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
+		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 	});
 
 	it('CleverComponent should update on store update', () => {
 		// to test that components react to their inputs we just manipulate the input streams
 		let store = mockStore({ clicks: { clicks: 3 }});
 		let component = <CleverComponent store= {store} />;
-		assert.equal(component.outerHTML, '<div>Clicks times 2: 6</div>');
+		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 		store.state$({ clicks: { clicks: 6 }});
-		assert.equal(component.outerHTML, '<div>Clicks times 2: 12</div>');
+		assert.equal(component.outerHTML, '<p>Clicks times 2: 12</p>');
 	});
 
 	it('should react to attached events', (done) => {
 		let store = mockStore({});
 		// this component fires a action on the store when clicked
-		let element = <DumbComponent store= {store} />;
+		let element = <DumbComponent store={store} />;
 		// perform the actions on the element
-		element.click();
+		element.querySelector('button').click();
 
 		// we can listen on the action$ to test this happening
 		store.action$.map(action => {
 			if (action == null) return;
-			assert.equal(action.type, 'SUBTRACKED');
+			assert.equal(action.type, SUBTRACKED);
 			done();
 		});
 	});
