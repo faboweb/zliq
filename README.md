@@ -12,7 +12,7 @@ ZLIQ is the intent to create an easy to understand, easy to use web framework. I
 ### Tech
 
 ZLIQ only uses a view dependencies:
- - [deep-equal]8https://github.com/substack/node-deep-equal) to diff objects
+ - [deep-equal](https://github.com/substack/node-deep-equal) to diff objects
  
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
