@@ -3,7 +3,7 @@ var path = require('path');
 module.exports = {
     entry: './demo/demo_app.jsx',
     output: {
-        path: path.resolve(__dirname, 'demo'),
+        path: path.resolve(__dirname, '../demo'),
         filename: 'bundle.js'
     },
     module: {
@@ -29,7 +29,7 @@ module.exports = {
         }]
     },
     devServer: {
-        contentBase: path.join(__dirname, "demo"),
+        contentBase: path.join(__dirname, "../demo"),
         compress: true,
         port: 8080
     }

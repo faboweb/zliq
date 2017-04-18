@@ -1,11 +1,7 @@
 import {merge$, stream} from './streamy';
 import {PromiseQueue} from './promise-queue';
 
-export const UPDATE_EVENT = {
-	PENDING: 'update_pending',
-	DONE: 'update_done',
-	PARTIAL: 'update_partial'
-}
+export const UPDATE_DONE = 'update_done';
 
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
@@ -79,7 +75,7 @@ function manageChildren(parentElem, children$Arr) {
 			)
 				// after changes are done notify listeners
 				.then(() => {
-					notifyParent(parentElem, UPDATE_EVENT.DONE);
+					notifyParent(parentElem, UPDATE_DONE);
 				})
 
 			return childArr;

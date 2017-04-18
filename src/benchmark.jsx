@@ -1,6 +1,5 @@
-import { h } from './utils/streamy-hyperscript';
+import { h, stream, merge$ } from './';
 import { LazyList } from './utils/lazy-list';
-import { stream, merge$} from './utils/streamy';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;

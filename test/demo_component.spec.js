@@ -1,4 +1,4 @@
-import { h, stream, list, UPDATE_EVENT } from '../src';
+import { h, stream, list, UPDATE_DONE } from '../src';
 import { CleverComponent, DumbComponent, SuperDumbComponent, ListComponent } from '../demo/demo_component.jsx';
 import { SUBTRACKED } from '../demo/reducers/clicks.js';
 import assert from 'assert';
@@ -61,7 +61,7 @@ describe('Components', () => {
 		// list items are not rendered yet as they are bundled into one animation frame
 		assert.equal(listElem.querySelectorAll('li').length, 0);
 		// we wait for the updates on the parent to have happend
-		listElem.addEventListener(UPDATE_EVENT.DONE, () => {
+		listElem.addEventListener(UPDATE_DONE, () => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
 			done();
 		});

@@ -23,12 +23,13 @@ export const h = (tag, props, children) => {
 */
 function makeChildrenStreams$(children) {
 	// wrap all children in streams
-	let children$Arr = [].concat(children).reduce(function makeStream(arr, child) {
-		if (child === null || !isStream(child)) {
-			return arr.concat(stream(child));
-		}
-		return arr.concat(child);
-	}, []);
+	let children$Arr = !Array.isArray(children) ? [] 
+		: children.map(child => {
+			if (child === null || !isStream(child)) {
+				return stream(child);
+			}
+			return child;
+		});
 
 	// make sure children are arrays and not nest
 	return children$Arr.map(child$ => flatten(makeArray(child$)));
@@ -51,7 +52,7 @@ function makeArray(stream) {
 function flatten(stream) {
 	return stream.map(arr => {
 		while (arr.some(value => Array.isArray(value))) {
-			arr = [].concat(...value);
+			arr = [].concat(...arr);
 		}
 		return arr;
 	})

@@ -1,6 +1,6 @@
 import deepEqual from 'deep-equal';
 import {merge$, stream} from './streamy';
-import {UPDATE_EVENT} from './streamy-dom';
+import {UPDATE_DONE} from './streamy-dom';
 import {h} from './streamy-hyperscript';
 
 let DEFAULT_CHILD_HEIGHT = 30;
@@ -37,7 +37,7 @@ export function LazyList(props) {
             let output$ = stream(childHeight || DEFAULT_CHILD_HEIGHT);
             
             if (children != null && children.length > 0) {
-                children[0].addEventListener(UPDATE_EVENT.DONE, () => {
+                children[0].addEventListener(UPDATE_DONE, () => {
                     let height = getElementHeight(children[0]);
                     height = Math.round(height * 100) / 100;
                     output$(height);
