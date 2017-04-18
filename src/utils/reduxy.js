@@ -14,7 +14,7 @@ export function reduxy(reducers) {
 		// query a value from the store
 		// as we probably render according to the values of this store only serve distinct values
 		// query format: {reducer}.{property}.{subproperty}
-		$: (query) => queryStore(state$, query).distinct(),
+		$: (query) => state$.$(query).distinct(),
 		dispatch: (action) => {
 			action$(action);
 			return;

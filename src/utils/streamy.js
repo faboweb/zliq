@@ -22,6 +22,9 @@ export const stream = function(init_value) {
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
 	s.notEmpty = () => notEmpty(s);
+	s.$ = (selectorArr) => query(s, selectorArr);
+	s.patch = (partialChange) => patch(s, partialChange);
+	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
 
 	return s;
 };
@@ -111,6 +114,13 @@ function deepSelect(parent$, selector) {
 	return newStream;
 };
 
+function query(parent$, selectorArr) {
+	if(!Array.isArray(selectorArr)) {
+		return deepSelect(parent$, selectorArr);
+	}
+	return merge$(...selectorArr.map(selector => deepSelect(parent$, selector)));
+}
+
 // TODO: maybe refactor with filter
 /*
 * provide a new stream that only notifys its children if the containing value actualy changes
@@ -121,6 +131,32 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 		if (fn(newStream.value, value)) {
 			newStream(value, newStream.value);
 		}
+	});
+	return newStream;
+}
+
+/*
+* update only the properties of an object passed
+* i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
+*/
+function patch(parent$, partialChange) {
+	if (parent$.value == null) {
+		parent$(partialChange);
+		return;
+	}
+	parent$(Object.assign({}, parent$.value, partialChange));
+}
+
+/*
+* reduce a stream over time
+* this will pass the last output value to the calculation function
+*/
+function reduce(parent$, fn, startValue) {
+	let aggregate = fn(startValue, parent$.value);
+	let newStream = stream(aggregate);
+	parent$.listeners.push(function reduceValue(value) {
+		aggregate = fn(aggregate, parent$.value);
+		newStream(aggregate);
 	});
 	return newStream;
 }

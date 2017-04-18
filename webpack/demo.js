@@ -1,14 +1,14 @@
 var path = require('path');
 
 module.exports = {
-    entry: './src/demo_app.jsx',
+    entry: './demo/demo_app.jsx',
     output: {
-        path: path.resolve(__dirname, 'demo'),
+        path: path.resolve(__dirname, '../demo'),
         filename: 'bundle.js'
     },
     module: {
         rules: [{
-            test: /\.scss$/,
+            test: /\.(css|scss)$/,
             use: [{
                 loader: "style-loader" // creates style nodes from JS strings
             }, {
@@ -21,10 +21,15 @@ module.exports = {
             use: [{
                 loader: 'babel-loader'
             }]
+        },{
+            test: /\.(tff|woff|woff2)$/,
+            use: [{
+                loader: 'null-loader'
+            }]
         }]
     },
     devServer: {
-        contentBase: path.join(__dirname, "demo"),
+        contentBase: path.join(__dirname, "../demo"),
         compress: true,
         port: 8080
     }

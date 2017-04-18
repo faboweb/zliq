@@ -1,6 +1,5 @@
-import { h } from './utils/streamy-hyperscript';
-import { list } from './utils/streamy-list';
-import { stream, merge$} from './utils/streamy';
+import { h, stream, merge$ } from './';
+import { LazyList } from './utils/lazy-list';
 
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;
@@ -85,14 +84,15 @@ function selectItem(evt) {
 	Operations.SelectItem(parseInt(el.id))();
 }
 
+let selected$ = state$.$('selected');
 let app =
 	<div className='container'>
 		<div className='jumbotron'>
 			<div className='row'>
-				<div className='col-md-6'>
+				<div className='col-md-6 col-sm-12'>
 					<h1>ZLIQ</h1>
 				</div>
-				<div className="col-md-6">
+				<div className="col-md-6 col-sm-12">
 					<div className="row">
 						<div className="col-sm-6 smallpad">
 							<button type='button' className='btn btn-primary btn-block' id='run'
@@ -122,22 +122,26 @@ let app =
 				</div>
 			</div>
 		</div>
-		<table className='table table-hover table-striped test-data'>
-			<tbody>
-			{
-				list(state$, 'items', (item, {selected}) =>
-					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
-						<td className='col-md-1'>{item.id}</td>
+		<table className='table table-hover table-striped test-data' style="display: block;">
+			<tbody style="display: block;">
+				<LazyList list$={state$.$('items')} height={400} childHeight={34.55} style={{width: '400px'}} template={(item$, height$) => {
+					let isSelected$ = merge$(selected$, item$).map(([selected, item]) => {
+						return selected === item.id;
+					});
+
+					return <tr id={item$.$('id')} 
+						className={isSelected$.map(selected => selected ? 'danger' : '')}
+					>
+						<td className='col-md-1'>{item$.$('id')}</td>
 						<td className='col-md-4'>
-							<a className='select' onclick={selectItem}>{item.label}</a>
+							<a className='select' onclick={selectItem}>{item$.$('label')}</a>
 						</td>
 						<td className='col-md-1'>
 							<a className='remove' onclick={removeItem}><span className='glyphicon glyphicon-remove'></span></a>
 						</td>
 						<td className='col-md-6'/>
 					</tr>
-				)
-			}
+				}} />
 			</tbody>
 		</table>
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>

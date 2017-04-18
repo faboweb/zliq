@@ -6,18 +6,19 @@
   "scripts": {
     "test": "karma start --single-run",
     "tdd": "karma start",
-    "start": "webpack-dev-server --config webpack.config.js",
-    "build": "webpack --config webpack.config.build.js",
-    "build:min": "webpack -p --config webpack.config.build.js --output-filename=zliq.min.js --output-path=lib/min",
-    "start:benchmark": "webpack-dev-server --config webpack.config.benchmark.js",
-    "build:benchmark": "webpack --config webpack.config.benchmark.js",
+    "start": "webpack-dev-server --config webpack/demo.js",
+    "build": "webpack --config webpack/build.js",
+    "build:min": "webpack -p --config webpack/build.js --output-filename=zliq.min.js --output-path=lib/min",
+    "start:benchmark": "webpack-dev-server --config webpack/benchmark.js",
+    "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
-    "prepublish": "npm test && rimraf lib/** && npm run build && npm run build:min"
+    "prepublish": "npm test && rimraf lib/** && npm run build && npm run build:min",
+    "ghpages": "git subtree push --prefix demo origin gh-pages"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "odiff": "0.0.2"
+    "deep-equal": "^1.0.1"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
@@ -26,16 +27,19 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-register": "^6.24.0",
     "css-loader": "^0.26.1",
+    "jquery": "^3.2.1",
     "karma": "^1.5.0",
     "karma-chrome-launcher": "^2.0.0",
     "karma-mocha": "^1.3.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.3",
+    "materialize-css": "^0.98.2",
     "mocha": "^3.2.0",
     "mocha-loader": "^1.1.1",
     "mocha-webpack": "^0.7.0",
     "node-sass": "^4.5.0",
     "null-loader": "^0.1.1",
+    "prismjs": "^1.6.0",
     "rimraf": "^2.6.1",
     "sass-loader": "^5.0.1",
     "style-loader": "^0.13.1",

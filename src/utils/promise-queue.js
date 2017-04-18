@@ -28,27 +28,28 @@ export function timedBatchProcessing(queueFnArr, batchCallback, maxTimePerChunk)
     let results = [];
     maxTimePerChunk = maxTimePerChunk || 200;
     
-    let startTime = now();
+    let startTime = new Date();
     queueFnArr.forEach(fn => {
         queue.add(() => {
-            if ((now() - startTime) > maxTimePerChunk) {
-                startTime = now();
+            // if max time for one batch has reached, output the results for that batch
+            let now = new Date();
+            if ((now - startTime) > maxTimePerChunk) {
+                startTime = now;
                 batchCallback && batchCallback(results, results.length === queueFnArr.length);
                 results = [];
             }
+            // fn is a promises 
             if (typeof fn.then === 'function') {
                 return fn.then(partial => results = results.concat(fn))
             }
+            // fn is a function
             results = results.concat(fn());
         })
     });
+    // when the queue is empty return all the results not yet send
     return queue.add(() => {
         if (results.length > 0) {
             batchCallback && batchCallback(results, true);
         }
     });
-} 
-			
-function now() {
-	return new Date().getTime();
 }
