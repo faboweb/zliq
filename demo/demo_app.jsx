@@ -12,7 +12,6 @@ import { clicks } from './reducers/clicks';
 import { routerReducer, initRouter, Router } from '../src';
 
 // components
-import { Navbar } from './navbar.jsx';
 import { Infos } from './infos.jsx';
 import { Examples } from './example.jsx';
 
@@ -31,7 +30,6 @@ initRouter(store);
 // zliq passes around HTMLElement elements so you can decide what to do with them
 let app =
 	<div>
-		{/*<Navbar />*/}
 		<Router store={store} route={'/'}>
 			<Infos />
 			<div class="divider"></div>
