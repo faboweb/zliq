@@ -20,6 +20,7 @@ ZLIQ implementes itself in a slim way:
  - streams
  - redux
  - change based rendering
+ - basic routing
 
 ### How It Works
 
@@ -54,7 +55,8 @@ $ npm start
 
  - Make a lazy loaded list work -> better rendering for many elements 
  - Need Reviewers
-
+ - Add Code Playground to Page
+ 
 License
 ----
 
