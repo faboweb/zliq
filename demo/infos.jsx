@@ -7,7 +7,7 @@ export function Infos() {
             <div class="container">
                 <div class="row">
                     <div class="col s12 center">
-                        <img src="../icon.png" />
+                        <img src="./icon.png" />
                     </div>
                     <h1 class="col s12 center highlight">ZLIQ</h1>
                 </div>
