@@ -16,6 +16,9 @@ import { Navbar } from './navbar.jsx';
 import { Infos } from './infos.jsx';
 import { Examples } from './example.jsx';
 
+//styles
+import './styles.scss';
+
 // create the store providing reducers
 let store = reduxy({
 	clicks,

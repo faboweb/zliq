@@ -10,7 +10,7 @@ export function Examples({store}) {
     let exampleSection =
         <div class='section'>
             <div class="row center">
-                <h3 class="light header red-text text-lighten-1">Examples</h3>
+                <h3 class="light header highlight">Examples</h3>
                 <p class="col s12 m8 offset-m2 caption">Play around with it. See the reactive changes.</p>
             </div>
             <div class="row">
@@ -38,8 +38,8 @@ export function Examples({store}) {
                                 `) 
                             }
                             <Output>
-                                <button class="btn waves-effect waves-light amber lighten-3 red-text text-lighten-1" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
-                                <button class="btn waves-effect waves-light amber lighten-3 red-text text-lighten-1" onclick={e => store.dispatch({ type: SUBTRACKED })}>-1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: SUBTRACKED })}>-1</button>
                                 <p>Counter: {store.$('clicks.clicks')}</p>
                             </Output>
                         </Example>
@@ -62,7 +62,7 @@ export function Examples({store}) {
                                     }}>
                                     This is red when the counter is greater 0 and blue if not.
                                 </p>
-                                <button class="btn waves-effect waves-light amber lighten-3 red-text text-lighten-1" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
                             </Output>
                         </Example>
                         <Example exampleId={3} title="Fetching data from a remote source is a breeze" activeExample$={activeExample$}>
@@ -87,7 +87,7 @@ export function Examples({store}) {
                                 `) 
                             }
                             <Output>
-                                <button class="btn waves-effect waves-light amber lighten-3 red-text text-lighten-1" onclick={e => fetchStuff(store)}>Fetch Quote</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => fetchStuff(store)}>Fetch Quote</button>
                                 {
                                     store
                                         .$(['clicks.fetched_loading', 'clicks.fetched_error', 'clicks.fetched'])
@@ -121,7 +121,7 @@ export function Examples({store}) {
                             }
                             <Output>
                                 <CleverComponent store={store} />
-                                <button class="btn waves-effect waves-light amber lighten-3 red-text text-lighten-1" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
                             </Output>
                         </Example>
                         <Example exampleId={5} title="Components can manipulate any stream (or redux store) given to them" activeExample$={activeExample$}>
@@ -162,7 +162,7 @@ export function Examples({store}) {
                                 `) 
                             }
                             <Output>
-                                <a class="btn amber lighten-3 red-text text-lighten-1" href='/?foo=bar'>Go to '/?foo=bar'</a>
+                                <a class="btn highlight highlight-background" href='/?foo=bar'>Go to '/?foo=bar'</a>
                                 <p>
                                     You are currently at route '{store.$('router.route')}' 
                                     with params '{store.$('router.params').map(params => JSON.stringify(params))}'.

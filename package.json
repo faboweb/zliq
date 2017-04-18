@@ -12,7 +12,8 @@
     "start:benchmark": "webpack-dev-server --config webpack/benchmark.js",
     "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
-    "prepublish": "npm test && rimraf lib/** && npm run build && npm run build:min"
+    "prepublish": "npm test && rimraf lib/** && npm run build && npm run build:min",
+    "ghpages": "git subtree push --prefix demo origin gh-pages"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",

@@ -59,3 +59,5 @@ License
 ----
 
 MIT
+
+Logo based on: http://www.iconsfind.com/2015/11/25/candy-dessert-food-sweet-baby-icon/
