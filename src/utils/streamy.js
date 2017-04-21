@@ -21,7 +21,6 @@ export const stream = function(init_value) {
 	s.filter = (fn) => filter(s, fn);
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
-	s.notEmpty = () => notEmpty(s);
 	s.$ = (selectorArr) => query(s, selectorArr);
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);

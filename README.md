@@ -143,7 +143,7 @@ newStream(7);
 // 7
 ```
 
-Checkout `src/utils/streamy.js` for the streams API. 
+Available stream manipulation functions are `.map`, `.flatMap`, `.filter`, `.deepSelect`, `.distinct`, `.$`, `.patch` and `.reduce`. Checkout `src/utils/streamy.js` for descriptions.
 
 A special manipulation is the `.$()` query selector. As a developer I often want to react to changes on a specific nested property. The query selector takes one or more property paths and will return a new stream with the current selected properties:
 ```js
@@ -155,6 +155,16 @@ let newStream = stream({
 });
 console.log(newStream.$('propA')()); // 1
 console.log(newStream.$(['propA', 'propB.propBA')()); // [1,2]
+```
+
+The counterpart is the `.patch` functions. It will update just parts of the object:
+```js
+let newStream = stream({
+    propA: 1
+});
+console.log(JSON.stringify(newStream())); // { propA: 1 }
+newStream.patch({ propB: 2});
+console.log(JSON.stringify(newStream())); // { propA: 1, propB: 2 }
 ```
 
 ### Redux
