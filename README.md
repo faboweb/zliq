@@ -1,19 +1,23 @@
+<p align="center">
+<img src="https://github.com/faboweb/zliq/blob/master/icon.png"  height="150px"/>
+</p>
+
 # ZLIQ
 
 ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~690 April 2017).
 
 ### Live
-[Test Online](https://cleaner-tortoise-23337.netlify.com/)
+[Test Online](https://faboweb.github.io/zliq/)
 
 ### Tech
 
 ZLIQ only uses a view dependencies:
- - [deep-equal]8https://github.com/substack/node-deep-equal) to diff objects
+ - [deep-equal](https://github.com/substack/node-deep-equal) to diff objects
  
 ZLIQ is written with:
  - [Webpack](https://github.com/webpack/webpack) for building
  - [Babel](https://github.com/babel/babel) for transpilation
- - [Mocha](https://github.com/mochajs/mocha) for testing
+ - [Karma](https://karma-runner.github.io) for testing
  - [JSX](https://facebook.github.io/jsx/) to make writing templates more comfortable
 
 ZLIQ implementes itself in a slim way:
