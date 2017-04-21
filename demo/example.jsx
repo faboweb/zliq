@@ -1,7 +1,7 @@
 import Prism from 'prismjs';
 import 'prismjs/components/prism-jsx.js';
 import { h, easyFetch, Router, UPDATE_DONE, stream } from '../src';
-import { CLICK, SUBTRACKED } from './reducers/clicks';
+import { CLICK, SUBTRACKED, FETCHED } from './reducers/clicks';
 import { CleverComponent, DumbComponent, SuperDumbComponent } from './demo_component.jsx';
 import './example.scss';
 
@@ -52,7 +52,6 @@ export function Examples({store}) {
                                         }}>
                                         This is red when the counter is greater 0 and blue if not.
                                     </p>
-                                    <button onclick={e => store.dispatch({ type: CLICK })}>+1</button>
                                 `) 
                             }
                             <Output>
@@ -62,10 +61,12 @@ export function Examples({store}) {
                                     }}>
                                     This is red when the counter is greater 0 and blue if not.
                                 </p>
+                                <hr />
                                 <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: SUBTRACKED })}>-1</button>
                             </Output>
                         </Example>
-                        <Example exampleId={3} title="Fetching data from a remote source is a breeze" activeExample$={activeExample$}>
+                        {/*<Example exampleId={3} title="Fetching data from a remote source is a breeze" activeExample$={activeExample$}>
                             { 
                                 Markup(`
                                     <button onclick={e => fetchStuff(store)}>Fetch Quote</button>
@@ -74,7 +75,7 @@ export function Examples({store}) {
                                             .$(['clicks.fetched_loading', 'clicks.fetched_error', 'clicks.fetched'])
                                             .map(([fetched_loading, fetched_error, fetched]) => {
                                                 if (fetched_loading) {
-                                                    return 'Loading ...';
+                                                    return <span>'Loading ...'</span>;
                                                 }
                                                 if (fetched_error != null) {
                                                     return <p>An error occurred: {fetched_error}</p>;
@@ -90,7 +91,7 @@ export function Examples({store}) {
                                 <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => fetchStuff(store)}>Fetch Quote</button>
                                 {
                                     store
-                                        .$(['clicks.fetched_loading', 'clicks.fetched_error', 'clicks.fetched'])
+                                        .$(['clicks.fetched_loading', 'clicks.fetched_error', 'clicks.FETCHED'])
                                         .map(([fetched_loading, fetched_error, fetched]) => {
                                             if (fetched_loading) {
                                                 return 'Loading ...';
@@ -99,12 +100,12 @@ export function Examples({store}) {
                                                 return <p>An error occurred: {fetched_error}</p>;
                                             }
                                             if (fetched != null) {
-                                                return <p>Fetched quote: {JSON.stringify(fetched)}</p>;
+                                                return <p>Fetched quote: {JSON.stringify(fetched[0])}</p>;
                                             }
                                         })
                                 }
                             </Output>
-                        </Example>
+                        </Example>*/}
                         <Example exampleId={4} title="Components can have a nested state" activeExample$={activeExample$}>
                             { 
                                 Markup(`
@@ -116,12 +117,13 @@ export function Examples({store}) {
 
                                     // usage
                                     <CleverComponent store={store} />
-                                    <button onclick={e => store.dispatch({ type: CLICK })}>+1</button>
                                 `) 
                             }
                             <Output>
                                 <CleverComponent store={store} />
+                                <hr />
                                 <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: SUBTRACKED })}>-1</button>
                             </Output>
                         </Example>
                         <Example exampleId={5} title="Components can manipulate any stream (or redux store) given to them" activeExample$={activeExample$}>
@@ -141,6 +143,8 @@ export function Examples({store}) {
                             <Output>
                                 <DumbComponent store={store} />
                                 <p>Counter: {store.$('clicks.clicks')}</p>
+                                <hr />
+                                <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: CLICK })}>+1</button>
                             </Output>
                         </Example>
                         <Example exampleId={6} title="ZLIQ provides a basic router" activeExample$={activeExample$}>
@@ -213,5 +217,5 @@ function fetchStuff(store) {
 	easyFetch(store, null)({
 		method: 'GET',
 		url: 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
-	}, 'FETCHED');
+	}, FETCHED);
 }

@@ -5,7 +5,8 @@ export const FETCHED = 'FETCHED';
 export const SUBTRACKED = 'SUBTRACKED';
 
 const INITIAL_STORE = {
-	clicks: 0
+	clicks: 0,
+	fetched: null
 };
 
 function clicksReducer(_state, {type, payload}) {
