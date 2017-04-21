@@ -1633,7 +1633,7 @@ function Infos() {
                     { 'class': 'col s12 center' },
                     [(0, _streamyHyperscript.h)(
                         'img',
-                        { src: '../icon.png' },
+                        { src: './icon.png' },
                         []
                     )]
                 ), (0, _streamyHyperscript.h)(
