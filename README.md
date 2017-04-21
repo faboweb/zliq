@@ -1,5 +1,5 @@
-<p style="text-align: center;">
-<img src="https://github.com/faboweb/zliq/blob/master/icon.png"  style="max-height:100px"/>
+<p align="center">
+<img src="https://github.com/faboweb/zliq/blob/master/icon.png"  height="150px"/>
 </p>
 
 # ZLIQ
