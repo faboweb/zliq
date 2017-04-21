@@ -1,5 +1,7 @@
 
-<img src="icon.png" alt="zliq logo" title="zliq" align="center" width="150" height="150" height="150px"/>
+<p align="center">
+    <img src="icon.png" alt="zliq logo" title="zliq" width="150" height="150" height="150px"/>
+</p>
 
 # ZLIQ
 
