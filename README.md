@@ -1,4 +1,4 @@
-[![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors)
 
 <p align="center">
 <img src="https://github.com/faboweb/zliq/blob/master/icon.png"  height="150px"/>
@@ -74,6 +74,9 @@ Logo based on: http://www.iconsfind.com/2015/11/25/candy-dessert-food-sweet-baby
 
 Thanks goes to these wonderful people ([emoji key](https://github.com/kentcdodds/all-contributors#emoji-key)):
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section --><!-- ALL-CONTRIBUTORS-LIST:END -->
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+| [<img src="https://avatars2.githubusercontent.com/u/5869273?v=3" width="100px;"/><br /><sub>Fabian</sub>](https://github.com/faboweb)<br />[💻](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Code") [🎨](#design-faboweb "Design") [📖](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Documentation") [⚠️](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Tests") | [<img src="https://avatars0.githubusercontent.com/u/1215719?v=3" width="100px;"/><br /><sub>Ferit Topcu</sub>](http://www.ftopcu.de)<br />[📖](https://github.com/Fabian Weber/zliq/commits?author=fokusferit "Documentation") |
+| :---: | :---: |
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification. Contributions of any kind welcome!
