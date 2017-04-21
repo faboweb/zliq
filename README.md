@@ -251,7 +251,7 @@ Checkout the [GitHub Page](https://faboweb.github.io/zliq/) and the correspondin
 Thanks goes to these wonderful people ([emoji key][emojis]):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-| [<img src="https://avatars2.githubusercontent.com/u/5869273?v=3" width="100px;"/><br /><sub>Fabian</sub>](https://github.com/faboweb)<br />[💻](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Code") [🎨](#design-faboweb "Design") [📖](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Documentation") [⚠️](https://github.com/Fabian Weber/zliq/commits?author=faboweb "Tests") | [<img src="https://avatars0.githubusercontent.com/u/1215719?v=3" width="100px;"/><br /><sub>Ferit Topcu</sub>](http://www.ftopcu.de)<br />[📖](https://github.com/Fabian Weber/zliq/commits?author=fokusferit "Documentation") |
+| [<img src="https://avatars2.githubusercontent.com/u/5869273?v=3" width="100px;"/><br /><sub>Fabian</sub>](https://github.com/faboweb)<br />[💻](https://github.com/faboweb/zliq/commits?author=faboweb "Code") [🎨](#design-faboweb "Design") [📖](https://github.com/faboweb/zliq/commits?author=faboweb "Documentation") [⚠️](https://github.com/faboweb/zliq/commits?author=faboweb "Tests") | [<img src="https://avatars0.githubusercontent.com/u/1215719?v=3" width="100px;"/><br /><sub>Ferit Topcu</sub>](http://www.ftopcu.de)<br />[📖](https://github.com/faboweb/zliq/commits?author=fokusferit "Documentation") |
 | :---: | :---: |
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
