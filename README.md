@@ -1,5 +1,6 @@
-<p align="center">
 [![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors)
+
+<p align="center">
 <img src="https://github.com/faboweb/zliq/blob/master/icon.png"  height="150px"/>
 </p>
 
