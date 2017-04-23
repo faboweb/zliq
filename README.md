@@ -61,7 +61,7 @@ let app = h('div', null, [
 
 ### Writing Components
 
-ZLIQ is leveraging ES2015 to read easier and reducing the transfer from normal ES5 developers already know.
+ZLIQ is leveraging ES2015 to read easier and to be readable by everybody.
 ZLIQ is using [JSX](https://facebook.github.io/jsx/) as a DOM abstraction in JS. This allows templating of the components and allows ZLIQ to define how properties and children are rendered.
 
 A component in ZLIQ can look like this:
