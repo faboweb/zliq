@@ -1,6 +1,17 @@
-import { h } from '../src';
+import { h, stream } from '../src';
 
-export const Header = () => <div class="row big-header highlight-background">
+export const Header = () => {
+    let scroll$ = stream();
+    window.addEventListener('scroll', scroll$);
+
+    let headerHidden$ = scroll$.map(() => {
+        let scrollTop = window.scrollY;
+        return scrollTop > 100;
+    });
+
+    return <div 
+            class={headerHidden$.map(hidden => "row big-header highlight-background " + (hidden ? 'hidden' : ''))}
+        >
             <div class="container">
                 <div class="row">
                     <div class="col s12 center">
@@ -10,4 +21,5 @@ export const Header = () => <div class="row big-header highlight-background">
                 </div>
                 <h3 class="center highlight-less">The web-framework-force you want your Padawan to learn.</h3>
             </div>
-        </div>
+        </div>;
+} 

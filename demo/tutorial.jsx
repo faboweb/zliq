@@ -30,8 +30,8 @@ export const Highlight = ({text}) =>
     h('span', {'class': 'highlight'}, [text]);`}
         </Markup>
 
-        <p>ZLIQ is a reactive view rendering framework. Much like React. Reactivitiy enables the developer to define how the rendering performs without needing to know when or where the data is coming from. Separating the concerns.
-        ZLIQ will rerender the above component everytime the input changes. Displaying it with the new content.</p>
+        <p>ZLIQ is a reactive view rendering framework. Much like React. Reactivity enables the developer to define how the rendering performs without needing to know when or where the data is coming from. Separating the concerns.
+        ZLIQ will rerender the above component every time the input changes. Displaying it with the new content.</p>
 
         <p>To use components in other components just import the function and use the function name as a tag name:</p>
 
@@ -68,10 +68,9 @@ let list = <ul><ListItems /></ul>;`}
         <Markup>{`let button = <button onclick={() => console.log('got clicked')}>Click me</button>;`}
         </Markup>
 
-        <div class="divider"></div>
         <Subheader title="Streams" subtitle="Feel the flow" />
 
-        <p>To render static content, we don't need to framework... Actual user interaction with our application will change the state at several occasions over time. Stream-librarys like <a href="https://github.com/Reactive-Extensions/RxJS">RXJs</a> are there explicitly for that scenario. ZLIQ includes a very lite implementation of streams inspried by RXJs and <a href="https://github.com/paldepind/flyd">Flyd</a>.</p>
+        <p>To render static content, we don't need to framework... Actual user interaction with our application will change the state at several occasions over time. Stream-librarys like <a href="https://github.com/Reactive-Extensions/RxJS">RXJs</a> are there explicitly for that scenario. ZLIQ includes a very lite implementation of streams inspired by RXJs and <a href="https://github.com/paldepind/flyd">Flyd</a>.</p>
 
         <Markup>{`import {stream} from 'zliq';
 
@@ -113,10 +112,9 @@ newStream.patch({ propB: 2});
 console.log(JSON.stringify(newStream())); // { propA: 1, propB: 2 }`}
         </Markup>
 
-        <div class="divider"></div>
         <Subheader title="Redux" subtitle="ZLIQs redux implementation" />
 
-        <p>States across multiple components and along multiple server requests gets unpredictable. As a developer in these situations you catch yourself not knowing where to debug now. ZLIQ inclued a very lite <a href="http://redux.js.org/docs/introduction/Motivation.html">Redux</a> implementation to enable centralised state management. (If you don't know Redux please read up on it.)</p>
+        <p>States across multiple components and along multiple server requests gets unpredictable. As a developer in these situations you catch yourself not knowing where to debug now. ZLIQ include a very lite <a href="http://redux.js.org/docs/introduction/Motivation.html">Redux</a> implementation to enable centralised state management. (If you don't know Redux please read up on it.)</p>
 
         <p>Create the store providing reducers:</p>
 
@@ -128,6 +126,13 @@ let store = reduxy({
 });`}
         </Markup>
 
+        <p>The store exposes the query function known from ZLIQs streams:</p>
+
+        <Markup>{`let app = <div>
+    <span>Clicks: {store.$('clicks.clicks')}</span>
+</div>;`}
+        </Markup>
+
         <p>Dispatch actions on the store object you pass to your components:</p>
 
         <Markup>{`let app = <div>
@@ -135,12 +140,11 @@ let store = reduxy({
 </div>;`}
         </Markup>
 
-        <div class="divider"></div>
         <Subheader title="Routing" subtitle="To allow deeplinks and browser history" />
 
         <p>ZLIQ currently has a basic router. The router prevents page reloading for local links and sends routing information to the Redux store.</p>
 
-        <p>Attach the router to the Redux store to receive and persist routing info. Then initialise the captchering of links:</p>
+        <p>Attach the router to the Redux store to receive and persist routing info. Then initialize the capturing of links:</p>
 
         <Markup>{`// 
 import { reduxy, routerReducer, initRouter, Router } from '../src';
@@ -150,7 +154,7 @@ let store = reduxy({
 initRouter(store);`}
         </Markup>
 
-        <p>In the app we can then easyly display content according to the routing information:</p>
+        <p>In the app we can then easily display content according to the routing information:</p>
 
         <Markup>{`let routes = [
     <Router store={store} route={'/'}>
@@ -163,17 +167,16 @@ initRouter(store);`}
 ];`}
         </Markup>
 
-        <div class="divider"></div>
         <Subheader title="Testing" subtitle="A good framework is easy to test" />
 
-        <p>ZLIQ returns the actual DOM element. This enables you to easyily test the components:</p>
+        <p>ZLIQ returns the actual DOM element. This enables you to easily test the components:</p>
 
         <Markup>{`import {Highlight} from './highlight.js';
 let element = <Highlight text="Hello World!!!"></Highlight>;
 assert.equal(element.outerHTML, '<p>Hello World!!!</p>');`}
         </Markup>
 
-        <p>ZLIQ batches changes that exceed a certain trashhold together. This batch then is the rendered in a browser <a href="https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame">animationframe</a>. Those changes are not immediatly applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. </p>
+        <p>ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser <a href="https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame">animationframe</a>. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. </p>
 
         <Markup>{`let listElems = // has many li-elements.
 let listElem = <ul>
@@ -181,7 +184,7 @@ let listElem = <ul>
 </ul>;
 // list items are not rendered yet as they are bundled into one animation frame
 assert.equal(listElem.querySelectorAll('li').length, 0);
-// we wait for the updates on the parent to have happend
+// we wait for the updates on the parent to have happened
 listElem.addEventListener(UPDATE_DONE, () => {
     assert.equal(listElem.querySelectorAll('li').length, length);
     done();
