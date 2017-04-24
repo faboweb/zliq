@@ -66,6 +66,10 @@ export function initRouter(store) {
 
 // src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
 function getUrlParams(href) {
+    let urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)?/g;
+    if (!urlRegex.test(href)) {
+        return {};
+    }
     var params = {};
     if (href === '') {
         return params;

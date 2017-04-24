@@ -7,3 +7,18 @@
 .highlight-background {
     background-color: #FBD9BC !important;
 }
+
+.caption {
+    margin-bottom: 10px;
+}
+
+pre {
+    padding-top: 2rem !important;
+    background-color: initial !important;
+    border-color: #FBD9BC;
+
+    &:before {
+        background: #FBD9BC !important;
+        color: #07684F !important;
+    }
+}

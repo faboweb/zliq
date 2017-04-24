@@ -54,6 +54,8 @@ export function fetchMiddleware(prefix, reducer) {
 				break;
 			case prefix + '_SUCCESS':
 				output[prefix.toLowerCase() + '_loading'] = false;
+				// pass the success through to manipulate the data in the reducer
+				type = prefix;
 				break;
 			case prefix + '_FAILURE':
 				output[prefix.toLowerCase() + '_loading'] = false;
