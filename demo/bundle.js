@@ -1675,32 +1675,44 @@ exports.Header = undefined;
 var _src = __webpack_require__(0);
 
 var Header = exports.Header = function Header() {
+    var scroll$ = (0, _src.stream)();
+    window.addEventListener('scroll', scroll$);
+
+    var headerHidden$ = scroll$.map(function () {
+        var scrollTop = window.scrollY;
+        return scrollTop > 100;
+    });
+
     return (0, _src.h)(
-        "div",
-        { "class": "row big-header highlight-background" },
+        'div',
+        {
+            'class': headerHidden$.map(function (hidden) {
+                return "row big-header highlight-background " + (hidden ? 'hidden' : '');
+            })
+        },
         [(0, _src.h)(
-            "div",
-            { "class": "container" },
+            'div',
+            { 'class': 'container' },
             [(0, _src.h)(
-                "div",
-                { "class": "row" },
+                'div',
+                { 'class': 'row' },
                 [(0, _src.h)(
-                    "div",
-                    { "class": "col s12 center" },
+                    'div',
+                    { 'class': 'col s12 center' },
                     [(0, _src.h)(
-                        "img",
-                        { src: "./icon.png" },
+                        'img',
+                        { src: './icon.png' },
                         []
                     )]
                 ), (0, _src.h)(
-                    "h1",
-                    { "class": "col s12 center highlight" },
-                    ["ZLIQ"]
+                    'h1',
+                    { 'class': 'col s12 center highlight' },
+                    ['ZLIQ']
                 )]
             ), (0, _src.h)(
-                "h3",
-                { "class": "center highlight-less" },
-                ["The web-framework-force you want your Padawan to learn."]
+                'h3',
+                { 'class': 'center highlight-less' },
+                ['The web-framework-force you want your Padawan to learn.']
             )]
         )]
     );
@@ -1867,7 +1879,7 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['ZLIQ is a reactive view rendering framework. Much like React. Reactivitiy enables the developer to define how the rendering performs without needing to know when or where the data is coming from. Separating the concerns. ZLIQ will rerender the above component everytime the input changes. Displaying it with the new content.']
+                        ['ZLIQ is a reactive view rendering framework. Much like React. Reactivity enables the developer to define how the rendering performs without needing to know when or where the data is coming from. Separating the concerns. ZLIQ will rerender the above component every time the input changes. Displaying it with the new content.']
                 ), (0, _src.h)(
                         'p',
                         null,
@@ -1901,10 +1913,6 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                         null,
                         ['let button = <button onclick={() => console.log(\'got clicked\')}>Click me</button>;']
                 ), (0, _src.h)(
-                        'div',
-                        { 'class': 'divider' },
-                        []
-                ), (0, _src.h)(
                         _subheader.Subheader,
                         { title: 'Streams', subtitle: 'Feel the flow' },
                         []
@@ -1915,7 +1923,7 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                                 'a',
                                 { href: 'https://github.com/Reactive-Extensions/RxJS' },
                                 ['RXJs']
-                        ), ' are there explicitly for that scenario. ZLIQ includes a very lite implementation of streams inspried by RXJs and ', (0, _src.h)(
+                        ), ' are there explicitly for that scenario. ZLIQ includes a very lite implementation of streams inspired by RXJs and ', (0, _src.h)(
                                 'a',
                                 { href: 'https://github.com/paldepind/flyd' },
                                 ['Flyd']
@@ -1989,17 +1997,13 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                         null,
                         ['let newStream = stream({\n    propA: 1\n});\nconsole.log(JSON.stringify(newStream())); // { propA: 1 }\nnewStream.patch({ propB: 2});\nconsole.log(JSON.stringify(newStream())); // { propA: 1, propB: 2 }']
                 ), (0, _src.h)(
-                        'div',
-                        { 'class': 'divider' },
-                        []
-                ), (0, _src.h)(
                         _subheader.Subheader,
                         { title: 'Redux', subtitle: 'ZLIQs redux implementation' },
                         []
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['States across multiple components and along multiple server requests gets unpredictable. As a developer in these situations you catch yourself not knowing where to debug now. ZLIQ inclued a very lite ', (0, _src.h)(
+                        ['States across multiple components and along multiple server requests gets unpredictable. As a developer in these situations you catch yourself not knowing where to debug now. ZLIQ include a very lite ', (0, _src.h)(
                                 'a',
                                 { href: 'http://redux.js.org/docs/introduction/Motivation.html' },
                                 ['Redux']
@@ -2015,15 +2019,19 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
+                        ['The store exposes the query function known from ZLIQs streams:']
+                ), (0, _src.h)(
+                        _utils.Markup,
+                        null,
+                        ['let app = <div>\n    <span>Clicks: {store.$(\'clicks.clicks\')}</span>\n</div>;']
+                ), (0, _src.h)(
+                        'p',
+                        null,
                         ['Dispatch actions on the store object you pass to your components:']
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
                         ['let app = <div>\n    <button onclick={() => store.dispatch({type: CLICK})}>Click + 1</button>\n</div>;']
-                ), (0, _src.h)(
-                        'div',
-                        { 'class': 'divider' },
-                        []
                 ), (0, _src.h)(
                         _subheader.Subheader,
                         { title: 'Routing', subtitle: 'To allow deeplinks and browser history' },
@@ -2035,7 +2043,7 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['Attach the router to the Redux store to receive and persist routing info. Then initialise the captchering of links:']
+                        ['Attach the router to the Redux store to receive and persist routing info. Then initialize the capturing of links:']
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
@@ -2043,15 +2051,11 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['In the app we can then easyly display content according to the routing information:']
+                        ['In the app we can then easily display content according to the routing information:']
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
                         ['let routes = [\n    <Router store={store} route={\'/\'}>\n        <a href=\'/place?foo=bar\'>Go to place bar</a>\n    </Router>,\n    <Router store={store} route={\'/place\'}>\n        You are at place {store.$(\'router.params.foo\')}.\n        <a href=\'/\'>Go home</a>\n    </Router>\n];']
-                ), (0, _src.h)(
-                        'div',
-                        { 'class': 'divider' },
-                        []
                 ), (0, _src.h)(
                         _subheader.Subheader,
                         { title: 'Testing', subtitle: 'A good framework is easy to test' },
@@ -2059,7 +2063,7 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['ZLIQ returns the actual DOM element. This enables you to easyily test the components:']
+                        ['ZLIQ returns the actual DOM element. This enables you to easily test the components:']
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
@@ -2067,15 +2071,15 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['ZLIQ batches changes that exceed a certain trashhold together. This batch then is the rendered in a browser ', (0, _src.h)(
+                        ['ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser ', (0, _src.h)(
                                 'a',
                                 { href: 'https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame' },
                                 ['animationframe']
-                        ), '. Those changes are not immediatly applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. ']
+                        ), '. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. ']
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
-                        ['let listElems = // has many li-elements.\nlet listElem = <ul>\n    { listElems }\n</ul>;\n// list items are not rendered yet as they are bundled into one animation frame\nassert.equal(listElem.querySelectorAll(\'li\').length, 0);\n// we wait for the updates on the parent to have happend\nlistElem.addEventListener(UPDATE_DONE, () => {\n    assert.equal(listElem.querySelectorAll(\'li\').length, length);\n    done();\n});']
+                        ['let listElems = // has many li-elements.\nlet listElem = <ul>\n    { listElems }\n</ul>;\n// list items are not rendered yet as they are bundled into one animation frame\nassert.equal(listElem.querySelectorAll(\'li\').length, 0);\n// we wait for the updates on the parent to have happened\nlistElem.addEventListener(UPDATE_DONE, () => {\n    assert.equal(listElem.querySelectorAll(\'li\').length, length);\n    done();\n});']
                 ), (0, _src.h)(
                         'p',
                         null,
@@ -3752,6 +3756,10 @@ function initRouter(store) {
 
 // src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
 function getUrlParams(href) {
+    var urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)?/g;
+    if (!urlRegex.test(href)) {
+        return {};
+    }
     var params = {};
     if (href === '') {
         return params;
@@ -3850,7 +3858,7 @@ exports = module.exports = __webpack_require__(1)();
 
 
 // module
-exports.push([module.i, ".highlight {\n  color: #07684F !important; }\n\n.highlight-less {\n  color: #188C71 !important; }\n\n.highlight-background {\n  background-color: #FBD9BC !important; }\n\n.caption {\n  margin-bottom: 10px; }\n\npre {\n  padding-top: 2rem !important; }\n", ""]);
+exports.push([module.i, ".highlight {\n  color: #07684F !important; }\n\n.highlight-less {\n  color: #188C71 !important; }\n\n.highlight-background {\n  background-color: #FBD9BC !important; }\n\n.caption {\n  margin-bottom: 10px; }\n\npre {\n  padding-top: 2rem !important;\n  background-color: initial !important;\n  border-color: #FBD9BC; }\n  pre:before {\n    background: #FBD9BC !important;\n    color: #07684F !important; }\n", ""]);
 
 // exports
 
@@ -4123,10 +4131,6 @@ var app = (0, _src.h)(
 				[]
 			), (0, _src.h)(
 				'div',
-				{ 'class': 'divider' },
-				[]
-			), (0, _src.h)(
-				'div',
 				{ 'class': 'section' },
 				[(0, _src.h)(
 					'div',
@@ -4157,10 +4161,6 @@ var app = (0, _src.h)(
 						['ZLIQ tries to be sth simple. Sth that reads in an evening. But that is still so powerfull you can just go and display complex UIs with it. Sth that feels more JS less Java.']
 					)]
 				)]
-			), (0, _src.h)(
-				'div',
-				{ 'class': 'divider' },
-				[]
 			), (0, _src.h)(
 				_tutorial.Tutorial,
 				null,

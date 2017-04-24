@@ -16,7 +16,7 @@ describe('Components', () => {
 	});
 
 	it('CleverComponent should perform inner operation and show result', () => {
-		// to test components dependend on state we just manipulate the input streams
+		// to test components dependent on state we just manipulate the input streams
 		// for the store we use a mocking object
 		let store = mockStore({ clicks: { clicks: 3 }});
 		// this component calculates the clicks * 2 inside and shows the result
@@ -60,7 +60,7 @@ describe('Components', () => {
 		</ul>;
 		// list items are not rendered yet as they are bundled into one animation frame
 		assert.equal(listElem.querySelectorAll('li').length, 0);
-		// we wait for the updates on the parent to have happend
+		// we wait for the updates on the parent to have happened
 		listElem.addEventListener(UPDATE_DONE, () => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
 			done();
