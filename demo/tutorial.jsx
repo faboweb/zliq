@@ -14,9 +14,9 @@ export const Tutorial = () =>
         <Markup>
             {`import {h} from 'zliq';
 
-// insert values with {x}
-export const Highlight = ({text}) => 
-    <span class='highlight'>{text}</span>;`}
+// insert values in the markup with {x}
+export const Highlight = (props, children) => 
+    <span class='highlight'>{props.text}</span>;`}
         </Markup>
 
         <p>You need to always provide the <code>h</code> function. JSX gets transformed to Hyperscript and the <code>h</code> is what gets evaluated by ZLIQ.</p>
@@ -110,6 +110,15 @@ console.log(newStream.$(['propA', 'propB.propBA')()); // [1,2]`}
 console.log(JSON.stringify(newStream())); // { propA: 1 }
 newStream.patch({ propB: 2});
 console.log(JSON.stringify(newStream())); // { propA: 1, propB: 2 }`}
+        </Markup>
+
+        <p>ZLIQ recognizes passed streams in the Hyperscript and updates the DOM on new stream values:</p>
+
+        <Markup>{`let newStream = stream('Hello World');
+let app <span>{newStream}</span>;
+assert(app.outerHTML === '<span>Hello World</span>');
+newStream('Bye World');
+assert(app.outerHTML === '<span>Bye World</span>');`}
         </Markup>
 
         <Subheader title="Redux" subtitle="ZLIQs redux implementation" />
