@@ -43,7 +43,7 @@ let app = <div>
 				</div>
 				<div class="row">
 					<p>Modern web frameworks got really big (React + Redux 139Kb and Angular 2 + Rx 766Kb, <a href="https://gist.github.com/Restuta/cda69e50a853aa64912d">src</a>). As a developer I came into the (un)pleasent situation to teach people how these work. But I couldn't really say, as I haven't actually understood each line of code in these beasts. But not only that, they also have a lot of structures I as a developer have to learn to get where I want to go. It feels like learning programming again just to be able to render some data.</p>
-					<p>ZLIQ tries to be sth simple. Sth that reads in an evening. But that is still so powerfull you can just go and display complex UIs with it. Sth that feels more JS less Java.</p>
+					<p>ZLIQ tries to be something simple. Something that reads in an evening. But that is still so powerfull you can just go and display complex UIs with it. Something that feels more JS less Java.</p>
 				</div>
 			</div>
 			<Tutorial/>

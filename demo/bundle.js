@@ -1859,7 +1859,7 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         _utils.Markup,
                         null,
-                        ['import {h} from \'zliq\';\n\n// insert values with {x}\nexport const Highlight = ({text}) => \n    <span class=\'highlight\'>{text}</span>;']
+                        ['import {h} from \'zliq\';\n\n// insert values in the markup with {x}\nexport const Highlight = (props, children) => \n    <span class=\'highlight\'>{props.text}</span>;']
                 ), (0, _src.h)(
                         'p',
                         null,
@@ -1996,6 +1996,14 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                         _utils.Markup,
                         null,
                         ['let newStream = stream({\n    propA: 1\n});\nconsole.log(JSON.stringify(newStream())); // { propA: 1 }\nnewStream.patch({ propB: 2});\nconsole.log(JSON.stringify(newStream())); // { propA: 1, propB: 2 }']
+                ), (0, _src.h)(
+                        'p',
+                        null,
+                        ['ZLIQ recognizes passed streams in the Hyperscript and updates the DOM on new stream values:']
+                ), (0, _src.h)(
+                        _utils.Markup,
+                        null,
+                        ['let newStream = stream(\'Hello World\');\nlet app <span>{newStream}</span>;\nassert(app.outerHTML === \'<span>Hello World</span>\');\nnewStream(\'Bye World\');\nassert(app.outerHTML === \'<span>Bye World</span>\');']
                 ), (0, _src.h)(
                         _subheader.Subheader,
                         { title: 'Redux', subtitle: 'ZLIQs redux implementation' },
