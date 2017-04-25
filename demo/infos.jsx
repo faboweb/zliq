@@ -1,5 +1,4 @@
 import { h } from '../src';
-import './infos.scss';
 
 export const Infos = () => [
     <div class="section">

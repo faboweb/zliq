@@ -1,0 +1,52 @@
+.big-header, img, h3 {
+    transition: all 0.5s;
+}
+
+.big-header {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+
+    h1 {
+        font-family: 'Rubik Mono One', sans-serif;
+        font-size: 10rem;
+    }
+
+    img {
+        height: 17rem;
+    }
+
+    @media all and (max-width: 569px) {
+        h1 {
+            font-size: 6rem;
+        }
+        img {
+            height: 10rem;
+        }
+        h3 {
+            font-size: 1.8rem;
+        }
+    }
+}
+
+.hidden {
+    position: fixed;
+    z-index: 100;
+    padding: 0;
+
+    * {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    h3, img {
+        height: 0;
+        overflow: hidden;
+    }
+
+    + .container {
+        padding-top: 37rem;
+
+        @media all and (max-width: 569px) {
+            padding-top: 30rem;
+        }
+    }
+}

@@ -16,6 +16,7 @@ import { Infos } from './infos.jsx';
 import { Header } from './header.jsx';
 import { Examples } from './example.jsx';
 import { Tutorial } from './tutorial.jsx';
+import { Playground } from './playground.jsx';
 
 //styles
 import './styles.scss';
@@ -47,6 +48,7 @@ let app = <div>
 				</div>
 			</div>
 			<Tutorial/>
+			<Playground />
 			{/*<Examples store={store} />*/}
 		</Router>
 	</div>
