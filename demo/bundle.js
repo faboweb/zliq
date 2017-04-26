@@ -3905,7 +3905,7 @@ exports = module.exports = __webpack_require__(1)();
 
 
 // module
-exports.push([module.i, ".big-header, img, h3 {\n  transition: all 0.5s; }\n\n.big-header {\n  padding-top: 2rem;\n  padding-bottom: 2rem; }\n  .big-header h1 {\n    font-family: 'Rubik Mono One', sans-serif;\n    font-size: 10rem; }\n  .big-header img {\n    height: 17rem; }\n  @media all and (max-width: 569px) {\n    .big-header h1 {\n      font-size: 6rem; }\n    .big-header img {\n      height: 10rem; }\n    .big-header h3 {\n      font-size: 1.8rem; } }\n\n.hidden {\n  position: fixed;\n  z-index: 100;\n  padding: 0; }\n  .hidden * {\n    margin-top: 0;\n    margin-bottom: 0; }\n  .hidden h3, .hidden img {\n    height: 0;\n    overflow: hidden; }\n  .hidden + .container {\n    padding-top: 37rem; }\n    @media all and (max-width: 569px) {\n      .hidden + .container {\n        padding-top: 30rem; } }\n", ""]);
+exports.push([module.i, ".big-header, img, h3 {\n  transition: all 0.5s; }\n\n.big-header {\n  padding-top: 2rem;\n  padding-bottom: 2rem; }\n  .big-header h1 {\n    font-family: 'Rubik Mono One', sans-serif;\n    font-size: 10rem; }\n  .big-header img {\n    height: 17rem; }\n  @media all and (max-width: 569px) {\n    .big-header h1 {\n      font-size: 6rem; }\n    .big-header img {\n      height: 10rem; }\n    .big-header h3 {\n      font-size: 1.8rem; } }\n\n.hidden {\n  position: fixed;\n  z-index: 100;\n  padding: 0;\n  width: 100%; }\n  .hidden * {\n    margin-top: 0;\n    margin-bottom: 0; }\n  .hidden h3, .hidden img {\n    height: 0;\n    overflow: hidden; }\n  .hidden + .container {\n    padding-top: 37rem; }\n    @media all and (max-width: 569px) {\n      .hidden + .container {\n        padding-top: 30rem; } }\n", ""]);
 
 // exports
 
