@@ -22,9 +22,10 @@ export const h = (tag, props, children) => {
 * we make sure that all children streams are flat arrays to make processing uniform 
 */
 function makeChildrenStreams$(children) {
+	// make sure children is an array
+	let childrenArr = !Array.isArray(children) ? [children] : children;
 	// wrap all children in streams
-	let children$Arr = !Array.isArray(children) ? [] 
-		: children.map(child => {
+	let children$Arr = childrenArr.map(child => {
 			if (child === null || !isStream(child)) {
 				return stream(child);
 			}
