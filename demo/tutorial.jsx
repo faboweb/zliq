@@ -121,39 +121,68 @@ newStream('Bye World');
 assert(app.outerHTML === '<span>Bye World</span>');`}
         </Markup>
 
-        <Subheader title="Redux" subtitle="ZLIQs redux implementation" />
+        <Subheader title="State Management" subtitle="F*** Redux. ZLIQ &#9829; streams" />
 
-        <p>States across multiple components and along multiple server requests gets unpredictable. As a developer in these situations you catch yourself not knowing where to debug now. ZLIQ include a very lite <a href="http://redux.js.org/docs/introduction/Motivation.html">Redux</a> implementation to enable centralised state management. (If you don't know Redux please read up on it.)</p>
+        <p>TODO explanation</p>
 
-        <p>Create the store providing reducers:</p>
+        <p>TODO:</p>
 
-        <Markup>{`import { reduxy } from '../src';
-import { clicks } from './reducers/clicks';
-
-let store = reduxy({
-    clicks
-});`}
-        </Markup>
-
-        <p>The store exposes the query function known from ZLIQs streams:</p>
-
-        <Markup>{`let app = <div>
-    <span>Clicks: {store.$('clicks.clicks')}</span>
+        <Markup>{`let state$ = stream({ clicks: 0 });
+let app = <div>
+  Clicks: {state$.$('clicks')}
 </div>;`}
         </Markup>
 
-        <p>Dispatch actions on the store object you pass to your components:</p>
+        <p>TODO:</p>
 
-        <Markup>{`let app = <div>
-    <button onclick={() => store.dispatch({type: CLICK})}>Click + 1</button>
+        <Markup>{`let increment = (state$) => () => {
+    state$.patch({ clicks: state$.$('clicks')() + 1 })
+};
+
+let app = <div>
+    <button onclick={increment(state$)}>Click + 1</button>
 </div>;`}
         </Markup>
+
+        <Subheader title="Fetching Data" subtitle="For all the asynchronous content you need" />
+
+        <Markup>{`import { fetchy } from '../src';
+
+function fetchStuff() {
+	return fetchy({
+		method: 'GET',
+		url: 'http://quotes.rest/qod.json?category=inspire'
+	}, (data) => {
+		return {
+			quote: data.contents.quotes["0"].quote,
+			author: data.contents.quotes["0"].author
+		};
+	});
+}
+let quoteRequest$ = stream({});
+
+let app = <div>
+    <button onclick={() => fetchStuff().map(quoteRequest$)}>Get Quote of the Day</button>
+    <p>
+        {
+            quoteRequest$.map(({data, loading}) => {
+                if (loading) {
+                    return 'Loading...';
+                } else if (data != null) {
+                    return <p>{data.quote} - {data.author}</p>;
+                }
+                return null;
+            })
+        }
+    </p>
+</div>;
+        `}</Markup>
 
         <Subheader title="Routing" subtitle="To allow deeplinks and browser history" />
 
-        <p>ZLIQ currently has a basic router. The router prevents page reloading for local links and sends routing information to the Redux store.</p>
+        <p>TODO: ZLIQ currently has a basic router. The router prevents page reloading for local links and sends routing information to the Redux store.</p>
 
-        <p>Attach the router to the Redux store to receive and persist routing info. Then initialize the capturing of links:</p>
+        <p>TODO: Attach the router to the Redux store to receive and persist routing info. Then initialize the capturing of links:</p>
 
         <Markup>{`// 
 import { reduxy, routerReducer, initRouter, Router } from '../src';
@@ -163,7 +192,7 @@ let store = reduxy({
 initRouter(store);`}
         </Markup>
 
-        <p>In the app we can then easily display content according to the routing information:</p>
+        <p>TODO: In the app we can then easily display content according to the routing information:</p>
 
         <Markup>{`let routes = [
     <Router store={store} route={'/'}>
@@ -175,6 +204,8 @@ initRouter(store);`}
     </Router>
 ];`}
         </Markup>
+
+        <p>Test the router on this page: <a href="/subpage?foo=bar">Go to Subpage</a></p>
 
         <Subheader title="Testing" subtitle="A good framework is easy to test" />
 

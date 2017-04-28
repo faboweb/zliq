@@ -1,4 +1,4 @@
-import { h, easyFetch, Router, UPDATE_DONE, stream } from '../src';
+import { h, Router, UPDATE_DONE, stream } from '../src';
 
 export const Subheader = ({title, subtitle}) =>
     <div class="row center">

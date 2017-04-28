@@ -1,26 +1,6 @@
-import {h} from '../utils/streamy-hyperscript';
+import {stream } from './';
 
-export const NEW_ROUTE = 'NEW_ROUTE';
-
-const INITIAL_STORE = {
-	route: '/',
-	params: {}
-};
-
-// we use a reducer to unify the way we check for information
-export function routerReducer(_state, {type, payload}) {
-	let state = _state || INITIAL_STORE;
-	switch (type) {
-		case NEW_ROUTE: return Object.assign({}, state, {
-			route: payload.route,
-			params: payload.params
-		});
-	}
-
-	return state;
-}
-
-export function initRouter(store) {
+function interceptLinks(routerState$) {
     // intercepts clicks on links
     // if the link is local '/...' we change the location hash instead
 	function interceptClickEvent(e) {
@@ -41,13 +21,15 @@ export function initRouter(store) {
     }
 
     // callback for HTML5 navigation events
-    // save the routing info in the store
+    // save the routing info in the routerState
     function dispatchRouteChange() {
+        // remove hash
         let href = location.hash.substr(1, location.hash.length - 1);
-        store.dispatch({ type: NEW_ROUTE, payload: {
+
+        routerState$.patch({
             route: href === '' ? '/' : href.split('?')[0],
             params: getUrlParams(href)
-        }});
+        });
     }
 
     // react to HTML5 go back and forward events
@@ -66,7 +48,7 @@ export function initRouter(store) {
 
 // src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
 function getUrlParams(href) {
-    let urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)?/g;
+    let urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)/g;
     if (!urlRegex.test(href)) {
         return {};
     }
@@ -98,15 +80,42 @@ function getUrlParams(href) {
 }
 
 // this is an element that shows it's content only if the expected route is met
-export function Router({store, route}, children) {
-    if (store == null) {
-        console.log('The Router component needs the store as attribute.')
+export function Router({state$, route}, children) {
+    if (state$ == null) {
+        console.log('The Router component needs the routerState$ as attribute.')
         return null;
     }
     if (route == null) {
         console.log('The Router component needs the route as attribute.')
         return null;
     }
-    return store.$('router.route').map(curRoute => curRoute === route)
+    // Register the route
+    // this is necessary to decide on a default route
+    state$.patch({ routes: state$().routes.concat(route) });
+
+    // check if no registered route was hit and set default if so
+    let sanitizedRoute$ = state$
+        .map(({route, routes}) => {
+            if (routes.indexOf(route) === -1) {
+                return '/';
+            }
+            return route;
+        });
+
+    let routeWasHit$ = sanitizedRoute$
+        .map(curRoute => curRoute === route);
+    return routeWasHit$
         .map(hitRoute => hitRoute ? children : []);
+}
+
+export function initRouter() {
+    let routerState$ = stream({
+        route: '',
+        params: {},
+        routes: ['/']
+    });
+
+    interceptLinks(routerState$);
+
+    return routerState$;
 }
