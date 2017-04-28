@@ -146,10 +146,12 @@ let app = <div>
 
         <Subheader title="Fetching Data" subtitle="For all the asynchronous content you need" />
 
+        <p>TODO</p>
+
         <Markup>{`import { fetchy } from '../src';
 
-function fetchStuff() {
-	return fetchy({
+function fetchStuff(into$) {
+	fetchy({
 		method: 'GET',
 		url: 'http://quotes.rest/qod.json?category=inspire'
 	}, (data) => {
@@ -157,12 +159,12 @@ function fetchStuff() {
 			quote: data.contents.quotes["0"].quote,
 			author: data.contents.quotes["0"].author
 		};
-	});
+	}),map(into$);
 }
 let quoteRequest$ = stream({});
 
 let app = <div>
-    <button onclick={() => fetchStuff().map(quoteRequest$)}>Get Quote of the Day</button>
+    <button onclick={() => fetchStuff(quoteRequest$)}>Get Quote of the Day</button>
     <p>
         {
             quoteRequest$.map(({data, loading}) => {

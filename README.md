@@ -19,7 +19,7 @@
 [![Watch on GitHub][github-watch-badge]][github-watch]
 [![Star on GitHub][github-star-badge]][github-star]
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~690 April 2017).
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~630 May 2017).
 
 ## Why yet another web framework?
 Modern web frameworks got really big (React + Redux 139Kb and Angular 2 + Rx 766Kb, [[src]](https://gist.github.com/Restuta/cda69e50a853aa64912d)). As a developer I came into the (un)pleasent situation to teach people how these work. But I couldn't really say, as I haven't actually understood each line of code in these beasts. But not only that, they also have a lot of structures I as a developer have to learn to get where I want to go. It feels like learning programming again just to be able to render some data.
@@ -47,7 +47,9 @@ let app = <div>
 document.querySelector('#app').appendChild(app);
 ```
 
-Make sure your stack converts [JSX](https://facebook.github.io/jsx/) to [Hyperscript](https://github.com/hyperhype/hyperscript). In the ZLIQ project this is archieved with [Babel](https://github.com/babel/babel) and the [transform-h-jsx](https://github.com/jchook/babel-plugin-transform-h-jsx) plugin. If you don't want to use JSX you can still write plain Hyperscript:
+Make sure your stack converts [JSX](https://facebook.github.io/jsx/) to [Hyperscript](https://github.com/hyperhype/hyperscript). In the ZLIQ project this is archieved with [Babel](https://github.com/babel/babel) and the [transform-h-jsx](https://github.com/jchook/babel-plugin-transform-h-jsx) plugin in [webpack](https://webpack.js.org/). Alternative you can use [Babel in the browser](https://babeljs.io/docs/setup/#installation), like I did in the [ZLIQ playground](http://jsfiddle.net/faboweb/hvbee8m9).
+
+If you don't want to use JSX you can still write plain Hyperscript:
 ```js
 let app = h('div', null, [
     h('span', null, ["Hello World"])
