@@ -4,6 +4,7 @@
 
 .big-header {
     padding-top: 2rem;
+    cursor: pointer;
 
     h1 {
         font-family: 'Rubik Mono One', sans-serif;
@@ -33,9 +34,10 @@
 
     a {
         color: #188C71;
-        margin: 1rem;
+        padding: 0 1rem;
         line-height: 2rem;
         font-weight: bold;
+        display: inline-block;
     }   
 
     @media all and (max-width: 569px) {
