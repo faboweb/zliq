@@ -28,6 +28,8 @@ Modern web frameworks got really big (React + Redux 139Kb and Angular 2 + Rx 766
 
 ZLIQ tries to be sth simple. Sth that reads in an evening. But that is still so powerful you can just go and display complex UIs with it. Sth that feels more JS less Java.
 
+Still ZLIQ doesn't try to be the next React or Angular! ZLIQ has a decent render speed even up to several hundred simultaneous updates but it's not as fast as [Preact](https://preactjs.com/). And it on purpose does not solve every problem you will ever have. ZLIQ is a tool to help you create the solution that fits your need.
+
 ## Quickstart
 To play around with ZLIQ fork this repo and start the demo page at `localhost:8080`:
 ```bash
@@ -65,7 +67,6 @@ Checkout the [Git Page](https://faboweb.github.io/zliq/) as a live example of a 
 
  - Make a lazy loaded list work -> better rendering for many elements 
  - Need Reviewers
- - Add Code Playground to Page
 
 ## Contributors
 
