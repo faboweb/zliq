@@ -14,14 +14,15 @@ export function Examples({store}) {
                 <div class="col s12">
                     <ul class="collapsible" data-collapsible="accordion">
                         <Example exampleId={0} title="Render a simple sub component" activeExample$={activeExample$}>
-                            { <Markup>{`
-// definition
-export const SuperDumbComponent = () =>
-    <p>HELLO WORLD</p>;
-
-// usage
-<SuperDumbComponent />
-                                `}</Markup> }
+                            <Markup>{`
+                                    |// definition
+                                    |export const SuperDumbComponent = () =>
+                                    |    <p>HELLO WORLD</p>;
+                                    |
+                                    |// usage
+                                    |<SuperDumbComponent />
+                                `}
+                            </Markup>
                             <Output>
                                 <SuperDumbComponent />
                             </Output>
@@ -63,7 +64,7 @@ export const SuperDumbComponent = () =>
                                 <button class="btn waves-effect waves-light highlight highlight-background" onclick={e => store.dispatch({ type: SUBTRACKED })}>-1</button>
                             </Output>
                         </Example>
-                        {/*<Example exampleId={3} title="Fetching data from a remote source is a breeze" activeExample$={activeExample$}>
+                        <Example exampleId={3} title="Fetching data from a remote source is a breeze" activeExample$={activeExample$}>
                             { 
                                 <Markup>{`
                                     <button onclick={e => fetchStuff(store)}>Fetch Quote</button>
@@ -102,7 +103,7 @@ export const SuperDumbComponent = () =>
                                         })
                                 }
                             </Output>
-                        </Example>*/}
+                        </Example>
                         <Example exampleId={4} title="Components can have a nested state" activeExample$={activeExample$}>
                             { 
                                 <Markup>{`

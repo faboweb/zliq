@@ -25,15 +25,26 @@ function makeChildrenStreams$(children) {
 	// make sure children is an array
 	let childrenArr = !Array.isArray(children) ? [children] : children;
 	// wrap all children in streams
-	let children$Arr = childrenArr.map(child => {
-			if (child === null || !isStream(child)) {
-				return stream(child);
-			}
-			return child;
-		});
+	let children$Arr = makeStreams(childrenArr);
 
-	// make sure children are arrays and not nest
-	return children$Arr.map(child$ => flatten(makeArray(child$)));
+	return children$Arr
+		// make sure children are arrays and not nest
+		.map(child$ => flatten(makeArray(child$)))
+		// make sure subchildren are all streams
+		.map(child$ => child$.map(children => makeStreams(children)))
+		// so we can easily merge them
+		.map(child$ => child$.flatMap(children => merge$(...children)));
+}
+
+// make sure all children are handled as streams
+// so we can later easily merge them 
+function makeStreams(childrenArr) {
+	return childrenArr.map(child => {
+		if (child === null || !isStream(child)) {
+			return stream(child);
+		}
+		return child;
+	});
 }
 
 // converts an input into an array

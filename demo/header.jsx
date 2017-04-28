@@ -12,7 +12,7 @@ export const Header = () => {
 
     return <div 
             class={headerHidden$.map(hidden => "row big-header highlight-background " + (hidden ? 'hidden' : ''))}
-            onclick={scrollUp}
+            onclick={(e) => e.target.tagName != "A" && scrollUp()}
         >
             <div class="container">
                 <div class="row">
@@ -22,6 +22,15 @@ export const Header = () => {
                     <h1 class="col s12 center highlight">ZLIQ</h1>
                 </div>
                 <h3 class="center highlight-less">The web-framework-force you want your Padawan to learn.</h3>
+            </div>
+            <div class="link-list center">
+                <a href="#motivation">Motivation</a>
+                <a href="#tutorial">Tutorial</a>
+                <a href="#streams">Streams</a>
+                <a href="#state">State</a>
+                <a href="#fetch">Fetch</a>
+                <a href="#routing">Routing</a>
+                <a href="#testing">Testing</a>
             </div>
         </div>;
 } 

@@ -4,7 +4,13 @@ import 'prismjs/themes/prism-solarizedlight.css';
 import { h } from '../src';
 
 export const Markup = (props, children) => {
-    let html = children ? Prism.highlight(children[0], Prism.languages.jsx) : '';
+    let code = children[0];
+    let strippedMarginCode = code
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => line.trim().substr(1))
+        .join('\n');
+    let html = Prism.highlight(strippedMarginCode, Prism.languages.jsx);
     let elem = document.createElement('code');
     elem.classList.add('language-jsx')
     elem.innerHTML = html;

@@ -4,7 +4,7 @@
 
 .big-header {
     padding-top: 2rem;
-    padding-bottom: 2rem;
+    cursor: pointer;
 
     h1 {
         font-family: 'Rubik Mono One', sans-serif;
@@ -25,6 +25,23 @@
         h3 {
             font-size: 1.8rem;
         }
+    }
+}
+
+.link-list {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+
+    a {
+        color: #188C71;
+        padding: 0 1rem;
+        line-height: 2rem;
+        font-weight: bold;
+        display: inline-block;
+    }   
+
+    @media all and (max-width: 569px) {
+        display: none;
     }
 }
 
@@ -49,5 +66,16 @@
         @media all and (max-width: 569px) {
             padding-top: 30rem;
         }
+    }
+
+    &.big-header {
+        h1 {
+            font-size: 4rem;
+        }
+    }
+
+    .link-list {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
     }
 }

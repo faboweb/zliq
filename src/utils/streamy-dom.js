@@ -1,5 +1,4 @@
 import {merge$, stream} from './streamy';
-import {PromiseQueue} from './promise-queue';
 
 export const UPDATE_DONE = 'update_done';
 
@@ -54,8 +53,6 @@ function manageProperties(elem, properties$) {
 
 // manage changes in the childrens (not deep changes, those are handled by the children)
 function manageChildren(parentElem, children$Arr) {
-	let changeQueue = PromiseQueue([]);
-	
 	// hook into every child stream for changes
 	// children can be arrays and are always treated like such
 	// changes are then performed on the parent
@@ -67,10 +64,12 @@ function manageChildren(parentElem, children$Arr) {
 			if (changes.length === 0) {
 				return childArr;
 			}
+
+			let elementsBefore = getElementsBefore(children$Arr, index);
 			// apply the changes
 			Promise.all(
-				changes.map(({indexes, type, num, elems}) => {
-					return updateDOMforChild(elems, index, indexes, type, num, parentElem)
+				changes.map(({indexes: subIndexes, type, num, elems}) => {
+					return updateDOMforChild(elems, elementsBefore, subIndexes, type, num, parentElem)
 				})
 			)
 				// after changes are done notify listeners
@@ -81,6 +80,12 @@ function manageChildren(parentElem, children$Arr) {
 			return childArr;
 		}, []);
 	});
+}
+
+// when we insert into the DOM we need to know where
+// as children can be arrays we need to know how many children are before the one we want to put into the DOM
+function getElementsBefore(children$Arr, index) {
+	return children$Arr.slice(0, index).reduce((sum, cur$) => sum += cur$().length, 0);
 }
 
 // very simple change detection
