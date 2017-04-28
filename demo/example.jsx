@@ -14,14 +14,15 @@ export function Examples({store}) {
                 <div class="col s12">
                     <ul class="collapsible" data-collapsible="accordion">
                         <Example exampleId={0} title="Render a simple sub component" activeExample$={activeExample$}>
-                            { <Markup>{`
-// definition
-export const SuperDumbComponent = () =>
-    <p>HELLO WORLD</p>;
-
-// usage
-<SuperDumbComponent />
-                                `}</Markup> }
+                            <Markup>{`
+                                    |// definition
+                                    |export const SuperDumbComponent = () =>
+                                    |    <p>HELLO WORLD</p>;
+                                    |
+                                    |// usage
+                                    |<SuperDumbComponent />
+                                `}
+                            </Markup>
                             <Output>
                                 <SuperDumbComponent />
                             </Output>

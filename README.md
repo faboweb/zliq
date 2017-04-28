@@ -21,10 +21,12 @@
 
 ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~630 May 2017).
 
+## [Website](https://faboweb.github.io/zliq/)
+
 ## Why yet another web framework?
 Modern web frameworks got really big (React + Redux 139Kb and Angular 2 + Rx 766Kb, [[src]](https://gist.github.com/Restuta/cda69e50a853aa64912d)). As a developer I came into the (un)pleasent situation to teach people how these work. But I couldn't really say, as I haven't actually understood each line of code in these beasts. But not only that, they also have a lot of structures I as a developer have to learn to get where I want to go. It feels like learning programming again just to be able to render some data.
 
-ZLIQ tries to be sth simple. Sth that reads in an evening. But that is still so powerfull you can just go and display complex UIs with it. Sth that feels more JS less Java.
+ZLIQ tries to be sth simple. Sth that reads in an evening. But that is still so powerful you can just go and display complex UIs with it. Sth that feels more JS less Java.
 
 ## Quickstart
 To play around with ZLIQ fork this repo and start the demo page at `localhost:8080`:
@@ -47,7 +49,7 @@ let app = <div>
 document.querySelector('#app').appendChild(app);
 ```
 
-Make sure your stack converts [JSX](https://facebook.github.io/jsx/) to [Hyperscript](https://github.com/hyperhype/hyperscript). In the ZLIQ project this is archieved with [Babel](https://github.com/babel/babel) and the [transform-h-jsx](https://github.com/jchook/babel-plugin-transform-h-jsx) plugin in [webpack](https://webpack.js.org/). Alternative you can use [Babel in the browser](https://babeljs.io/docs/setup/#installation), like I did in the [ZLIQ playground](http://jsfiddle.net/faboweb/hvbee8m9).
+Make sure your stack converts [JSX](https://facebook.github.io/jsx/) to [Hyperscript](https://github.com/hyperhype/hyperscript) syntax. In the ZLIQ project this is achieved with [Babel](https://babeljs.io) and the [transform-h-jsx](https://github.com/jchook/babel-plugin-transform-h-jsx) plugin used in [webpack](https://webpack.js.org/). Alternative you can use [Babel in the browser](https://babeljs.io/docs/setup/#installation), like I did in the [ZLIQ playground](http://jsfiddle.net/faboweb/hvbee8m9).
 
 If you don't want to use JSX you can still write plain Hyperscript:
 ```js

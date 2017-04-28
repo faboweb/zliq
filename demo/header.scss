@@ -4,7 +4,6 @@
 
 .big-header {
     padding-top: 2rem;
-    padding-bottom: 2rem;
 
     h1 {
         font-family: 'Rubik Mono One', sans-serif;
@@ -25,6 +24,22 @@
         h3 {
             font-size: 1.8rem;
         }
+    }
+}
+
+.link-list {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+
+    a {
+        color: #188C71;
+        margin: 1rem;
+        line-height: 2rem;
+        font-weight: bold;
+    }   
+
+    @media all and (max-width: 569px) {
+        display: none;
     }
 }
 
@@ -55,5 +70,10 @@
         h1 {
             font-size: 4rem;
         }
+    }
+
+    .link-list {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
     }
 }

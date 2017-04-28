@@ -14,6 +14,14 @@ function interceptLinks(routerState$) {
             if (isLocal) {
                 location.hash = href;
 
+                let anchorSearch = RegExp(/[\/\w]+(\?\w+=\w*(&\w+=\w*))?#(\w+)/g).exec(href);
+                if (anchorSearch != null && anchorSearch[3] != null) {
+                    setImmediate(() => {
+                        let anchorElem = document.getElementById(anchorSearch[3]);
+                        anchorElem && anchorElem.scrollIntoView();
+                    });
+                }
+
                 //tell the browser not to respond to the link click
                 e.preventDefault();
             }
@@ -80,8 +88,8 @@ function getUrlParams(href) {
 }
 
 // this is an element that shows it's content only if the expected route is met
-export function Router({state$, route}, children) {
-    if (state$ == null) {
+export function Router({router$, route}, children) {
+    if (router$ == null) {
         console.log('The Router component needs the routerState$ as attribute.')
         return null;
     }
@@ -91,10 +99,10 @@ export function Router({state$, route}, children) {
     }
     // Register the route
     // this is necessary to decide on a default route
-    state$.patch({ routes: state$().routes.concat(route) });
+    router$.patch({ routes: router$().routes.concat(route) });
 
     // check if no registered route was hit and set default if so
-    let sanitizedRoute$ = state$
+    let sanitizedRoute$ = router$
         .map(({route, routes}) => {
             if (routes.indexOf(route) === -1) {
                 return '/';
