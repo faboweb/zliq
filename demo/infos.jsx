@@ -19,7 +19,7 @@ export const Infos = () => [
                     <i class="material-icons highlight">merge_type</i>
                     <p class="promo-caption highlight-less">Based on streams</p>
                     <p class="light center">
-                        ZLIQ uses streams to apply changes to the DOM. You can provide these streams per component. Or you can use the provided Redux implementation, for a centralized state management.
+                        ZLIQ uses streams to apply changes to the DOM. You can provide these streams per component. Or you can provide a state stream and pass it through to your component.
                         <br />Feel the flow.	
                     </p>
                 </div>
