@@ -12,8 +12,11 @@ module.exports = {
         rules: [{
             test: /\.(js|jsx)$/,
             use: [{
-                loader: 'babel-loader'
+                loader: 'babel-loader',
+                query: {
+                    presets: ['babili']
+                }
             }]
         }]
-    },
+    }
 }
