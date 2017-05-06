@@ -22,10 +22,7 @@ describe('Components', () => {
 		let component = <DoubleClicks clicks$={clicks$} />;
 		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 		clicks$(6);
-		// TODO make setTimeout not needed
-		setTimeout(() =>
-			assert.equal(component.outerHTML, '<p>Clicks times 2: 12</p>')
-		, 1)
+		assert.equal(component.outerHTML, '<p>Clicks times 2: 12</p>');
 	});
 
 	it('should react to attached events', () => {
