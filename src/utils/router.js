@@ -16,10 +16,10 @@ function interceptLinks(routerState$) {
 
                 let anchorSearch = RegExp(/[\/\w]+(\?\w+=\w*(&\w+=\w*))?#(\w+)/g).exec(href);
                 if (anchorSearch != null && anchorSearch[3] != null) {
-                    setImmediate(() => {
+                    setTimeout(() => {
                         let anchorElem = document.getElementById(anchorSearch[3]);
                         anchorElem && anchorElem.scrollIntoView();
-                    });
+                    }, 1);
                 }
 
                 //tell the browser not to respond to the link click
