@@ -7,6 +7,16 @@ describe('Components', () => {
 		assert.equal(element.outerHTML, '<p>HELLO WORLD</p>');
 	});
 
+	it('should work with React style hyperscript', () => {
+		let element = h('p', null, 'this', ' and ', 'that');
+		assert.equal(element.outerHTML, '<p>this and that</p>');
+	});
+
+	it('should work with Preact style hyperscript', () => {
+		let element = h('p', null, ['this', ' and ', 'that']);
+		assert.equal(element.outerHTML, '<p>this and that</p>');
+	});
+
 	it('should react to inputs', () => {
 		let clicks$ = stream(3);
 		let DoubleClicks = ({clicks$}) =>

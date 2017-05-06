@@ -8,7 +8,7 @@ const DOM_EVENT_LISTENERS = [
     'ondblclick'
 ];
 
-const BATCH_CHILD_CHANGE_TRASHHOLD = 5;
+const BATCH_CHILD_CHANGE_TRESHOLD = 5;
 
 /*
 * Entry point for the streamy-dom
@@ -199,7 +199,7 @@ function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
 	// to minor changes directly but bundle long langes with many elements into one animationFrame to speed things update_done
 	// if we do this for every change, this slows things down as we have to wait for the animationframe
 	return new Promise((resolve, reject) => {
-		if (nodeChildren && nodeChildren.length > BATCH_CHILD_CHANGE_TRASHHOLD) {
+		if (nodeChildren && nodeChildren.length > BATCH_CHILD_CHANGE_TRESHOLD) {
 			requestAnimationFrame(operation.bind(
 				this,
 				index,

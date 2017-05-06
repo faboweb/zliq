@@ -4,7 +4,7 @@ import {createElement} from './streamy-dom';
 /*
 * wrap hyperscript elements in reactive streams dependent on their children streams
 */
-export const h = (tag, props, children) => {
+export const h = (tag, props, ...children) => {
 	// jsx usally resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
@@ -21,9 +21,10 @@ export const h = (tag, props, children) => {
 * wrap all children in streams and merge those
 * we make sure that all children streams are flat arrays to make processing uniform 
 */
-function makeChildrenStreams$(children) {
-	// make sure children is an array
-	let childrenArr = !Array.isArray(children) ? [children] : children;
+function makeChildrenStreams$(childrenArr) {
+	// flatten children arr
+	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
+	childrenArr = [].concat(...childrenArr);
 	// wrap all children in streams
 	let children$Arr = makeStreams(childrenArr);
 
