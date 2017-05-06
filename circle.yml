@@ -1,6 +1,8 @@
 dependencies:
+  pre:
+    - npm i yarn
   override:
-    - npm install
+    - yarn
 general:
   branches:
     ignore:
