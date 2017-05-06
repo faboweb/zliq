@@ -1,0 +1,10 @@
+dependencies:
+  override:
+    - npm install
+general:
+  branches:
+    ignore:
+      - gh-pages
+test:
+  override:
+    - npm test
