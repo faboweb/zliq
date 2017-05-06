@@ -19,7 +19,8 @@ export const h = (tag, props, ...children) => {
 
 /*
 * wrap all children in streams and merge those
-* we make sure that all children streams are flat arrays to make processing uniform 
+* we make sure that all children streams are flat arrays to make processing uniform
+* output: stream([stream([])])
 */
 function makeChildrenStreams$(childrenArr) {
 	// flatten children arr
