@@ -35,8 +35,11 @@ function manageProperties(elem, properties$) {
 
 				// property event binder start with 'on' but events not so we need to strip that
                 let eventName = property.substr(2);
-                elem.removeEventListener(eventName, value);
-                elem.addEventListener(eventName, value);
+				// TODO notify dev about value not being a function
+				if (typeof value === 'function') {
+					elem.removeEventListener(eventName, value);
+					elem.addEventListener(eventName, value);
+				}
             } else if (property === 'class' || property.toLowerCase() === 'classname') {
                 elem.className = value;
 			// we leave the possibility to define styles as strings
