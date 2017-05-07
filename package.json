@@ -20,7 +20,8 @@
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deep-equal": "^1.0.1"
+    "deep-equal": "^1.0.1",
+    "jest": "^20.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
