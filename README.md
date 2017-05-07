@@ -6,6 +6,7 @@
 # ZLIQ
 
 [![Dependencies][dependencyci-badge]][dependencyci]
+[![CircleCI](https://circleci.com/gh/faboweb/zliq.svg?style=shield)](https://circleci.com/gh/faboweb/zliq)
 [![version][version-badge]][package]
 [![downloads][downloads-badge]][npm-stat]
 [![MIT License][license-badge]][LICENSE]
