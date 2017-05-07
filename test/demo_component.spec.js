@@ -25,7 +25,7 @@ describe('Components', () => {
 		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 	});
 
-	it('CleverComponent should update on store update', () => {
+	it('CleverComponent should update on input stream update', () => {
 		let clicks$ = stream(3);
 		let DoubleClicks = ({clicks$}) =>
 			<p>Clicks times 2: {clicks$.map(clicks => 2*clicks)}</p>;
@@ -47,6 +47,18 @@ describe('Components', () => {
 		element.querySelector('button').click();
 
 		assert.equal(clicks$(), 1);
+	});
+	
+	it('should handle input changes', () => {
+		let value$ = stream('');
+		let update = function() {
+			value$(this.value);
+		};
+		let input = <input oninput={update} />;
+		input.value = 'Test';
+		input.dispatchEvent(new Event('input'));
+
+		assert.equal(value$(), 'Test');
 	});
 
 	it('should render a list of changes in an animationframe', (done) => {

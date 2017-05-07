@@ -5,7 +5,7 @@ export const UPDATE_DONE = 'update_done';
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
 	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
-    'ondblclick'
+    'ondblclick', 'oninput'
 ];
 
 const BATCH_CHILD_CHANGE_TRESHOLD = 5;
@@ -28,8 +28,11 @@ function manageProperties(elem, properties$) {
         if (!properties) return;
         Object.getOwnPropertyNames(properties).map(property => {
             let value = properties[property];
+			// bind to properties
+			if (property.startsWith('$')) {
+				observeProperty(elem, property.substr(1), value);		
             // check if event
-            if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
+			} else if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
                 // we can't pass the function as a property
                 // so we bind to the event
 
@@ -83,6 +86,19 @@ function manageChildren(parentElem, children$Arr) {
 			return childArr;
 		}, []);
 	});
+}
+
+function observeProperty(elem, property, stream) {
+	// eine Instanz des Observers erzeugen
+	var observer = new MutationObserver(() => {
+		stream(elem[property]);
+	});
+	
+	// Konfiguration des Observers: alles melden - Änderungen an Daten, Kindelementen und Attributen
+	var config = { attributes: true, childList: false, characterData: false, attributeFilter: [property] };
+	
+	// eigentliche Observierung starten und Zielnode und Konfiguration übergeben
+	observer.observe(elem, config);
 }
 
 // when we insert into the DOM we need to know where
