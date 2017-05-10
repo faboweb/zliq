@@ -1,17 +1,17 @@
----
 engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - javascript
   eslint:
     enabled: true
-  csslint:
+  fixme:
     enabled: true
- scss-lint:
-    enabled: true
-  duplication:
-  	enabled: true
-    config:
-    	languages:
-      - javascript
 ratings:
-  paths:
-  - "demo/**"
-  - "src/**"
+    paths:
+    - "src/**"
+exclude_paths:
+- node_modules/
+- lib/
+- demo/bundle.js
