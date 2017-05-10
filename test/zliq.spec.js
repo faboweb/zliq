@@ -17,18 +17,16 @@ describe('Components', () => {
 		assert.equal(element.outerHTML, '<p>this and that</p>');
 	});
 
+	let DoubleClicks = ({clicks$}) =>
+		<p>Clicks times 2: {clicks$.map(clicks => 2*clicks)}</p>;
 	it('should react to inputs', () => {
 		let clicks$ = stream(3);
-		let DoubleClicks = ({clicks$}) =>
-			<p>Clicks times 2: {clicks$.map(clicks => 2*clicks)}</p>;
 		let component = <DoubleClicks clicks$={clicks$} />;
 		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 	});
 
 	it('CleverComponent should update on store update', () => {
 		let clicks$ = stream(3);
-		let DoubleClicks = ({clicks$}) =>
-			<p>Clicks times 2: {clicks$.map(clicks => 2*clicks)}</p>;
 		let component = <DoubleClicks clicks$={clicks$} />;
 		assert.equal(component.outerHTML, '<p>Clicks times 2: 6</p>');
 		clicks$(6);
