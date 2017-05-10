@@ -52,6 +52,9 @@
   "jest": {
     "setupFiles": [
       "./test/helpers/rAF.js"
-    ]
+    ],
+    "moduleNameMapper": {
+      "\\.(css|scss|jpg|png)$": "<rootDir>/test/helpers/empty-module.js"
+    }
   }
 }
