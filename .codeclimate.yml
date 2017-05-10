@@ -12,6 +12,10 @@ engines:
     	languages:
       - javascript
 ratings:
-  paths:
-  - "demo/**"
-  - "src/**"
+    paths:
+    - "src/**"
+exclude_paths:
+- node_modules/
+- lib/
+- demo/bundle.js
+- demo/benchmark.jsx
