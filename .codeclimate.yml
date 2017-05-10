@@ -1,15 +1,15 @@
+---
 engines:
   eslint:
     enabled: true
   csslint:
     enabled: true
- scss-lint:
+  scss-lint:
     enabled: true
   duplication:
   	enabled: true
     config:
     	languages:
-      	#mass_threshold: 30
       - javascript
 ratings:
   paths:
