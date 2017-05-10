@@ -12,6 +12,7 @@
 [![MIT License][license-badge]][LICENSE]
 <!--[![Examples][examples-badge]][examples]--> 
 
+[![Code Climate](https://codeclimate.com/github/faboweb/zliq.png)](https://codeclimate.com/github/faboweb/zliq)
 [![gzip size][tiny-gzip-badge]][unpkg-dist]
 [![size][tiny-size-badge]][unpkg-dist]
 [![module formats: es, umd][module-formats-badge]][unpkg-dist]
