@@ -1,21 +1,18 @@
----
-engines:
-  eslint:
-    enabled: true
-  csslint:
-    enabled: true
-  scss-lint:
-    enabled: true
-  duplication:
-  	enabled: true
-    config:
-    	languages:
-      - javascript
-ratings:
-    paths:
-    - "src/**"
-exclude_paths:
-- node_modules/
-- lib/
-- demo/bundle.js
-- demo/benchmark.jsx
+ engines:
+   duplication:
+     enabled: true
+     config:
+       languages:
+       - javascript
+   eslint:
+     enabled: true
+   fixme:
+     enabled: true
+ ratings:
+     paths:
+     - "src/**"
+ exclude_paths:
+  - node_modules/
+  - lib/
+  - demo/bundle.js
+  - demo/benchmark.jsx
