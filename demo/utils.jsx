@@ -4,7 +4,8 @@ import 'prismjs/themes/prism-solarizedlight.css';
 import { h } from '../src';
 
 export const Markup = (props, children) => {
-    let code = children[0];
+    // children are always arrays of arrays to allow children that stream arrays
+    let code = children[0][0];
     let strippedMarginCode = code
         .split('\n')
         .filter(line => line.trim() !== '')
