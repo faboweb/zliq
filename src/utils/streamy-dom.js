@@ -1,6 +1,11 @@
 import {merge$, stream} from './streamy';
 
-export const UPDATE_DONE = 'update_done';
+// deprecated
+export const UPDATE_DONE = 'children_changed';
+export const CHILDREN_CHANGED = 'children_changed';
+export const ADDED = 'element_added';
+export const REMOVED = 'element_removed';
+export const UPDATED = 'element_updated';
 
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
@@ -77,7 +82,7 @@ function manageChildren(parentElem, children$Arr) {
 			)
 				// after changes are done notify listeners
 				.then(() => {
-					notifyParent(parentElem, UPDATE_DONE);
+					notify(parentElem, UPDATE_DONE);
 				})
 
 			return childArr;
@@ -93,7 +98,7 @@ function getElementsBefore(children$Arr, index) {
 
 // very simple change detection
 // if the children objects are not the same, they changed
-// if there was an element before and there is no one know it got removed 
+// if there was an element before and there is no one know it got removed
 function calcChanges(childArr, oldChildArr) {
 	let subIndex = 0;
 	let changes = [];
@@ -108,8 +113,8 @@ function calcChanges(childArr, oldChildArr) {
 		if (oldChild === newChild) {
 			continue;
 		};
-		let type = oldChild != null && newChild == null ? 'rm' 
-				: oldChild == null && newChild != null ? 'add' 
+		let type = oldChild != null && newChild == null ? 'rm'
+				: oldChild == null && newChild != null ? 'add'
 				: 'set';
 
 		// aggregate consecutive changes of the similar type to perform batch operations
@@ -154,6 +159,7 @@ function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, 
 		if (node != null) {
 			parentElem.removeChild(node);
 		}
+		notify(node, REMOVED);
 	}
 	resolve();
 }
@@ -177,6 +183,7 @@ function addElements(index, subIndexes, children, parentElem, resolve) {
 		} else {
 			parentElem.insertBefore(child, elementAtPosition);
 		}
+		notify(child, ADDED);
 	});
 	resolve();
 }
@@ -198,7 +205,7 @@ function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
 		default:
 			return Promise.reject('Trying to perform a change with unknown change-type:', type);
 	}
-	
+
 	// to minor changes directly but bundle long langes with many elements into one animationFrame to speed things update_done
 	// if we do this for every change, this slows things down as we have to wait for the animationframe
 	return new Promise((resolve, reject) => {
@@ -237,9 +244,9 @@ function makeChildrenNodes(children) {
 
 // emit an event on the handled parent element
 // this helps to test asynchronous rendered elements
-function notifyParent(parentElem, event_name) {
+function notify(element, event_name) {
 	let event = new CustomEvent(event_name, {
 		bubbles: false
 	});
-	parentElem.dispatchEvent(event);
+	element.dispatchEvent(event);
 }
