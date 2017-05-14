@@ -1,4 +1,4 @@
-import { h, stream, list, UPDATE_DONE } from '../src';
+import { h, stream, list, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
 import assert from 'assert';
 
 describe('Components', () => {
@@ -34,7 +34,7 @@ describe('Components', () => {
 	});
 
 	it('should react to attached events', () => {
-		let DumbComponent = ({clicks$}) => 
+		let DumbComponent = ({clicks$}) =>
 			<div>
 				<button onclick={clicks$(clicks$() + 1)}>Click to emit event</button>
 			</div>;
@@ -60,9 +60,37 @@ describe('Components', () => {
 		// list items are not rendered yet as they are bundled into one animation frame
 		assert.equal(listElem.querySelectorAll('li').length, 0);
 		// we wait for the updates on the parent to have happened
-		listElem.addEventListener(UPDATE_DONE, () => {
+		listElem.addEventListener(CHILDREN_CHANGED, () => {
 			assert.equal(listElem.querySelectorAll('li').length, length);
 			done();
 		});
-	}); 
+	});
+
+	it('should send added lifecycle events', (done)=> {
+		let Child = ()=>{
+			let elem = <div class="child"></div>;
+			elem.addEventListener(ADDED, ()=>{
+				assert(container.querySelector('.child').length, 1);
+				done();
+			});
+			return elem;
+		};
+		var container = <div class="parent"><Child /></div>;
+	})
+
+	it('should send removed lifecycle events', (done)=> {
+		let switch$ = stream(true);
+		let Child = ()=>{
+			let elem = <div class="child"></div>;
+			elem.addEventListener(REMOVED, ()=>{
+				assert(container.querySelector('.child').length, 0);
+				done();
+			});
+			return elem;
+		};
+		var container = <div class="parent">
+			{switch$.map(x=>x?<Child />:null)}
+		</div>;
+		setTimeout(()=>switch$(false),1);
+	})
 });
