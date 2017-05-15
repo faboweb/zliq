@@ -5,12 +5,8 @@ export const Header = () => {
     let scroll$ = stream();
     window.addEventListener('scroll', scroll$);
 
-    let headerHidden$ = scroll$.map(() => {
-        let scrollTop = window.scrollY;
-        return scrollTop > 100;
-    });
-
-    return <div 
+    let headerHidden$ = stream(false);
+    let header = <div 
             class={headerHidden$.map(hidden => "row big-header highlight-background " + (hidden ? 'hidden' : ''))}
             onclick={(e) => e.target.tagName != "A" && scrollUp()}
         >
@@ -34,6 +30,14 @@ export const Header = () => {
                 <a href="#testing">Testing</a>
             </div>
         </div>;
+
+    scroll$.map(() => {
+        if (!headerHidden$.value && (document.body.scrollHeight < 900)) return false;
+        let scrollTop = window.scrollY;
+        return scrollTop > 100;
+    }).map(headerHidden$);
+
+    return header;
 } 
 
 function scrollUp() {
