@@ -745,12 +745,17 @@ function isStream(parent$) {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.UPDATE_DONE = undefined;
+exports.UPDATED = exports.REMOVED = exports.ADDED = exports.CHILDREN_CHANGED = exports.UPDATE_DONE = undefined;
 exports.createElement = createElement;
 
 var _streamy = __webpack_require__(5);
 
-var UPDATE_DONE = exports.UPDATE_DONE = 'update_done';
+// deprecated
+var UPDATE_DONE = exports.UPDATE_DONE = 'CHILDREN_CHANGED';
+var CHILDREN_CHANGED = exports.CHILDREN_CHANGED = 'CHILDREN_CHANGED';
+var ADDED = exports.ADDED = 'ADDED';
+var REMOVED = exports.REMOVED = 'REMOVED';
+var UPDATED = exports.UPDATED = 'UPDATED';
 
 // js DOM events. add which ones you need
 var DOM_EVENT_LISTENERS = ['onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload', 'ondblclick'];
@@ -827,7 +832,7 @@ function manageChildren(parentElem, children$Arr) {
 			}))
 			// after changes are done notify listeners
 			.then(function () {
-				notifyParent(parentElem, UPDATE_DONE);
+				notify(parentElem, UPDATE_DONE);
 			});
 
 			return childArr;
@@ -845,7 +850,7 @@ function getElementsBefore(children$Arr, index) {
 
 // very simple change detection
 // if the children objects are not the same, they changed
-// if there was an element before and there is no one know it got removed 
+// if there was an element before and there is no one know it got removed
 function calcChanges(childArr, oldChildArr) {
 	var subIndex = 0;
 	var changes = [];
@@ -904,6 +909,7 @@ function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, 
 		if (node != null) {
 			parentElem.removeChild(node);
 		}
+		notify(node, REMOVED);
 	}
 	resolve();
 }
@@ -927,6 +933,7 @@ function addElements(index, subIndexes, children, parentElem, resolve) {
 		} else {
 			parentElem.insertBefore(child, elementAtPosition);
 		}
+		notify(child, ADDED);
 	});
 	resolve();
 }
@@ -979,11 +986,11 @@ function makeChildrenNodes(children) {
 
 // emit an event on the handled parent element
 // this helps to test asynchronous rendered elements
-function notifyParent(parentElem, event_name) {
+function notify(element, event_name) {
 	var event = new CustomEvent(event_name, {
 		bubbles: false
 	});
-	parentElem.dispatchEvent(event);
+	element.dispatchEvent(event);
 }
 
 /***/ }),
@@ -1006,12 +1013,8 @@ var Header = exports.Header = function Header() {
     var scroll$ = (0, _src.stream)();
     window.addEventListener('scroll', scroll$);
 
-    var headerHidden$ = scroll$.map(function () {
-        var scrollTop = window.scrollY;
-        return scrollTop > 100;
-    });
-
-    return (0, _src.h)(
+    var headerHidden$ = (0, _src.stream)(false);
+    var header = (0, _src.h)(
         'div',
         {
             'class': headerHidden$.map(function (hidden) {
@@ -1074,11 +1077,23 @@ var Header = exports.Header = function Header() {
                 ['Routing']
             ), (0, _src.h)(
                 'a',
+                { href: '#lifecycle' },
+                ['Lifecycle']
+            ), (0, _src.h)(
+                'a',
                 { href: '#testing' },
                 ['Testing']
             )]
         )]
     );
+
+    scroll$.map(function () {
+        if (!headerHidden$.value && document.body.scrollHeight < 900) return false;
+        var scrollTop = window.scrollY;
+        return scrollTop > 100;
+    }).map(headerHidden$);
+
+    return header;
 };
 
 function scrollUp() {
@@ -1484,6 +1499,30 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                         )]
                 ), (0, _src.h)(
                         _subheader.Subheader,
+                        { title: 'Lifecycle', subtitle: 'To cleanup your s*** after your done', id: 'lifecycle' },
+                        []
+                ), (0, _src.h)(
+                        'p',
+                        null,
+                        ['ZLIQ dispatches lifecycle events `CHILDREN_CHANGED`, `ADDED`, `REMOVED` and `UPDATED` on the element. This way you can perform actions like initialization jQuery plugins on the element.']
+                ), (0, _src.h)(
+                        _utils.Markup,
+                        null,
+                        ['\n            |let Child = () => {\n            |    let elem = <div class="child"></div>;\n            |    elem.addEventListener(ADDED, () => {\n            |        // manipulate element\n            |    });\n            |    elem.addEventListener(REMOVED, () => {\n            |        // cleanup\n            |    });\n            |    return elem;\n            |};\n            ']
+                ), (0, _src.h)(
+                        'p',
+                        null,
+                        ['ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser ', (0, _src.h)(
+                                'a',
+                                { href: 'https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame' },
+                                ['animationframe']
+                        ), '. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated `CHILDREN_CHANGED` event. ']
+                ), (0, _src.h)(
+                        _utils.Markup,
+                        null,
+                        ['\n            |let listElems = // has many li-elements.\n            |let listElem = <ul>\n            |    { listElems }\n            |</ul>;\n            |// list items are not rendered yet as they are bundled into one animation frame\n            |assert.equal(listElem.querySelectorAll(\'li\').length, 0);\n            |// we wait for the updates on the parent to have happened\n            |listElem.addEventListener(CHILDREN_CHANGED, () => {\n            |    assert.equal(listElem.querySelectorAll(\'li\').length, length);\n            |    done();\n            |});\n            ']
+                ), (0, _src.h)(
+                        _subheader.Subheader,
                         { title: 'Testing', subtitle: 'A good framework is easy to test', id: 'testing' },
                         []
                 ), (0, _src.h)(
@@ -1497,23 +1536,15 @@ var Tutorial = exports.Tutorial = function Tutorial() {
                 ), (0, _src.h)(
                         'p',
                         null,
-                        ['ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser ', (0, _src.h)(
-                                'a',
-                                { href: 'https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame' },
-                                ['animationframe']
-                        ), '. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. ']
-                ), (0, _src.h)(
-                        _utils.Markup,
-                        null,
-                        ['\n            |let listElems = // has many li-elements.\n            |let listElem = <ul>\n            |    { listElems }\n            |</ul>;\n            |// list items are not rendered yet as they are bundled into one animation frame\n            |assert.equal(listElem.querySelectorAll(\'li\').length, 0);\n            |// we wait for the updates on the parent to have happened\n            |listElem.addEventListener(UPDATE_DONE, () => {\n            |    assert.equal(listElem.querySelectorAll(\'li\').length, length);\n            |    done();\n            |});\n            ']
+                        ['ATTENTION: The `CHILDREN_CHANGED` event is async for long lists of elements. Checkout the list example above.']
                 ), (0, _src.h)(
                         'p',
                         null,
                         ['If you need an easy test setup checkout how the ZLIQ project uses ', (0, _src.h)(
                                 'a',
-                                { href: 'https://karma-runner.github.io' },
-                                ['Karma']
-                        ), '.']
+                                { href: 'https://facebook.github.io/jest/' },
+                                ['Jest']
+                        ), ' with almost 0 configuration.']
                 )]
         );
 };

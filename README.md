@@ -65,10 +65,9 @@ let app = h('div', null, [
 ## Dive in
 Checkout the [Git Page](https://faboweb.github.io/zliq/) as a live example of a ZLIQ app (the code lives under `./demo`). There you will also find a tutorial and more detailed descriptions on ZLIQs parts.
 
-## Todos
+## Roadmap
 
- - Make a lazy loaded list work -> better rendering for many elements 
- - Need Reviewers
+ You want to know where ZLIQ is heading? Checkout the [issues](https://github.com/faboweb/zliq/issues).
 
 ## Contributors
 
