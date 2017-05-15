@@ -275,6 +275,43 @@ export const Tutorial = () =>
 
         <p>Test the router on this page: <a href="/subpage?foo=bar">Go to Subpage</a></p>
 
+        <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
+
+        <p>ZLIQ dispatches lifecycle events `CHILDREN_CHANGED`, `ADDED`, `REMOVED` and `UPDATED` on the element. This way you can perform actions like initialization jQuery plugins on the element.</p>
+
+        <Markup>
+            {`
+            |let Child = () => {
+            |    let elem = <div class="child"></div>;
+            |    elem.addEventListener(ADDED, () => {
+            |        // manipulate element
+            |    });
+            |    elem.addEventListener(REMOVED, () => {
+            |        // cleanup
+            |    });
+            |    return elem;
+            |};
+            `}
+        </Markup>
+
+        <p>ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser <a href="https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame">animationframe</a>. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated `CHILDREN_CHANGED` event. </p>
+
+        <Markup>
+            {`
+            |let listElems = // has many li-elements.
+            |let listElem = <ul>
+            |    { listElems }
+            |</ul>;
+            |// list items are not rendered yet as they are bundled into one animation frame
+            |assert.equal(listElem.querySelectorAll('li').length, 0);
+            |// we wait for the updates on the parent to have happened
+            |listElem.addEventListener(CHILDREN_CHANGED, () => {
+            |    assert.equal(listElem.querySelectorAll('li').length, length);
+            |    done();
+            |});
+            `}
+        </Markup>
+
         <Subheader title="Testing" subtitle="A good framework is easy to test" id="testing" />
 
         <p>ZLIQ returns the actual DOM element. This enables you to easily test the components:</p>
@@ -287,23 +324,7 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <p>ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser <a href="https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame">animationframe</a>. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated "UPDATED" event. </p>
+        <p>ATTENTION: The `CHILDREN_CHANGED` event is async for long lists of elements. Checkout the list example above.</p>
 
-        <Markup>
-            {`
-            |let listElems = // has many li-elements.
-            |let listElem = <ul>
-            |    { listElems }
-            |</ul>;
-            |// list items are not rendered yet as they are bundled into one animation frame
-            |assert.equal(listElem.querySelectorAll('li').length, 0);
-            |// we wait for the updates on the parent to have happened
-            |listElem.addEventListener(UPDATE_DONE, () => {
-            |    assert.equal(listElem.querySelectorAll('li').length, length);
-            |    done();
-            |});
-            `}
-        </Markup>
-
-        <p>If you need an easy test setup checkout how the ZLIQ project uses <a href="https://karma-runner.github.io">Karma</a>.</p>
+        <p>If you need an easy test setup checkout how the ZLIQ project uses <a href="https://facebook.github.io/jest/">Jest</a> with almost 0 configuration.</p>
     </div>

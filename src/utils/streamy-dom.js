@@ -1,11 +1,11 @@
 import {merge$, stream} from './streamy';
 
 // deprecated
-export const UPDATE_DONE = 'children_changed';
-export const CHILDREN_CHANGED = 'children_changed';
-export const ADDED = 'element_added';
-export const REMOVED = 'element_removed';
-export const UPDATED = 'element_updated';
+export const UPDATE_DONE = 'CHILDREN_CHANGED';
+export const CHILDREN_CHANGED = 'CHILDREN_CHANGED';
+export const ADDED = 'ADDED';
+export const REMOVED = 'REMOVED';
+export const UPDATED = 'UPDATED';
 
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [

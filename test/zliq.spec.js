@@ -67,30 +67,36 @@ describe('Components', () => {
 	});
 
 	it('should send added lifecycle events', (done)=> {
+		var container;
+		let switch$ = stream(false);
 		let Child = ()=>{
 			let elem = <div class="child"></div>;
 			elem.addEventListener(ADDED, ()=>{
-				assert(container.querySelector('.child').length, 1);
+				assert(container.querySelectorAll('.child').length, 1);
 				done();
 			});
 			return elem;
 		};
-		var container = <div class="parent"><Child /></div>;
+		container = <div class="parent">
+			{switch$.map(x=>x?<Child />:null)}
+		</div>;
+		setTimeout(()=>switch$(true),1);
 	})
 
 	it('should send removed lifecycle events', (done)=> {
+		var container;
 		let switch$ = stream(true);
 		let Child = ()=>{
 			let elem = <div class="child"></div>;
 			elem.addEventListener(REMOVED, ()=>{
-				assert(container.querySelector('.child').length, 0);
+				assert(container.querySelectorAll('.child').length === 0, true);
 				done();
 			});
 			return elem;
 		};
-		var container = <div class="parent">
+		container = <div class="parent">
 			{switch$.map(x=>x?<Child />:null)}
 		</div>;
-		setTimeout(()=>switch$(false),1);
+		setTimeout(()=>switch$(false),10);
 	})
 });

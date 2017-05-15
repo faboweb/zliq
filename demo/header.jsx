@@ -30,6 +30,7 @@ export const Header = () => {
                 <a href="#state">State</a>
                 <a href="#fetch">Fetch</a>
                 <a href="#routing">Routing</a>
+                <a href="#lifecycle">Lifecycle</a>
                 <a href="#testing">Testing</a>
             </div>
         </div>;

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "tdd": "jest --watch",
+    "test-debug": "node --debug --harmony node_modules/jest/bin/jest.js -i --watch",
     "start": "webpack-dev-server --config webpack/demo.js",
     "build": "webpack --config webpack/build.js --output-filename=zliq.js --output-path=lib/",
     "build:min": "webpack -p --config webpack/build_min.js --output-filename=zliq.min.js --output-path=lib/",
