@@ -148,7 +148,7 @@ function calcChanges(childArr, oldChildArr) {
 		})
 	}
 
-	return changes;
+	return changes.reverse();
 }
 
 // list of operations
