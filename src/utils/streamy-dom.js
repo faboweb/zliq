@@ -148,6 +148,7 @@ function calcChanges(childArr, oldChildArr) {
 		})
 	}
 
+	// if changes get performed in detection order, shrinking lists do not remove elements
 	return changes.reverse();
 }
 
