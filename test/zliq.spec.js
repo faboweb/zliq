@@ -99,4 +99,31 @@ describe('Components', () => {
 		</div>;
 		setTimeout(()=>switch$(false),10);
 	})
+
+	it('should update lists correctly', (done)=> {
+		var arr = [];
+		var length = 20;
+		for (let i = 0; i < length; i++) {
+			arr.push({ name: i });
+		}
+		let list$ = stream(arr);
+		let listElems$ = list$.map(arr => arr.map(x => <li>{x.name}</li>));
+		let listElem = <ul>
+			{ listElems$ }
+		</ul>;
+		let firstCheck = () => {
+			console.log('first');
+			listElem.removeEventListener(CHILDREN_CHANGED, firstCheck);
+			listElem.addEventListener(CHILDREN_CHANGED, secondCheck);
+			assert.equal(listElem.querySelectorAll('li')[20].innerText, '19');
+			let arr = new Array(listElems$.value);
+			arr.pop();
+			list$(arr);
+		};
+		let secondCheck = () => {
+			assert.equal(listElem.querySelectorAll('li')[18].innerText, '17');
+			done();
+		}
+		listElem.addEventListener(CHILDREN_CHANGED, firstCheck);
+	})
 });
