@@ -36,7 +36,7 @@ function interceptLinks(routerState$) {
 
         routerState$.patch({
             route: href === '' ? '/' : href.split('?')[0],
-            params: getUrlParams(href)
+            params: getUrlParams(href, window.location.search)
         });
     }
 
@@ -49,26 +49,27 @@ function interceptLinks(routerState$) {
     document.addEventListener('click', interceptClickEvent);
 
     // react to initial routing info
-    if (location.hash != '') {
-        dispatchRouteChange();
-    }
+    // if (location.hash != '') {
+    dispatchRouteChange();
+    // }
 }
 
 // src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
-function getUrlParams(href) {
+function getUrlParams(href, search) {
     let urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)/g;
-    if (!urlRegex.test(href)) {
-        return {};
-    }
+    // if (!urlRegex.test(href)) {
+    //     return {};
+    // }
     var params = {};
-    if (href === '') {
-        return params;
-    };
-    let splitHref = href.split('?');
-    if (splitHref.length == 0) {
-        return params;
-    }
-    var query = splitHref[1];
+    // if (href === '') {
+    //     return params;
+    // };
+    // let splitHref = href.split('?');
+    // if (splitHref.length == 0) {
+    //     return params;
+    // }
+    var query = href.substr(1);
+    query += search === '' ? '' : '&' + search.substr(1);
     var vars = query.split("&");
     for (var i=0;i<vars.length;i++) {
         var pair = vars[i].split("=");
@@ -83,7 +84,7 @@ function getUrlParams(href) {
         } else {
             params[pair[0]].push(decodeURIComponent(pair[1]));
         }
-    } 
+    }
     return params;
 }
 
