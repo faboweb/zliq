@@ -42,6 +42,7 @@ function manageProperties(elem, properties$) {
                 let eventName = property.substr(2);
 				// TODO notify dev about value not being a function
 				if (typeof value === 'function') {
+					// TODO remove based on old eventlistener-function not new one
 					elem.removeEventListener(eventName, value);
 					elem.addEventListener(eventName, value);
 				}
@@ -53,7 +54,11 @@ function manageProperties(elem, properties$) {
                 Object.assign(elem.style, value);
 			// other propertys are just added as is to the DOM
             } else {
-                elem.setAttribute(property, value);
+				if (value === null) {
+					elem.removeAttribute(property);
+				} else {
+                	elem.setAttribute(property, value);
+				}
             }
         });
     });
