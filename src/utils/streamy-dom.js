@@ -31,7 +31,7 @@ export function createElement(tagName, properties$, children$Arr) {
 function manageProperties(elem, properties$) {
     properties$.map(properties => {
         if (!properties) return;
-        Object.getOwnPropertyNames(properties).map(function(property) {
+        Object.getOwnPropertyNames(properties).map(function applyPropertyToElement(property) {
             let value = properties[property];
             // check if event
             if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
