@@ -36,7 +36,7 @@ function interceptLinks(routerState$) {
 
         routerState$.patch({
             route: href === '' ? '/' : href.split('?')[0],
-            params: getUrlParams(href, window.location.search)
+            params: getUrlParams(href, location.search)
         });
     }
 
@@ -54,23 +54,20 @@ function interceptLinks(routerState$) {
     }
 }
 
-// src: http://stackoverflow.com/questions/979975/how-to-get-the-value-from-the-get-parameters
-function getUrlParams(href, search) {
-    let urlRegex = /\/\w*(\?\w+=.+(&\w+=.+)*)/g;
-    // if (!urlRegex.test(href)) {
-    //     return {};
-    // }
-    var params = {};
-    // if (href === '') {
-    //     return params;
-    // };
-    // let splitHref = href.split('?');
-    // if (splitHref.length == 0) {
-    //     return params;
-    // }
-    var query = href.substr(1);
-    query += search === '' ? '' : '&' + search.substr(1);
-    var vars = query.split("&");
+function getUrlParams(hash, search) {
+    // match query params in urls like:
+    // http://localhost:8080/?code=e4a4f94f008a92f12221&code2=abc#/location?code=e4a4f94f008a92f12221&code2=abc
+    // the query could be set internaly; then it would be behind the #
+    // the query could be set at start; then it would be before the #
+    let urlRegex = /(#\/\w*)?(\?(\w+=.*)(&\w+=.*)*)+/g;
+    let regExResultHash = RegExp(urlRegex).exec(hash);
+    let regExResultSearch = RegExp(urlRegex).exec(search);
+
+    // merge all query params before and after the hash
+    let vars = regExResultHash && regExResultHash[3] != null ? regExResult[3].split('&') : [];
+    vars = regExResultSearch && regExResultSearch[3] != null ? vars.concat(regExResultSearch[3].split('&')) : vars;
+
+    let params = {};
     for (var i=0;i<vars.length;i++) {
         var pair = vars[i].split("=");
             // If first entry with this name

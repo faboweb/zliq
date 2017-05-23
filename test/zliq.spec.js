@@ -115,8 +115,35 @@ describe('Components', () => {
 
 		let router$ = initRouter();
 		router$.map(({route, params}) => {
-			assert(route === '/route');
+			assert(route === '/route', true);
 			done();
 		})
+	})
+
+	it('should react to initial query parameters', (done) => {
+		Object.defineProperty(location, 'search', {
+			value: '?param=value',
+			configurable: true,
+		});
+
+		let router$ = initRouter();
+		router$.map(({route, params}) => {
+			assert(params.param === 'value', true);
+			done();
+		})
+	})
+
+	it('should react to clicks on internal links', (done) => {
+		let link = <a href="/route?param=value" />
+
+		let router$ = initRouter();
+
+		link.click();
+
+		router$.map(({route, params}) => {
+			assert(route === '/route', true);
+			assert(params.param === 'value', true);
+			done();
+		});
 	})
 });
