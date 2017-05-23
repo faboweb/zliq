@@ -110,7 +110,7 @@ describe('Components', () => {
 	it('should react to initial routing', (done) => {
 		Object.defineProperty(location, 'hash', {
 			value: '#/route',
-			configurable: true,
+			configurable: true
 		});
 
 		let router$ = initRouter();
@@ -123,7 +123,7 @@ describe('Components', () => {
 	it('should react to initial query parameters', (done) => {
 		Object.defineProperty(location, 'search', {
 			value: '?param=value',
-			configurable: true,
+			configurable: true
 		});
 
 		let router$ = initRouter();
