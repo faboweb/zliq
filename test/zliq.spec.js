@@ -99,4 +99,11 @@ describe('Components', () => {
 		</div>;
 		setTimeout(()=>switch$(false),10);
 	})
+
+	it('should remove attributes on null value', () => {
+		let elem = <div disabled={stream(true)}></div>;
+		assert(elem.getAttribute('disabled'), true);
+		let elem2 = <div disabled={stream(null)}></div>;
+		assert(elem.getAttribute('disabled'), false);
+	})
 });

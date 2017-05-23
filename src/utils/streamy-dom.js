@@ -31,7 +31,7 @@ export function createElement(tagName, properties$, children$Arr) {
 function manageProperties(elem, properties$) {
     properties$.map(properties => {
         if (!properties) return;
-        Object.getOwnPropertyNames(properties).map(property => {
+        Object.getOwnPropertyNames(properties).map(function applyPropertyToElement(property) {
             let value = properties[property];
             // check if event
             if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
@@ -40,8 +40,8 @@ function manageProperties(elem, properties$) {
 
 				// property event binder start with 'on' but events not so we need to strip that
                 let eventName = property.substr(2);
-				// TODO notify dev about value not being a function
 				if (typeof value === 'function') {
+					// TODO remove based on old eventlistener-function not new one
 					elem.removeEventListener(eventName, value);
 					elem.addEventListener(eventName, value);
 				}
@@ -53,7 +53,11 @@ function manageProperties(elem, properties$) {
                 Object.assign(elem.style, value);
 			// other propertys are just added as is to the DOM
             } else {
-                elem.setAttribute(property, value);
+				if (value === null) {
+					elem.removeAttribute(property);
+				} else {
+                	elem.setAttribute(property, value);
+				}
             }
         });
     });
