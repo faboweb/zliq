@@ -100,9 +100,9 @@ describe('Components', () => {
 		setTimeout(()=>switch$(false),10);
 	})
 
-	it('should update lists correctly', (done)=> {
+	it('should update lists correctly', ()=> {
 		var arr = [];
-		var length = 20;
+		var length = 3;
 		for (let i = 0; i < length; i++) {
 			arr.push({ name: i });
 		}
@@ -111,20 +111,13 @@ describe('Components', () => {
 		let listElem = <ul>
 			{ listElems$ }
 		</ul>;
-		let firstCheck = () => {
-			console.log('first');
-			listElem.removeEventListener(CHILDREN_CHANGED, firstCheck);
-			listElem.addEventListener(CHILDREN_CHANGED, secondCheck);
-			assert.equal(listElem.querySelectorAll('li')[20].innerText, '19');
-			let arr = new Array(listElems$.value);
-			arr.pop();
-			list$(arr);
-		};
-		let secondCheck = () => {
-			assert.equal(listElem.querySelectorAll('li')[18].innerText, '17');
-			done();
-		}
-		listElem.addEventListener(CHILDREN_CHANGED, firstCheck);
+
+		assert.equal(listElem.querySelectorAll('li').length, 3);
+		assert.equal(listElem.querySelectorAll('li')[2].innerHTML, '2');
+		arr.pop();
+		list$(arr);
+		assert.equal(listElem.querySelectorAll('li').length, 2);
+		assert.equal(listElem.querySelectorAll('li')[1].innerHTML, '1');
 	});
 
 	it('should remove attributes on null value', () => {
