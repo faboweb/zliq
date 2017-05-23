@@ -1,4 +1,4 @@
-import { h, stream, list, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
+import { h, stream, list, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
 import assert from 'assert';
 
 describe('Components', () => {
@@ -105,5 +105,18 @@ describe('Components', () => {
 		assert(elem.getAttribute('disabled'), true);
 		let elem2 = <div disabled={stream(null)}></div>;
 		assert(elem.getAttribute('disabled'), false);
+	})
+
+	it('should react to initial routing', (done) => {
+		Object.defineProperty(location, 'hash', {
+			value: '#/route',
+			configurable: true,
+		});
+
+		let router$ = initRouter();
+		router$.map(({route, params}) => {
+			assert(route === '/route');
+			done();
+		})
 	})
 });
