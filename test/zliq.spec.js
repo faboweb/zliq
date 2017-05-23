@@ -100,12 +100,32 @@ describe('Components', () => {
 		setTimeout(()=>switch$(false),10);
 	})
 
+	it('should update lists correctly', ()=> {
+		var arr = [];
+		var length = 3;
+		for (let i = 0; i < length; i++) {
+			arr.push({ name: i });
+		}
+		let list$ = stream(arr);
+		let listElems$ = list$.map(arr => arr.map(x => <li>{x.name}</li>));
+		let listElem = <ul>
+			{ listElems$ }
+		</ul>;
+
+		assert.equal(listElem.querySelectorAll('li').length, 3);
+		assert.equal(listElem.querySelectorAll('li')[2].innerHTML, '2');
+		arr.pop();
+		list$(arr);
+		assert.equal(listElem.querySelectorAll('li').length, 2);
+		assert.equal(listElem.querySelectorAll('li')[1].innerHTML, '1');
+	});
+
 	it('should remove attributes on null value', () => {
 		let elem = <div disabled={stream(true)}></div>;
 		assert(elem.getAttribute('disabled'), true);
 		let elem2 = <div disabled={stream(null)}></div>;
 		assert(elem.getAttribute('disabled'), false);
-	})
+	});
 
 	it('should react to initial routing', (done) => {
 		Object.defineProperty(location, 'hash', {
@@ -118,7 +138,7 @@ describe('Components', () => {
 			assert(route === '/route', true);
 			done();
 		})
-	})
+	});
 
 	it('should react to initial query parameters', (done) => {
 		Object.defineProperty(location, 'search', {
@@ -131,7 +151,7 @@ describe('Components', () => {
 			assert(params.param === 'value', true);
 			done();
 		})
-	})
+	});
 
 	it('should react to clicks on internal links', (done) => {
 		let link = <a href="/route?param=value" />
@@ -145,5 +165,5 @@ describe('Components', () => {
 			assert(params.param === 'value', true);
 			done();
 		});
-	})
+	});
 });
