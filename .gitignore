@@ -43,3 +43,4 @@ benchmark.js
 *.worker.js
 lib
 lcov-report
+lcov.info
