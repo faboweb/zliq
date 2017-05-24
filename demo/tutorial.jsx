@@ -171,7 +171,7 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <p>For a centralized state like in [Redux](http://redux.js.org/) define a state for the application and then pass it on to each component.</p>
+        <p>For a centralized state like in <a href="http://redux.js.org/">Redux</a> define a state for the application and then pass it on to each component.</p>
 
         <Markup>
             {`
