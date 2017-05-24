@@ -4,6 +4,7 @@ machine:
 dependencies:
   pre:
     - npm i yarn
+    - npm i -g codeclimate-test-reporter
   override:
     - yarn
 general:
@@ -13,3 +14,5 @@ general:
 test:
   override:
     - npm test
+  post:
+    - codeclimate-test-reporter < lcov.info
