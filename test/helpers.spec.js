@@ -6,9 +6,7 @@ describe('Helpers', () => {
         it('should indicate loading', (done)=> {
             let done$ = stream(false);
             let promise = new Promise((resolve, reject) => {
-                done$.map(x => {
-                    x && resolve()
-                });
+                if$(done$, resolve());
             });
             let request$ = promise$(promise);
             let call = 0;
@@ -24,27 +22,33 @@ describe('Helpers', () => {
                 call++;
             })
         });
-        it('should deliver data', (done)=> {
+
+        let checkPostLoading = (promise, callback) => {
             let done$ = stream(true);
-            let promise = Promise.resolve('Data');
             let request$ = promise$(promise);
-            request$.map(({loading, data}) => {
+            request$.map(({loading, data, error}) => {
                 if (loading === false) {
+                    callback(data, error);
+                }
+            })
+        };
+        it('should deliver data', (done)=> {
+            checkPostLoading(
+                Promise.resolve('Data'),
+                (data, error) => {
                     assert.equal(data, 'Data');
                     done();
                 }
-            })
+            )
         });
         it('should deliver errors', (done)=> {
-            let done$ = stream(true);
-            let promise = Promise.reject('Error');
-            let request$ = promise$(promise);
-            request$.map(({loading, error}) => {
-                if (loading === false) {
+            checkPostLoading(
+                Promise.reject('Error'),
+                (data, error) => {
                     assert.equal(error, 'Error');
                     done();
                 }
-            })
+            )
         });
     });
 
