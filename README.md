@@ -13,6 +13,7 @@
 <!--[![Examples][examples-badge]][examples]--> 
 
 [![Code Climate](https://codeclimate.com/github/faboweb/zliq.png)](https://codeclimate.com/github/faboweb/zliq)
+[![Test Coverage](https://codeclimate.com/github/codeclimate/codeclimate/badges/coverage.svg)](https://codeclimate.com/github/codeclimate/codeclimate/coverage)
 [![gzip size][tiny-gzip-badge]][unpkg-dist]
 [![size][tiny-size-badge]][unpkg-dist]
 [![module formats: es, umd][module-formats-badge]][unpkg-dist]
