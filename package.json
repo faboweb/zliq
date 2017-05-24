@@ -61,6 +61,6 @@
     "collectCoverage": true,
     "coverageDirectory": "./",
     "coverageReporters": ["lcov"],
-    "coveragePathIgnorePatterns": ["/node_modules/", "/demo/", "/test/"]
+    "coveragePathIgnorePatterns": ["/node_modules/", "/demo/", "/test/", "/lib/"]
   }
 }
