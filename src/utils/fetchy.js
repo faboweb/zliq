@@ -13,6 +13,29 @@ function isAuthenticated(auth$) {
 	};
 }
 
+export const promise$ = (promise) => {
+	let output$ = stream({
+		loading: true,
+		error: null,
+		data: null
+	});
+
+	promise
+	.then(result => {
+		output$.patch({
+			loading: false,
+			data
+		});
+	}, error => {
+		output$.patch({
+			loading: false,
+			error
+		});
+	});
+
+	return output$;
+}
+
 /*
 * TODO
 * wrapper for LOADING -> SUCCESS / FAILED actions
@@ -20,11 +43,6 @@ function isAuthenticated(auth$) {
 */
 export const fetchy = (request, extractData, auth$) => {
 	extractData = extractData || (a => a);
-	let output$ = stream({
-		loading: true,
-		error: null,
-		data: null
-	});
 
 	let options = {
 		method: request.method || 'GET',
@@ -35,21 +53,10 @@ export const fetchy = (request, extractData, auth$) => {
 		cache: request.cache || 'default'
 	};
 
-	fetch(request.url, options)
-		.then(isAuthenticated(auth$))
-		.then(res => res.json())
-		.then(body => {
-			output$.patch({
-				loading: false,
-				data: extractData(body)
-			});
-		})
-		.catch(error => {
-			output$.patch({
-				loading: false,
-				error
-			});
-		})
-
-	return output$;
+	return promise$(
+		fetch(request.url, options)
+			.then(isAuthenticated(auth$))
+			.then(res => res.json())
+			.then(body => extractData(body))
+	);
 };
