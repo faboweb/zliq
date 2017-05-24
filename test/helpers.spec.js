@@ -30,6 +30,7 @@ describe('Helpers', () => {
                 if (loading === false) {
                     callback(data, error);
                 }
+                return;
             })
         };
         it('should deliver data', (done)=> {
