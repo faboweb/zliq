@@ -1,9 +1,10 @@
 import { h } from '../src';
 import {Subheader} from './subheader.jsx';
 import {Markup} from './utils.jsx';
+import './tutorial.scss';
 
 export const Tutorial = () =>
-    <div class="section">
+    <div class="section tutorial">
         <Subheader title="Writing Components" subtitle="Hello World here we come" id="tutorial"/>
 
         <p>ZLIQ is leveraging ES2015 to read easier and to be readable by everybody.
@@ -203,6 +204,62 @@ export const Tutorial = () =>
 
         <p>ZLIQ acknowledges that a web developer has a bunch of tasks he performs frequently. With ZLIQ this developer could build his own helpers. But we developers are lazy, so ZLIQ provides some basics you probably will use in you ZLIQ application.</p>
 
+        <h6>if$ - boolean switch</h6>
+
+        <p>Often you want to show content dependent on boolean-state:</p>
+
+        <Markup>
+            {`
+            |<div>
+            |    {
+            |        open$.map(open => {
+            |            if (open) {
+            |                return <span>Open</span>;
+            |            } else {
+            |                return <span>Closed</span>;
+            |            }
+            |        })
+            |    }
+            |</div>
+            `}
+        </Markup>
+
+        <p>ZLIQ provides a boolean switch for these cases:</p>
+
+        <Markup>
+            {`
+            |<div>
+            |    {
+            |        if$(open$,
+            |            <span>Open</span>,
+            |            <span>Closed</span>)
+            |    }
+            |</div>
+            `}
+        </Markup>
+
+        <h6>join$ - string merge</h6>
+
+        <p>Performing class manipulation on an element can be a pain:</p>
+
+        <Markup>
+            {`
+            |<div class={open$.map(open => 'container ' + open ? 'open' : 'closed')}>
+            |</div>
+            `}
+        </Markup>
+
+        <p>Imagine this with more then one condition... ZLIQ provides a helper for joining strings even from streams:</p>
+
+        <Markup>
+            {`
+            |<div class={join$('container', if$(open$, 'open', 'closed'))}>
+            |</div>
+            `}
+        </Markup>
+
+        <h6>promise$ - promise enhancer</h6>
+
         <p>ZLIQ provides a little wrapper around promises. It provides a flag for the ongoing request. This way you can show loading bars easily:</p>
 
         <Markup>
@@ -237,56 +294,6 @@ export const Tutorial = () =>
             |        }
             |    </p>
             |</div>;
-            `}
-        </Markup>
-
-        <p>Often you want to show content dependent on boolean-state:</p>
-
-        <Markup>
-            {`
-            |<div>
-            |    {
-            |        open$.map(open => {
-            |            if (open) {
-            |                return <span>Open</span>;
-            |            } else {
-            |                return <span>Closed</span>;
-            |            }
-            |        })
-            |    }
-            |</div>
-            `}
-        </Markup>
-
-        <p>ZLIQ provides a boolean switch for these cases:</p>
-
-        <Markup>
-            {`
-            |<div>
-            |    {
-            |        if$(open$,
-            |            <span>Open</span>,
-            |            <span>Closed</span>)
-            |    }
-            |</div>
-            `}
-        </Markup>
-
-        <p>Performing class manipulation on an element can be a pain:</p>
-
-        <Markup>
-            {`
-            |<div class={open$.map(open => 'container ' + open ? 'open' : 'closed')}>
-            |</div>
-            `}
-        </Markup>
-
-        <p>Imagine this with more then one condition... ZLIQ provides a helper for joining strings even from streams:</p>
-
-        <Markup>
-            {`
-            |<div class={join$('container', if$(open$, 'open', 'closed'))}>
-            |</div>
             `}
         </Markup>
 
