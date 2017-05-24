@@ -5,5 +5,5 @@ import './playground.scss';
 export const Playground = () =>
     <div class="section">
         <Subheader title="Experiment" subtitle="Fork and get your hands dirty" />
-        <script async src="//jsfiddle.net/faboweb/hvbee8m9/embed/js,html,result/"></script>
+        <script async src="//jsfiddle.net/hvbee8m9/3/embed/js,html,result/"></script>
     </div>;
