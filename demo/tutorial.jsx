@@ -240,43 +240,53 @@ export const Tutorial = () =>
             `}
         </Markup>
 
+        <p>Often you want to show content dependent on boolean-state:</p>
+
+        <Markup>
+            {`
+            |<div>
+            |    {
+            |        open$.map(open => {
+            |            if (open) {
+            |                return <span>Open</span>;
+            |            } else {
+            |                return <span>Closed</span>;
+            |            }
+            |        })
+            |    }
+            |</div>
+            `}
+        </Markup>
+
+        <p>ZLIQ provides a boolean switch for these cases:</p>
+
+        <Markup>
+            {`
+            |<div>
+            |    {
+            |        if$(open$,
+            |            <span>Open</span>,
+            |            <span>Closed</span>)
+            |    }
+            |</div>
+            `}
+        </Markup>
+
         <p>Performing class manipulation on an element can be a pain:</p>
 
         <Markup>
             {`
-            |import { fetchy } from '../src';
-            |
-            |function fetchQuote(into$) {
-            |	fetchy({
-            |		method: 'GET',
-            |		url: 'http://quotes.rest/qod.json?category=inspire'
-            |	}, (data) => {
-            |		return {
-            |			quote: data.contents.quotes["0"].quote,
-            |			author: data.contents.quotes["0"].author
-            |		};
-            |	}).map(into$);
-            |}
-            |let quoteRequest$ = stream({});
-            |
-            |let app = <div>
-            |    <button onclick={() => fetchQuote(quoteRequest$)}>Get Quote of the Day</button>
-            |    <p>
-            |        {
-            |            quoteRequest$.map(({data, loading}) => {
-            |                if (loading) {
-            |                    return 'Loading...';
-            |                }
-            |                // request was successful
-            |                else if (data != null) {
-            |                    return <p>{data.quote} - {data.author}</p>;
-            |                }
-            |                // not yet requested any data
-            |                return null;
-            |            })
-            |        }
-            |    </p>
-            |</div>;
+            |<div class={open$.map(open => 'container ' + open ? 'open' : 'closed')}>
+            |</div>
+            `}
+        </Markup>
+
+        <p>Imagine this with more then one condition... ZLIQ provides a helper for joining strings even from streams:</p>
+
+        <Markup>
+            {`
+            |<div class={join$('container', if$(open$, 'open', 'closed'))}>
+            |</div>
             `}
         </Markup>
 
