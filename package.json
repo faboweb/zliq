@@ -60,6 +60,6 @@
     },
     "collectCoverage": true,
     "coverageDirectory": "./",
-    "coverageReporters": "['lcov']"
+    "coverageReporters": ["lcov"]
   }
 }
