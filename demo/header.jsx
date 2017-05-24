@@ -6,7 +6,7 @@ export const Header = () => {
     window.addEventListener('scroll', scroll$);
 
     let headerHidden$ = stream(false);
-    let header = <div 
+    let header = <div
             class={headerHidden$.map(hidden => "row big-header highlight-background " + (hidden ? 'hidden' : ''))}
             onclick={(e) => e.target.tagName != "A" && scrollUp()}
         >
@@ -24,7 +24,7 @@ export const Header = () => {
                 <a href="#tutorial">Tutorial</a>
                 <a href="#streams">Streams</a>
                 <a href="#state">State</a>
-                <a href="#fetch">Fetch</a>
+                <a href="#helpers">Helpers</a>
                 <a href="#routing">Routing</a>
                 <a href="#lifecycle">Lifecycle</a>
                 <a href="#testing">Testing</a>
@@ -38,7 +38,7 @@ export const Header = () => {
     }).map(headerHidden$);
 
     return header;
-} 
+}
 
 function scrollUp() {
     scrollTo(document.body, 0, 0.5);
