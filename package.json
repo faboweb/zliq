@@ -57,6 +57,9 @@
     ],
     "moduleNameMapper": {
       "\\.(css|scss|jpg|png)$": "<rootDir>/test/helpers/empty-module.js"
-    }
+    },
+    "collectCoverage": true,
+    "coverageDirectory": "./",
+    "coverageReporters": ["lcov"]
   }
 }

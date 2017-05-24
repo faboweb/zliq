@@ -1,9 +1,10 @@
 import { h } from '../src';
 import {Subheader} from './subheader.jsx';
 import {Markup} from './utils.jsx';
+import './tutorial.scss';
 
-export const Tutorial = () => 
-    <div class="section">
+export const Tutorial = () =>
+    <div class="section tutorial">
         <Subheader title="Writing Components" subtitle="Hello World here we come" id="tutorial"/>
 
         <p>ZLIQ is leveraging ES2015 to read easier and to be readable by everybody.
@@ -16,7 +17,7 @@ export const Tutorial = () =>
             |import {h} from 'zliq';
             |
             |// insert values in the markup with {x}
-            |export const Highlight = (props, children) => 
+            |export const Highlight = (props, children) =>
             |    <span class='highlight'>{props.text}</span>;
             `}
         </Markup>
@@ -26,11 +27,11 @@ export const Tutorial = () =>
         <Markup>
             {`
             |// before
-            |export const Highlight = ({text}) => 
+            |export const Highlight = ({text}) =>
             |    <span class="highlight">{text}</span>;
             |
             |// after
-            |export const Highlight = ({text}) => 
+            |export const Highlight = ({text}) =>
             |    h('span', {'class': 'highlight'}, [text]);
             `}
         </Markup>
@@ -95,7 +96,7 @@ export const Tutorial = () =>
             |console.log(newStream()); // 6
             |
             |// the map function is the easy way to manipulate or interact with values of the stream
-            |newStream.map(value => console.log(value)); 
+            |newStream.map(value => console.log(value));
             |// 6
             |newStream(7);
             |// 7
@@ -103,7 +104,7 @@ export const Tutorial = () =>
         </Markup>
 
         <p>Available stream manipulation functions are <code>.map</code>, <code>.flatMap</code>, <code>.filter</code>, <code>.deepSelect</code>, <code>.distinct</code>, <code>.$</code>, <code>.patch</code> and <code>.reduce</code>. Checkout <code>src/utils/streamy.js</code> for descriptions.</p>
-        
+
         <p>A special manipulation is the <code>.$()</code> query selector. As a developer I often want to react to changes on a specific nested property. The query selector takes one or more property paths and will return a new stream with the current selected properties:</p>
 
         <Markup>
@@ -170,7 +171,7 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <p>For a centralized state like in [Redux](http://redux.js.org/) define a state for the application and then pass it on to each component.</p>
+        <p>For a centralized state like in <a href="http://redux.js.org/">Redux</a> define a state for the application and then pass it on to each component.</p>
 
         <Markup>
             {`
@@ -199,43 +200,96 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <Subheader title="Fetching Data" subtitle="For all the asynchronous content you need" id="fetch" />
+        <Subheader title="Helpers" subtitle="Because in some situation you need a friend" id="helpers" />
 
-        <p>Modern single page sites are so much better as the old server generated pages as only the content of the page is updated that needs updating. This results in the user getting faster to where he wants to go and therefor a better UX.</p>
-        
-        <p>ZLIQ provides a little wrapper around the native `fetch` function so you can use requests as streams in the Hyperscript:</p>
+        <p>ZLIQ acknowledges that a web developer has a bunch of tasks he performs frequently. With ZLIQ this developer could build his own helpers. But we developers are lazy, so ZLIQ provides some basics you probably will use in you ZLIQ application.</p>
+
+        <h6>if$ - boolean switch</h6>
+
+        <p>Often you want to show content dependent on boolean-state:</p>
 
         <Markup>
             {`
-            |import { fetchy } from '../src';
+            |<div>
+            |    {
+            |        open$.map(open => {
+            |            if (open) {
+            |                return <span>Open</span>;
+            |            } else {
+            |                return <span>Closed</span>;
+            |            }
+            |        })
+            |    }
+            |</div>
+            `}
+        </Markup>
+
+        <p>ZLIQ provides a boolean switch for these cases:</p>
+
+        <Markup>
+            {`
+            |<div>
+            |    {
+            |        if$(open$,
+            |            <span>Open</span>,
+            |            <span>Closed</span>)
+            |    }
+            |</div>
+            `}
+        </Markup>
+
+        <h6>join$ - string merge</h6>
+
+        <p>Performing class manipulation on an element can be a pain:</p>
+
+        <Markup>
+            {`
+            |<div class={open$.map(open => 'container ' + open ? 'open' : 'closed')}>
+            |</div>
+            `}
+        </Markup>
+
+        <p>Imagine this with more then one condition... ZLIQ provides a helper for joining strings even from streams:</p>
+
+        <Markup>
+            {`
+            |<div class={join$('container', if$(open$, 'open', 'closed'))}>
+            |</div>
+            `}
+        </Markup>
+
+        <h6>promise$ - promise enhancer</h6>
+
+        <p>ZLIQ provides a little wrapper around promises. It provides a flag for the ongoing request. This way you can show loading bars easily:</p>
+
+        <Markup>
+            {`
+            |import { promise$ } from '../src';
             |
-            |function fetchQuote(into$) {
-            |	fetchy({
-            |		method: 'GET',
-            |		url: 'http://quotes.rest/qod.json?category=inspire'
-            |	}, (data) => {
-            |		return {
-            |			quote: data.contents.quotes["0"].quote,
-            |			author: data.contents.quotes["0"].author
-            |		};
+            |let fetchQuote = (into$) => () => {
+            |	promise$(fetch('http://quotes.rest/qod.json?category=inspire')
+            |        .then(res => res.json())
+            |        .then(data => {
+            |		    return {
+            |		    	quote: data.contents.quotes["0"].quote,
+            |		    	author: data.contents.quotes["0"].author
+            |		    };
             |	}).map(into$);
             |}
-            |let quoteRequest$ = stream({});
+            |let quoteRequest$ = stream({initial: true});
             |
             |let app = <div>
-            |    <button onclick={() => fetchQuote(quoteRequest$)}>Get Quote of the Day</button>
+            |    <button onclick={fetchQuote(quoteRequest$)}>Get Quote of the Day</button>
             |    <p>
             |        {
-            |            quoteRequest$.map(({data, loading}) => {
+            |            quoteRequest$.map(({initial, data, loading}) => {
+            |                if (initial) {
+            |                   return null;
+            |                }
             |                if (loading) {
             |                    return 'Loading...';
-            |                } 
-            |                // request was successful
-            |                else if (data != null) {
-            |                    return <p>{data.quote} - {data.author}</p>;
             |                }
-            |                // not yet requested any data
-            |                return null;
+            |                return <p>{data.quote} - {data.author}</p>;
             |            })
             |        }
             |    </p>
