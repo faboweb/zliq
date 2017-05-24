@@ -22,7 +22,7 @@
 [![Watch on GitHub][github-watch-badge]][github-watch]
 [![Star on GitHub][github-star-badge]][github-star]
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on redux, reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~630 May 2017).
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~630 May 2017).
 
 ## [Website](https://faboweb.github.io/zliq/)
 
@@ -51,6 +51,27 @@ import {h} from 'zliq';
 let app = <div>
         <span>Hello World</span>
     </div>;
+document.querySelector('#app').appendChild(app);
+```
+
+ZLIQ includes streams similar to [flyd](https://github.com/paldepind/flyd) to make state easy to handle:
+```js
+import {h} from 'zliq';
+
+// define a stream of state
+let state$ = stream({ clicks: 0 });
+
+// Redux like action
+let increment = (state$) => () => {
+    state$.patch({ clicks: state$.$('clicks')() + 1 })
+};
+            
+let app = <div>
+    // display from state
+    <p>Clicks: {state$.$('clicks')}</p>
+    // interact with state
+    <button onclick={increment(state$)}>Click + 1</button>
+</div>;
 document.querySelector('#app').appendChild(app);
 ```
 
