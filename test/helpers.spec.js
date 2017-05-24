@@ -28,9 +28,8 @@ describe('Helpers', () => {
             let request$ = promise$(promise);
             request$.map(({loading, data, error}) => {
                 if (loading === false) {
-                    callback(data, error);
+                    return callback(data, error);
                 }
-                return;
             })
         };
         it('should deliver data', (done)=> {
