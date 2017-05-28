@@ -1222,7 +1222,7 @@ var Playground = exports.Playground = function Playground() {
             []
         ), (0, _src.h)(
             'script',
-            { async: true, src: '//jsfiddle.net/faboweb/hvbee8m9/embed/js,html,result/' },
+            { async: true, src: '//jsfiddle.net/hvbee8m9/3/embed/js,html,result/' },
             []
         )]
     );
