@@ -64,7 +64,7 @@ function getUrlParams(hash, search) {
     let regExResultSearch = RegExp(urlRegex).exec(search);
 
     // merge all query params before and after the hash
-    let vars = regExResultHash && regExResultHash[3] != null ? regExResult[3].split('&') : [];
+    let vars = regExResultHash && regExResultHash[3] != null ? regExResultHash[3].split('&') : [];
     vars = regExResultSearch && regExResultSearch[3] != null ? vars.concat(regExResultSearch[3].split('&')) : vars;
 
     let params = {};
