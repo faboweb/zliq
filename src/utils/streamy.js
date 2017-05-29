@@ -13,7 +13,7 @@ export const stream = function(init_value) {
 	}
 
 	s.IS_STREAM = true;
-	s.value = init_value !== null ? init_value : null;
+	s.value = init_value;
 	s.listeners = [];
 
 	s.map = (fn) => map(s, fn);
@@ -56,10 +56,19 @@ function notifyListeners(listeners, value) {
 }
 
 /*
+* Do not pipe the value undefined. This allows to wait for an external initialization.
+* It also saves you from checking for an initial null on every map function.
+*/
+function fork$(parent$, mapFunction) {
+	let initValue = parent$.value !== undefined ? mapFunction(parent$.value) : undefined
+	return stream(initValue);
+}
+
+/*
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function map(parent$, fn) {
-	let newStream = stream(fn(parent$.value));
+	let newStream = fork$(parent$, (value) => fn(value));
 	parent$.listeners.push(function mapValue(value) {
 		newStream(fn(value));
 	});
@@ -70,8 +79,8 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = stream(fn(parent$.value)());
-	parent$.listeners.push(function mapValue(value) {
+	let newStream = fork$(parent$, (value) => fn(value)());
+	parent$.listeners.push(function flatMapValue(value) {
 		fn(value).map(function updateOuterStream(result) {
 			newStream(result);
 		});
@@ -84,7 +93,7 @@ function flatMap(parent$, fn) {
 * still a stream ALWAYS has a value -> so it starts at least with NULL
 */
 function filter(parent$, fn) {
-	let newStream = stream(fn(parent$.value) ? parent$.value : null);
+	let newStream = fork$(parent$, (value) => fn(value) ? value : undefined);
 	parent$.listeners.push(function filterValue(value) {
 		if (fn(value)) {
 			newStream(value);
@@ -106,9 +115,9 @@ function deepSelect(parent$, selector) {
 		}, parent);
 	}
 
-	let newStream = stream(select(parent$.value, selectors));
+	let newStream = fork$(parent$, (value) => select(value, selectors));
 	parent$.listeners.push(function deepSelectValue(newValue) {
-		newStream(select(newValue, selectors), newStream.value);
+		newStream(select(newValue, selectors));
 	});
 	return newStream;
 };
@@ -125,10 +134,10 @@ function query(parent$, selectorArr) {
 * provide a new stream that only notifys its children if the containing value actualy changes
 */
 function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
-	let newStream = stream(parent$.value);
+	let newStream = fork$(parent$, (value) => value);
 	parent$.listeners.push(function deepSelectValue(value) {
 		if (fn(newStream.value, value)) {
-			newStream(value, newStream.value);
+			newStream(value);
 		}
 	});
 	return newStream;
@@ -149,9 +158,10 @@ function patch(parent$, partialChange) {
 /*
 * reduce a stream over time
 * this will pass the last output value to the calculation function
+* reads like the array reduce function
 */
 function reduce(parent$, fn, startValue) {
-	let aggregate = fn(startValue, parent$.value);
+	let aggregate = parent$.value !== undefined ? fn(startValue, parent$.value) : undefined;
 	let newStream = stream(aggregate);
 	parent$.listeners.push(function reduceValue(value) {
 		aggregate = fn(aggregate, parent$.value);
@@ -162,13 +172,15 @@ function reduce(parent$, fn, startValue) {
 
 /*
 * merge several streams into one stream providing the values of all streams as an array
+* the merge will only have a value if every stream for the merge has a value
 */
 export function merge$(...streams) {
 	let values = streams.map(parent$ => parent$.value);
-	let newStream = stream(values);
+	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
 	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
-			newStream(streams.map(parent$ => parent$.value));
+			values[index] = value;
+			newStream(values.indexOf(undefined) === -1 ? values : undefined);
 		});
 	});
 	return newStream;
