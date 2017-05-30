@@ -1,4 +1,4 @@
-import { h, stream, promise$, if$, merge$, join$ } from '../src';
+import { h, stream, promise$, if$, merge$, join$, is$ } from '../src';
 import assert from 'assert';
 
 describe('Helpers', () => {
@@ -97,6 +97,21 @@ describe('Helpers', () => {
         it('should join mixed content', (done)=> {
             join$('a',stream('b')).map(x => {
                 assert.equal(x, 'a b');
+                done();
+            })
+        });
+    });
+
+    describe('is$', () => {
+        it('should emit true if value is matched', (done)=> {
+            is$(stream('foo'),'foo').map(x => {
+                assert.equal(x, true);
+                done();
+            })
+        });
+        it('should emit false if value is not matched', (done)=> {
+            is$(stream('foo'),'bar').map(x => {
+                assert.equal(x, false);
                 done();
             })
         });
