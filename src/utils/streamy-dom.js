@@ -53,7 +53,7 @@ function manageProperties(elem, properties$) {
                 Object.assign(elem.style, value);
 			// other propertys are just added as is to the DOM
             } else {
-				if (value === null) {
+				if (value === null || value === undefined) {
 					elem.removeAttribute(property);
 				} else {
                 	elem.setAttribute(property, value);
