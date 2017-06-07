@@ -1,4 +1,4 @@
-import { stream, merge$ } from '../src';
+import { h, stream, merge$, if$, REMOVED } from '../src';
 
 describe('Streamy', () => {
     it('should trigger listeners on initial value', (done)=> {
@@ -34,5 +34,19 @@ describe('Streamy', () => {
             done()
         });
         myStream({test: 1});
+    })
+
+    it('shouldnt trigger listeners for negative .until triggers', () => {
+        const myMock = jest.fn();
+        let myStream = stream('HALLO');
+        let myTrigger = stream(false);
+        myStream.until(myTrigger).map(myMock);
+        expect(myStream.listeners.length).toBe(1);
+        expect(myMock.mock.calls.length).toBe(1);
+        myTrigger(true);
+        expect(myStream.listeners.length).toBe(0);
+        expect(myMock.mock.calls.length).toBe(1);
+        myStream('WORLD');
+        expect(myMock.mock.calls.length).toBe(1);
     })
 })
