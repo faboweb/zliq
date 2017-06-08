@@ -1,4 +1,4 @@
-import { h, stream, if$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
+import { h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
 import assert from 'assert';
 
 describe('Components', () => {
@@ -173,7 +173,6 @@ describe('Components', () => {
         const myMock = jest.fn();
         let my$ = stream('HALLO');
         let trigger$ = stream(true);
-        let outerDeleted$ = stream();
         let Elem = ({some$}, children, deleted$) => {
             let another$ = some$.map(myMock);
 			deleted$.map((deleted) => {
@@ -190,5 +189,20 @@ describe('Components', () => {
         </div>;
         expect(my$.listeners.length).toBe(1);
         trigger$(false);
+    })
+
+	it('should evaluate streams on dom attachment', () => {
+        const myMock = jest.fn();
+		let control$ = stream(false);
+        let trigger$ = stream(true);
+        let my$ = stream('HALLO').until(trigger$);
+        let app = <div>
+            {if$(control$, my$)}
+        </div>;
+        expect(app.outerHTML).toBe('<div></div>');
+        control$(true);
+        expect(app.outerHTML).toBe('<div></div>');
+        trigger$(false);
+        expect(app.outerHTML).toBe('<div>HALLO</div>');
     })
 });
