@@ -1,4 +1,4 @@
-import { h, stream, list, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
+import { h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
 import assert from 'assert';
 
 describe('Components', () => {
@@ -34,13 +34,15 @@ describe('Components', () => {
 	});
 
 	it('should react to attached events', () => {
-		let DumbComponent = ({clicks$}) =>
+		// input streams are scoped to be able to remove the listener if the element gets removed
+		// this means you can not manipulate the stream from the inside to the outside but need to use a callback function
+		let DumbComponent = ({clicks$, onclick}) =>
 			<div>
-				<button onclick={clicks$(clicks$() + 1)}>Click to emit event</button>
+				<button onclick={onclick(clicks$() + 1)}>Click to emit event</button>
 			</div>;
 		let clicks$ = stream(0);
 		// this component fires a action on the store when clicked
-		let element = <DumbComponent clicks$={clicks$} />;
+		let element = <DumbComponent clicks$={clicks$} onclick={x=>clicks$(x)} />;
 		// perform the actions on the element
 		element.querySelector('button').click();
 
@@ -128,4 +130,41 @@ describe('Components', () => {
 		let elem3 = <div disabled={stream()}></div>;
 		assert(elem.getAttribute('disabled'), false);
 	});
+
+    it('should cleanup component stream subscriptions', (done) => {
+        const myMock = jest.fn();
+        let my$ = stream('HALLO');
+        let trigger$ = stream(true);
+        let Elem = ({some$}, children, deleted$) => {
+            let another$ = some$.map(myMock);
+			deleted$.map((deleted) => {
+				if (deleted) {
+					expect(my$.listeners.length).toBe(0); 
+					done();
+				}
+			})
+            return <div />
+        }
+        let elem = <Elem some$={my$} />;
+        let app = <div>
+            {if$(trigger$, elem)}
+        </div>;
+        expect(my$.listeners.length).toBe(1);
+        trigger$(false);
+    })
+
+	it('should evaluate streams on dom attachment', () => {
+        const myMock = jest.fn();
+		let control$ = stream(false);
+        let trigger$ = stream(true);
+        let my$ = stream('HALLO').until(trigger$);
+        let app = <div>
+            {if$(control$, my$)}
+        </div>;
+        expect(app.outerHTML).toBe('<div></div>');
+        control$(true);
+        expect(app.outerHTML).toBe('<div></div>');
+        trigger$(false);
+        expect(app.outerHTML).toBe('<div>HALLO</div>');
+    })
 });

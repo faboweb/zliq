@@ -70,6 +70,7 @@ function manageChildren(parentElem, children$Arr) {
 	// changes are then performed on the parent
 	children$Arr.map((child$, index) => {
 		child$.reduce((oldChildArr, childArr) => {
+			oldChildArr = oldChildArr || [null];
 			// the default childArr will be [null]
 			let changes = calcChanges(childArr, oldChildArr);
 
@@ -97,7 +98,7 @@ function manageChildren(parentElem, children$Arr) {
 // when we insert into the DOM we need to know where
 // as children can be arrays we need to know how many children are before the one we want to put into the DOM
 function getElementsBefore(children$Arr, index) {
-	return children$Arr.slice(0, index).reduce((sum, cur$) => sum += cur$().length, 0);
+	return children$Arr.slice(0, index).reduce((sum, cur$) => sum += cur$() && cur$().length, 0);
 }
 
 // very simple change detection
@@ -163,8 +164,8 @@ function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, 
 		let node = parentElem.childNodes[index];
 		if (node != null) {
 			parentElem.removeChild(node);
+			notify(node, REMOVED);
 		}
-		notify(node, REMOVED);
 	}
 	resolve();
 }

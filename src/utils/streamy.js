@@ -22,6 +22,7 @@ export const stream = function(init_value) {
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
 	s.$ = (selectorArr) => query(s, selectorArr);
+	s.until = (stopEmit$) => until(s, stopEmit$);
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
 
@@ -153,6 +154,28 @@ function patch(parent$, partialChange) {
 		return;
 	}
 	parent$(Object.assign({}, parent$.value, partialChange));
+}
+
+function until(parent$, stopEmitValues$) {
+	let newStream = stream(stopEmitValues$.value ? undefined : parent$.value);
+	let subscribeTo = (stream) => {
+		newStream(parent$.value);
+		stream.listeners.push(newStream);
+	}
+	let unsubscribeFrom = (stream) => {
+		var index = stream.listeners.indexOf(newStream);
+		if (index !== -1) {
+			stream.listeners.splice(index, 1);
+		}
+	};
+	stopEmitValues$.distinct().map(stopEmitValues => {
+		if(stopEmitValues) {
+			unsubscribeFrom(parent$);
+		} else {
+			subscribeTo(parent$);
+		}
+	});
+	return newStream;
 }
 
 /*
