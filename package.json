@@ -60,7 +60,14 @@
     },
     "collectCoverage": true,
     "coverageDirectory": "./",
-    "coverageReporters": ["lcov"],
-    "coveragePathIgnorePatterns": ["/node_modules/", "/demo/", "/test/", "/lib/"]
+    "coverageReporters": [
+      "lcov"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/demo/",
+      "/test/",
+      "/lib/"
+    ]
   }
 }
