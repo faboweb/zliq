@@ -120,10 +120,12 @@ describe('Components', () => {
 		assert.equal(listElem.querySelectorAll('li')[1].innerHTML, '1');
 	});
 
-	it('should remove attributes on null value', () => {
+	it('should remove attributes on null or undefined value', () => {
 		let elem = <div disabled={stream(true)}></div>;
 		assert(elem.getAttribute('disabled'), true);
 		let elem2 = <div disabled={stream(null)}></div>;
+		assert(elem.getAttribute('disabled'), false);
+		let elem3 = <div disabled={stream()}></div>;
 		assert(elem.getAttribute('disabled'), false);
 	});
 });
