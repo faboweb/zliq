@@ -153,7 +153,7 @@ function patch(parent$, partialChange) {
 		parent$(partialChange);
 		return;
 	}
-	parent$(Object.assign({}, parent$.value, partialChange));
+	return parent$(Object.assign({}, parent$.value, partialChange));
 }
 
 function until(parent$, stopEmitValues$) {
