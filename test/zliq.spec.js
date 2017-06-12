@@ -122,51 +122,13 @@ describe('Components', () => {
 		assert.equal(listElem.querySelectorAll('li')[1].innerHTML, '1');
 	});
 
-	it('should remove attributes on null value', () => {
+	it('should remove attributes on null or undefined value', () => {
 		let elem = <div disabled={stream(true)}></div>;
 		assert(elem.getAttribute('disabled'), true);
 		let elem2 = <div disabled={stream(null)}></div>;
 		assert(elem.getAttribute('disabled'), false);
-	});
-
-	it('should react to initial routing', (done) => {
-		Object.defineProperty(location, 'hash', {
-			value: '#/route',
-			configurable: true
-		});
-
-		let router$ = initRouter();
-		router$.map(({route, params}) => {
-			assert(route === '/route', true);
-			done();
-		})
-	});
-
-	it('should react to initial query parameters', (done) => {
-		Object.defineProperty(location, 'search', {
-			value: '?param=value',
-			configurable: true
-		});
-
-		let router$ = initRouter();
-		router$.map(({route, params}) => {
-			assert(params.param === 'value', true);
-			done();
-		})
-	});
-
-	it('should react to clicks on internal links', (done) => {
-		let link = <a href="/route?param=value" />
-
-		let router$ = initRouter();
-
-		link.click();
-
-		router$.map(({route, params}) => {
-			assert(route === '/route', true);
-			assert(params.param === 'value', true);
-			done();
-		});
+		let elem3 = <div disabled={stream()}></div>;
+		assert(elem.getAttribute('disabled'), false);
 	});
 
     it('should cleanup component stream subscriptions', (done) => {
