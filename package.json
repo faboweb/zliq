@@ -33,7 +33,7 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-register": "^6.24.0",
     "css-loader": "^0.26.1",
-    "jest": "^20.0.0",
+    "jest": "^20.0.4",
     "jquery": "^3.2.1",
     "materialize-css": "^0.98.2",
     "node-sass": "^4.5.0",
@@ -43,7 +43,7 @@
     "sass-loader": "^5.0.1",
     "style-loader": "^0.13.1",
     "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.3.0",
+    "webpack-dev-server": "^2.5.0",
     "webpack-node-externals": "^1.5.4",
     "worker-loader": "^0.8.0"
   },

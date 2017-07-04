@@ -6,30 +6,30 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 */
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
-	let elem;
+	let component;
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
-		elem = tag(
+		component = tag(
 			addStreamDetacher(props, deleted$),
 			addStreamDetacher(children, deleted$),
 			deleted$
 		);
 	} else {
-		elem = createElement(
-			tag,
-			wrapProps$(props, deleted$),
-			makeChildrenStreams$(children, deleted$)
-		);
+		component = {
+			vdom$: merge$(
+					wrapProps$(props, deleted$),
+					...makeChildrenStreams$(children, deleted$)
+				).map(([props, children]) => {
+					tag,
+					props,
+					children
+				}),
+			lifecycle$: stream()
+		};
 	}
 
-	// ATTENTION: the stream breaking is not working for returned arrays currently
-	if (elem.addEventListener !== undefined) {
-		elem.addEventListener(REMOVED, () => deleted$(true));
-		elem.addEventListener(ADDED, () => deleted$(false));
-	}
-
-	return elem;
+	return component;
 };
 
 function addStreamDetacher(obj, deleted$) {
@@ -59,19 +59,23 @@ function makeChildrenStreams$(childrenArr, deleted$) {
 	// flatten children arr
 	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
 	childrenArr = [].concat(...childrenArr);
-	// wrap all children in streams
-	let children$Arr = makeStreams(childrenArr);
+	// only handle vdom for now
+	let children$Arr = childrenArr.map(component => {
+		// if there is no vdom$ it is a string or number
+		if (component.vdom$ === undefined) {
+			return stream(component);
+		}
+		return component.vdom$
+	});
 
 	return children$Arr
 		// unsubscribe on the child when deleted
-		.map(child$ => child$.until(deleted$))
+		.map(vdom$ => vdom$.until(deleted$))
 		// make sure children are arrays and not nest
-		.map(child$ => flatten(makeArray(child$)))
-		// make sure subchildren are all streams
-		.map(child$ => child$.map(children => makeStreams(children)))
+		.map(vdom$ => flatten(makeArray(vdom$)))
 		// so we can easily merge them
-		.map(child$ => child$.flatMap(children =>
-				merge$(...children)));
+		.map(vdom$ => vdom$.flatMap(vdomArr =>
+				mixedMerge$(...vdomArr)));
 }
 
 // make sure all children are handled as streams
@@ -153,4 +157,25 @@ function wrapProps$(props, deleted$) {
 			return obj;
 		}, {});
 	});
+}
+
+export function mixedMerge$(...potentialStreams) {
+	let values = potentialStreams.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
+	let actualStreams = potentialStreams.reduce((streams, potentialStream, index) => {
+		if (potentialStream.IS_STREAM) {
+			streams.push({
+				stream: potentialStream,
+				index
+			})
+		}
+		return streams;
+	}, []);
+	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
+	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
+		stream.listeners.push(function updateMergedStream(value) {
+			values[index] = value;
+			newStream(values.indexOf(undefined) === -1 ? values : undefined);
+		});
+	});
+	return newStream;
 }
