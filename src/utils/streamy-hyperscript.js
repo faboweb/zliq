@@ -20,11 +20,12 @@ export const h = (tag, props, ...children) => {
 			vdom$: merge$(
 					wrapProps$(props, deleted$),
 					...makeChildrenStreams$(children, deleted$)
-				).map(([props, children]) => {
-					tag,
-					props,
-					children
-				}),
+				).map(([props, ...children]) => {
+					return {
+						tag,
+						props,
+						children: children === undefined ? [] : flatten(children)
+				}}),
 			lifecycle$: stream()
 		};
 	}
@@ -61,6 +62,10 @@ function makeChildrenStreams$(childrenArr, deleted$) {
 	childrenArr = [].concat(...childrenArr);
 	// only handle vdom for now
 	let children$Arr = childrenArr.map(component => {
+		// TODO
+		// if (component.IS_STREAM) {
+		// 	return 
+		// }
 		// if there is no vdom$ it is a string or number
 		if (component.vdom$ === undefined) {
 			return stream(component);
@@ -72,7 +77,8 @@ function makeChildrenStreams$(childrenArr, deleted$) {
 		// unsubscribe on the child when deleted
 		.map(vdom$ => vdom$.until(deleted$))
 		// make sure children are arrays and not nest
-		.map(vdom$ => flatten(makeArray(vdom$)))
+		.map(_ => makeArray(_)
+			.map(flatten))
 		// so we can easily merge them
 		.map(vdom$ => vdom$.flatMap(vdomArr =>
 				mixedMerge$(...vdomArr)));
@@ -103,20 +109,18 @@ function makeArray(stream) {
 }
 
 // flattens an array
-function flatten(stream) {
-	return stream.map(arr => {
-		while (arr.some(value => Array.isArray(value))) {
-			arr = [].concat(...arr);
-		}
-		return arr;
-	})
+function flatten(arr) {
+	while (arr.some(value => Array.isArray(value))) {
+		arr = [].concat(...arr);
+	}
+	return arr;
 }
 
 /*
 * Wrap props into one stream
 */
 function wrapProps$(props, deleted$) {
-	if (props === null) return stream();
+	if (props === null) return stream({});
 	if (isStream(props)) {
 		return props.until(deleted$);
 	}
@@ -178,10 +182,4 @@ export function mixedMerge$(...potentialStreams) {
 		});
 	});
 	return newStream;
-}
-
-export function render(component, parentElement) {
-	component.vdom$.map(vdom => {
-		
-	})
 }

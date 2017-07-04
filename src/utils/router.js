@@ -110,8 +110,14 @@ export function Router({router$, route}, children) {
 
     let routeWasHit$ = sanitizedRoute$
         .map(curRoute => curRoute === route);
-    return routeWasHit$
-        .map(hitRoute => hitRoute ? children : []);
+    return {
+        vdom$: stream({
+                tag: 'router',
+                props: {},
+                children: routeWasHit$.map(hitRoute => hitRoute ? children : [])
+            }),
+        lifecycle$: stream()
+    };
 }
 
 export function initRouter() {

@@ -6,6 +6,7 @@ export const CHILDREN_CHANGED = 'CHILDREN_CHANGED';
 export const ADDED = 'ADDED';
 export const REMOVED = 'REMOVED';
 export const UPDATED = 'UPDATED';
+const TEXT_NODE = '#text';
 
 // js DOM events. add which ones you need
 const DOM_EVENT_LISTENERS = [
@@ -87,7 +88,7 @@ function manageChildren(parentElem, children$Arr) {
 			)
 				// after changes are done notify listeners
 				.then(() => {
-					notify(parentElem, UPDATE_DONE);
+					// notify(parentElem, UPDATE_DONE);
 				})
 
 			return childArr;
@@ -164,7 +165,7 @@ function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, 
 		let node = parentElem.childNodes[index];
 		if (node != null) {
 			parentElem.removeChild(node);
-			notify(node, REMOVED);
+			// notify(node, REMOVED);
 		}
 	}
 	resolve();
@@ -189,7 +190,7 @@ function addElements(index, subIndexes, children, parentElem, resolve) {
 		} else {
 			parentElem.insertBefore(child, elementAtPosition);
 		}
-		notify(child, ADDED);
+		// notify(child, ADDED);
 	});
 	resolve();
 }
@@ -248,11 +249,123 @@ function makeChildrenNodes(children) {
 	});
 }
 
-// emit an event on the handled parent element
-// this helps to test asynchronous rendered elements
-function notify(element, event_name) {
-	let event = new CustomEvent(event_name, {
-		bubbles: false
+
+
+export function render(component, parentElement) {
+	// merge$(component.lifecycle$, component.vdom$).map(([lifecycle, vdom]) => {
+	// 	if ()
+	// })
+	component.vdom$.reduce((oldElement, vdom) => {
+		if (oldElement === null) {
+			oldElement = createNode(vdom.tag, vdom.children);
+			parentElement.appendChild(oldElement);
+		}
+		diff(oldElement, vdom.tag, vdom.props, vdom.children);
+		return oldElement;
+	}, null)
+}
+
+function diff(oldElement, tag, props, newChildren) {
+	let newElement = oldElement;
+
+	if (oldElement instanceof window.Text && tag === TEXT_NODE) {
+		oldElement.value = newChildren[0];
+		return;
+	}
+
+	if (oldElement.nodeName.toLowerCase() !== tag) {
+		newElement = createNode(tag, newChildren);
+		oldElement.parentElem.replaceChild(oldElement, newElement);
+	}
+
+	diffAttributes(newElement, props);
+	if (tag !== TEXT_NODE && newChildren && newChildren.length > 0) {
+		diffChildren(newElement, newChildren);
+	}
+}
+
+function diffAttributes(element, props) {
+	if (props !== undefined) {
+		Object.getOwnPropertyNames(props).map(function applyPropertyToElement(attribute) {
+			applyAttribute(element, attribute, props[attribute])
+		});
+		cleanupAttributes(element, props);
+	}
+}
+
+function applyAttribute(element, attribute, value) {
+	if (typeof value === 'function') {
+		if (element[attribute] !== undefined) {
+			element[attribute] = value;
+		}
+	} else if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
+		element.className = value;
+	// we leave the possibility to define styles as strings
+	// but we allow styles to be defined as an object
+	} else if (attribute === 'style' && typeof value !== "string" ) {
+		Object.assign(element.style, value);
+	// other propertys are just added as is to the DOM
+	} else if (element[attribute] !== undefined) {
+		// also remove attributes on null to allow better handling of streams
+		// streams don't emit on undefined
+		if (value === null) {
+			element.removeAttribute(attribute);
+		} else {
+			element.setAttribute(attribute, value);
+		}
+	}
+}
+
+function cleanupAttributes(element, props) {
+	if (element.props !== undefined) {
+		for(let attribute in element.props) {
+			if (props[attribute] === undefined) {
+				element.removeAttribute(attribute);
+			}
+		}
+	}
+}
+
+function diffChildren(element, newChildren) {
+	let oldChildren = element.childNodes;
+	let unifiedChildren = newChildren.map(child => {
+		// if there is no tag we assume it's a number or a string
+		if (!child.IS_STREAM && child.tag === undefined) {
+			return {
+				tag: TEXT_NODE,
+				children: [child]
+			}
+		} else {
+			return child;
+		}
+	})
+
+	// diff existing nodes
+	oldChildren.forEach((oldElement, index) => {
+		let {tag, props, children} = unifiedChildren[index];
+		diff(oldElement, tag, props, children);
 	});
-	element.dispatchEvent(event);
+
+	// add new nodes
+	for(let i = oldChildren.length; i < unifiedChildren.length; i++) {
+		let {tag, props, children} = unifiedChildren[i];
+		let newElement = createNode(tag, children);
+		element.appendChild(newElement);
+		diff(newElement, tag, props, children);
+	}
+
+	// remove not needed nodes at the end
+	for(let i = unifiedChildren.length; i < oldChildren.length; i++) {
+		element.removeChild(element.lastChild);
+	}
+}
+
+// create text_nodes from numbers or strings
+// create domNodes from regular vdom descriptions 
+function createNode(tag, children) {
+	if (tag === TEXT_NODE) {
+		return document.createTextNode(children[0]);
+	} else {
+		return document.createElement(tag);
+	}
 }
