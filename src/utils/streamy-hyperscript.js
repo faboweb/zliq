@@ -179,3 +179,9 @@ export function mixedMerge$(...potentialStreams) {
 	});
 	return newStream;
 }
+
+export function render(component, parentElement) {
+	component.vdom$.map(vdom => {
+		
+	})
+}
