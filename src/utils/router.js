@@ -111,7 +111,9 @@ export function Router({router$, route}, children$) {
         });
 
     let routeWasHit$ = is$(sanitizedRoute$, route);
-    return merge$(routeWasHit$, children$).map(([wasHit, children]) => wasHit ? children : []);
+    return merge$(routeWasHit$, children$).map(([wasHit, children]) => {
+        return wasHit ? children : []
+    });
 }
 
 export function initRouter() {

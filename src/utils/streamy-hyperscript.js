@@ -7,15 +7,16 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
 	let component;
-	
-	let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$)
-    let childrenVdom$ = childrenWithDetacher.map(child => child.vdom$ || child);
+	let version = 0;
+
+	// let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$);
+	let mergedChildren$ = mergeChildren$(flatten(children));
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
 		component = tag(
 			props,
-			mixedMerge$(...childrenVdom$),
+			mergedChildren$,
 			deleted$
 		);
 	} else {
@@ -28,12 +29,13 @@ export const h = (tag, props, ...children) => {
 		component = {
 			vdom$: merge$(
 					wrapProps$(props, deleted$),
-					...makeChildrenStreams$(children, deleted$)
-				).map(([props, ...children]) => {
+					mergedChildren$
+				).distinct().map(([props, ...children]) => {
 					return {
 						tag,
 						props,
-						children: children === undefined ? [] : flatten(children)
+						children: children === undefined ? [] : flatten(children),
+						version: ++version
 				}}),
 			lifecycle$: stream()
 		};
@@ -60,12 +62,29 @@ function addStreamDetacher(obj, deleted$) {
 	return obj;
 }
 
+
+// input is be [stream | {vdom$}]
+function mergeChildren$(children) {
+	let childrenVdom$arr = children.map(child => {
+		if (isStream(child)) {
+			return child
+			.flatMap(child.vdom$);
+		}
+		return child.vdom$;
+	})
+
+	return mixedMerge$(...childrenVdom$arr)
+		.flatMap(children => {
+			return merge$(...children.map(_ => _.vdom$))
+		});
+}
+
 /*
 * wrap all children in streams and merge those
 * we make sure that all children streams are flat arrays to make processing uniform
 * output: stream([stream([])])
 */
-function makeChildrenStreams$(childrenArr, deleted$) {
+function getChildrenVdom$arr(childrenArr, deleted$) {
 	// flatten children arr
 	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
 	childrenArr = [].concat(...childrenArr);
@@ -73,7 +92,7 @@ function makeChildrenStreams$(childrenArr, deleted$) {
 	let children$Arr = childrenArr.map(component => {
 		// TODO
 		// if (component.IS_STREAM) {
-		// 	return 
+		// 	return
 		// }
 		// if there is no vdom$ it is a string or number
 		if (component.vdom$ === undefined) {
@@ -94,7 +113,7 @@ function makeChildrenStreams$(childrenArr, deleted$) {
 }
 
 // make sure all children are handled as streams
-// so we can later easily merge them 
+// so we can later easily merge them
 function makeStreams(childrenArr) {
 	return childrenArr.map(child => {
 		if (child === null || !isStream(child)) {
@@ -135,7 +154,7 @@ function wrapProps$(props, deleted$) {
 	}
 
 	// go through all the props and make them a stream
-	// if they are objects, traverse them to check if they include streams	
+	// if they are objects, traverse them to check if they include streams
 	let props$Arr = Object.keys(props).map((propName, index) => {
 		let value = props[propName];
 		if (isStream(value)) {
