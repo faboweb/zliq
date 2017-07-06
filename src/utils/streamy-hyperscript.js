@@ -7,15 +7,24 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
 	let component;
+	
+	let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$)
+    let childrenVdom$ = childrenWithDetacher.map(child => child.vdom$ || child);
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
 		component = tag(
-			addStreamDetacher(props, deleted$),
-			addStreamDetacher(children, deleted$),
+			props,
+			mixedMerge$(...childrenVdom$),
 			deleted$
 		);
 	} else {
+		// add detachers to props
+		props !== null && Object.keys(props).map((propName, index) => {
+			if (isStream(props[propName])) {
+				props[propName] = props[propName].until(deleted$);
+			}
+		});
 		component = {
 			vdom$: merge$(
 					wrapProps$(props, deleted$),
@@ -109,7 +118,7 @@ function makeArray(stream) {
 }
 
 // flattens an array
-function flatten(arr) {
+export function flatten(arr) {
 	while (arr.some(value => Array.isArray(value))) {
 		arr = [].concat(...arr);
 	}

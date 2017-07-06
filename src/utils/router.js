@@ -1,4 +1,4 @@
-import {stream } from './';
+import {stream, if$, is$, merge$, mixedMerge$, flatten} from './';
 
 function interceptLinks(routerState$) {
     // intercepts clicks on links
@@ -86,7 +86,7 @@ function getUrlParams(hash, search) {
 }
 
 // this is an element that shows it's content only if the expected route is met
-export function Router({router$, route}, children) {
+export function Router({router$, route}, children$) {
     if (router$ == null) {
         console.log('The Router component needs the routerState$ as attribute.')
         return null;
@@ -97,7 +97,9 @@ export function Router({router$, route}, children) {
     }
     // Register the route
     // this is necessary to decide on a default route
-    router$.patch({ routes: router$().routes.concat(route) });
+    router$.$('routes')
+    // routes can be attached async so we check if the route exists and if not add it
+    .map((routes) => routes.indexOf(route) === -1 && router$.patch({ routes: routes.concat(route) }));
 
     // check if no registered route was hit and set default if so
     let sanitizedRoute$ = router$
@@ -108,16 +110,8 @@ export function Router({router$, route}, children) {
             return route;
         });
 
-    let routeWasHit$ = sanitizedRoute$
-        .map(curRoute => curRoute === route);
-    return {
-        vdom$: stream({
-                tag: 'router',
-                props: {},
-                children: routeWasHit$.map(hitRoute => hitRoute ? children : [])
-            }),
-        lifecycle$: stream()
-    };
+    let routeWasHit$ = is$(sanitizedRoute$, route);
+    return merge$(routeWasHit$, children$).map(([wasHit, children]) => wasHit ? children : []);
 }
 
 export function initRouter() {

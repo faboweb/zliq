@@ -311,7 +311,8 @@ function applyAttribute(element, attribute, value) {
 		if (value === null) {
 			element.removeAttribute(attribute);
 		} else {
-			element.setAttribute(attribute, value);
+			element[attribute] = value;
+			// element.setAttribute(attribute, value);
 		}
 	}
 }
@@ -340,6 +341,11 @@ function diffChildren(element, newChildren) {
 		}
 	})
 
+	// remove not needed nodes at the end
+	for(let i = unifiedChildren.length; i < oldChildren.length; i++) {
+		element.removeChild(element.lastChild);
+	}
+
 	// diff existing nodes
 	oldChildren.forEach((oldElement, index) => {
 		let {tag, props, children} = unifiedChildren[index];
@@ -352,11 +358,6 @@ function diffChildren(element, newChildren) {
 		let newElement = createNode(tag, children);
 		element.appendChild(newElement);
 		diff(newElement, tag, props, children);
-	}
-
-	// remove not needed nodes at the end
-	for(let i = unifiedChildren.length; i < oldChildren.length; i++) {
-		element.removeChild(element.lastChild);
 	}
 }
 
