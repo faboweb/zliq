@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports = {
-    devtool: '#cheap-eval-inline-source-map',
+    devtool: '#inline-source-map',
     entry: './demo/demo_app.jsx',
     output: {
         path: path.resolve(__dirname, '../demo'),
@@ -20,7 +20,11 @@ module.exports = {
         },{
             test: /\.(js|jsx)$/,
             use: [{
-                loader: 'babel-loader?sourceMap=inline'
+                loader: 'babel-loader',
+                query: {
+                    retainLines: true,
+                    cacheDirectory: true
+                }
             }]
         },{
             test: /\.(tff|woff|woff2)$/,
