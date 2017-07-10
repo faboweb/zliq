@@ -7,7 +7,6 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
 	let component;
-	let version = 0;
 
 	// let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$);
 	let mergedChildren$ = mergeChildren$(flatten(children));
@@ -30,14 +29,13 @@ export const h = (tag, props, ...children) => {
 			vdom$: merge$(
 					wrapProps$(props, deleted$),
 					mergedChildren$
-				).distinct().map(([props, ...children]) => {
+				).map(([props, ...children]) => {
 					return {
 						tag,
 						props,
 						children: children === undefined ? [] : flatten(children),
-						version: ++version
-				}}),
-			lifecycle$: stream()
+						version: guid()
+				}})
 		};
 	}
 
@@ -63,20 +61,20 @@ function addStreamDetacher(obj, deleted$) {
 }
 
 
-// input is be [stream | {vdom$}]
+// input has format [stream | {vdom$}]
 function mergeChildren$(children) {
+	if (!Array.isArray(children)) {
+		children = [children];
+	}
 	let childrenVdom$arr = children.map(child => {
 		if (isStream(child)) {
 			return child
-			.flatMap(child.vdom$);
+			.flatMap(mergeChildren$);
 		}
-		return child.vdom$;
+		return child.vdom$ || child;
 	})
 
-	return mixedMerge$(...childrenVdom$arr)
-		.flatMap(children => {
-			return merge$(...children.map(_ => _.vdom$))
-		});
+	return mixedMerge$(...childrenVdom$arr);
 }
 
 /*
@@ -210,4 +208,14 @@ export function mixedMerge$(...potentialStreams) {
 		});
 	});
 	return newStream;
+}
+
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
 }

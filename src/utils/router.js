@@ -110,7 +110,7 @@ export function Router({router$, route}, children$) {
             return route;
         });
 
-    let routeWasHit$ = is$(sanitizedRoute$, route);
+    let routeWasHit$ = is$(sanitizedRoute$, route).distinct();
     return merge$(routeWasHit$, children$).map(([wasHit, children]) => {
         return wasHit ? children : []
     });

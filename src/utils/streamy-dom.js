@@ -20,7 +20,7 @@ export function render(component, parentElement) {
 			oldElement = createNode(tag, children);
 			parentElement.appendChild(oldElement);
 		}
-		diff(oldElement, tag, props, children, oldChildren, version, oldVersion);
+		diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
 		return {
 			element: oldElement,
 			version,
@@ -34,6 +34,7 @@ export function render(component, parentElement) {
 }
 
 function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
+	// doesn't work for the router as the versions of sub-components are the same
 	if (newVersion === oldVersion) {
 		return;
 	}
@@ -46,7 +47,9 @@ function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldV
 
 	if (oldElement.nodeName.toLowerCase() !== tag) {
 		newElement = createNode(tag, newChildren);
-		oldElement.parentElem.replaceChild(oldElement, newElement);
+		oldElement.parentElement.replaceChild(newElement, oldElement);
+		oldChildren = [];
+		oldVersion = -1;
 	}
 
 	diffAttributes(newElement, props);
@@ -112,21 +115,34 @@ function diffChildren(element, newChildren, oldChildren) {
 			return child;
 		}
 	})
+	let unifiedOldChildren = oldChildren.map(child => {
+		// if there is no tag we assume it's a number or a string
+		if (!child.IS_STREAM && child.tag === undefined) {
+			return {
+				tag: TEXT_NODE,
+				children: [child],
+				version: 1
+			}
+		} else {
+			return child;
+		}
+	})
+
+	// diff existing nodes
+	for(let i = 0; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
+		let oldElement = oldChildNodes[i];
+		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
+		let {tag, props, children, version} = unifiedChildren[i];
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
+	};
 
 	// remove not needed nodes at the end
-	for(let i = unifiedChildren.length; i < oldChildNodes.length; i++) {
+	for(let i = unifiedChildren.length; i < unifiedOldChildren.length; i++) {
 		element.removeChild(element.lastChild);
 	}
 
-	// diff existing nodes
-	oldChildNodes.forEach((oldElement, index) => {
-		let {version: oldVersion, children: oldChildChildren} = oldChildren[index];
-		let {tag, props, children, version} = unifiedChildren[index];
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
-	});
-
 	// add new nodes
-	for(let i = oldChildNodes.length; i < unifiedChildren.length; i++) {
+	for(let i = unifiedOldChildren.length; i < unifiedChildren.length; i++) {
 		let {tag, props, children, version} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
 		element.appendChild(newElement);
