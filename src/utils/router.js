@@ -4,25 +4,19 @@ function interceptLinks(routerState$) {
     // intercepts clicks on links
     // if the link is local '/...' we change the location hash instead
 	function interceptClickEvent(e) {
-        var href;
-        var target = e.target || e.srcElement;
+        let target = e.target || e.srcElement;
         if (target.tagName === 'A') {
-            href = target.getAttribute('href');
+            let href = target.getAttribute('href');
             let isLocal = href != null && href.startsWith('/');
 
             //put your logic here...
             if (isLocal) {
-                location.hash = href;
-
-                let anchorSearch = RegExp(/[\/\w]+(\?\w+=\w*(&\w+=\w*))?#(\w+)/g).exec(href);
-                if (anchorSearch != null && anchorSearch[3] != null) {
-                    setTimeout(() => {
-                        let anchorElem = document.getElementById(anchorSearch[3]);
-                        anchorElem && anchorElem.scrollIntoView();
-                    }, 1);
-                }
-
                 //tell the browser not to respond to the link click
+                e.preventDefault();
+            } else if (href.startsWith('#')) {
+                let id = href.substr(1);
+                let route = routerState$.value.route;
+                goTo(id, route)
                 e.preventDefault();
             }
         }
@@ -126,4 +120,8 @@ export function initRouter() {
     interceptLinks(routerState$);
 
     return routerState$;
+}
+
+function goTo(id, route) {
+    location.href = `#${id}${route && '/' + route}${location.search && '?' + location.search}`;
 }
