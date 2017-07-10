@@ -27,7 +27,7 @@ export const h = (tag, props, ...children) => {
 		});
 		component = {
 			vdom$: merge$(
-					wrapProps$(props, deleted$),
+					wrapProps$(props, deleted$).distinct(),
 					mergedChildren$
 				).map(([props, ...children]) => {
 					return {
