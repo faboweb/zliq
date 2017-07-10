@@ -34,7 +34,7 @@ export function render(component, parentElement) {
 }
 
 function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
-	// doesn't work for the router as the versions of sub-components are the same
+	// if the dom-tree hasn't changed, don't process it
 	if (newVersion === oldVersion) {
 		return;
 	}
