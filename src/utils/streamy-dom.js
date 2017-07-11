@@ -35,7 +35,7 @@ export function render(component, parentElement) {
 
 function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
-	if (newVersion === oldVersion) {
+	if (newVersion === undefined && newVersion === oldVersion) {
 		return;
 	}
 	let newElement = oldElement;
