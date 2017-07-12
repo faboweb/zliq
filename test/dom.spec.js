@@ -129,32 +129,29 @@ describe('Components', () => {
 			element => {
 				assert.equal(element.querySelectorAll('li').length, 3);
 				assert.equal(element.querySelectorAll('li')[2].innerHTML, '2');
-				arr.pop();
-				list$(arr);
 			},
 			element => {
 				assert.equal(element.querySelectorAll('li').length, 2);
-				assert.equal(element.querySelectorAll('li')[1].innerHTML, '1');
+				assert.equal(element.querySelectorAll('li')[1].innerHTML, '2');
 			},
 		], done);
+
+		let newArr = arr.slice(1);
+		list$(newArr);
 	});
 
-	it('should remove attributes on null or undefined value', done => {
-		let value$ = stream();
+	it('should remove attributes on null value', done => {
+		let value$ = stream(null);
 		let component = <div disabled={value$}></div>;
 		test(component, [
 			element => {
 				assert(element.getAttribute('disabled'), false);
-				value$(true)
 			},
 			element => {
 				assert(element.getAttribute('disabled'), true);
-				value$(null)
-			},
-			element => {
-				assert(element.getAttribute('disabled'), false);
-			},
+			}
 		], done);
+		value$(true);
 	});
 
     xit('should cleanup component stream subscriptions', (done) => {

@@ -1,5 +1,5 @@
 // dependencies
-import 'materialize-css/css/ghpages-materialize.css'; 
+import 'materialize-css/css/ghpages-materialize.css';
 
 // core
 import { render, h, stream, merge$ } from '../src';
@@ -41,8 +41,8 @@ let app = <div>
 			<Playground />
 		</Router>
 		<Router router$={router$} route="/subpage">
-			You are at a subpage. The router detected the params: 
-			{router$.$('params').map(params => JSON.stringify(params))}. 
+			You are at a subpage. The router detected the params:
+			{router$.$('params').map(params => JSON.stringify(params))}.
 			<a href="/#routing">Go Back</a>
 		</Router>
 	</div>
