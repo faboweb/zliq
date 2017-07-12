@@ -33,16 +33,16 @@ export function render(component, parentElement) {
 	})
 }
 
-function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
 	if (newVersion === undefined && newVersion === oldVersion) {
-		return;
+		return oldElement;
 	}
 	let newElement = oldElement;
 
 	if (oldElement instanceof window.Text && tag === TEXT_NODE) {
 		oldElement.value = newChildren[0];
-		return;
+		return newElement;
 	}
 
 	if (oldElement.nodeName.toLowerCase() !== tag) {
@@ -56,6 +56,8 @@ function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldV
 	if (tag !== TEXT_NODE && newChildren && newChildren.length > 0) {
 		diffChildren(newElement, newChildren, oldChildren);
 	}
+
+	return newElement;
 }
 
 function diffAttributes(element, props) {
@@ -152,7 +154,7 @@ function diffChildren(element, newChildren, oldChildren) {
 
 // create text_nodes from numbers or strings
 // create domNodes from regular vdom descriptions
-function createNode(tag, children) {
+export function createNode(tag, children) {
 	if (tag === TEXT_NODE) {
 		return document.createTextNode(children[0]);
 	} else {

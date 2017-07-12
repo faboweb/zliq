@@ -1,4 +1,5 @@
 import { initRouter, h } from '../src';
+import { test } from './helpers/test-component';
 
 describe('Router', ()=> {
 	it('should react to initial routing', (done) => {
@@ -32,7 +33,9 @@ describe('Router', ()=> {
 
 		let router$ = initRouter();
 
-		link.click();
+		test(link, [
+			element => element.click()
+		], ()=>{});
 
 		router$.map(({route, params}) => {
 			expect(route).toBe('/route');
