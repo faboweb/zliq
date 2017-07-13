@@ -71,11 +71,7 @@ function diffAttributes(element, props) {
 }
 
 function applyAttribute(element, attribute, value) {
-	if (typeof value === 'function') {
-		if (element[attribute] !== undefined) {
-			element[attribute] = value;
-		}
-	} else if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
+	if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
 		element.className = value;
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
@@ -86,9 +82,10 @@ function applyAttribute(element, attribute, value) {
 		// also remove attributes on null to allow better handling of streams
 		// streams don't emit on undefined
 		if (value === null) {
-			element.removeAttribute(attribute);
+			element[attribute] = undefined;
 		} else {
-			element.setAttribute(attribute, value);
+			// element.setAttribute(attribute, value);
+			element[attribute] = value;
 		}
 	}
 }

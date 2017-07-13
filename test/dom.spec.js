@@ -46,11 +46,11 @@ describe('Components', () => {
 		// this means you can not manipulate the stream from the inside to the outside but need to use a callback function
 		let DumbComponent = ({clicks$, onclick}) =>
 			<div>
-				<button onclick={onclick(clicks$() + 1)}>Click to emit event</button>
+				<button onclick={() => onclick(clicks$() + 1)}>Click to emit event</button>
 			</div>;
 		let clicks$ = stream(0);
 		// this component fires a action on the store when clicked
-		let component = <DumbComponent clicks$={clicks$} onclick={x=>clicks$(x)} />;
+		let component = <DumbComponent clicks$={clicks$} onclick={x => clicks$(x)} />;
 		test(component, [
 			// perform the actions on the element
 			element => {
@@ -145,10 +145,10 @@ describe('Components', () => {
 		let component = <div disabled={value$}></div>;
 		test(component, [
 			element => {
-				assert.equal(element.getAttribute('disabled'), "true");
+				assert.equal(element.disabled, true);
 			},
 			element => {
-				assert.equal(element.getAttribute('disabled'), null);
+				assert.equal(element.disabled, undefined);
 			}
 		], done);
 		value$(null);
