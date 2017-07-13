@@ -327,7 +327,7 @@ export const Tutorial = () =>
 
         <p>The router is currently not allowing for some kind of child-routes.</p>
 
-        <p>Test the router on this page: <a href="/subpage?foo=bar">Go to Subpage</a></p>
+        <p>Test the router on this page: <a href="/subpage?foo=bar#blabla">Go to Subpage</a></p>
 
         <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
 
