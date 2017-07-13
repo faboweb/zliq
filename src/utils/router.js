@@ -9,9 +9,9 @@ function interceptLinks(routerState$) {
             let href = target.getAttribute('href');
             let isLocal = href != null && href.startsWith('/');
 
-            //put your logic here...
+            parseLink(href);
             if (isLocal) {
-                //tell the browser not to respond to the link click
+                goTo(null, href.substr(1));
                 e.preventDefault();
             } else if (href.startsWith('#')) {
                 let id = href.substr(1);
@@ -122,6 +122,15 @@ export function initRouter() {
     return routerState$;
 }
 
-function goTo(id, route) {
-    location.href = `#${id}${route && '/' + route}${location.search && '?' + location.search}`;
+function parseLink(link) {
+    let regexp = /(#(\w+))?((\/\w+)+)?(\?(\w+=.*)(&\w+=.*)*)?/;
+    let matches = regexp.exec(link);
+    let anchor = matches[2];
+    let route = matches[3];
+    let params = matches[6];
+    console.log(regexp.exec(link));
+}
+
+function goTo(anchor, route) {
+    location.hash = `${anchor ? anchor : ''}${route ? '/' + route : ''}${location.search ? '?' + location.search : ''}`;
 }
