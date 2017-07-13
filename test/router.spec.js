@@ -1,9 +1,10 @@
 import { initRouter, h } from '../src';
+import { test } from './helpers/test-component';
 
 describe('Router', ()=> {
 	it('should react to initial routing', (done) => {
-		Object.defineProperty(location, 'hash', {
-			value: '#/route',
+		Object.defineProperty(location, 'pathname', {
+			value: '/route',
 			configurable: true
 		});
 
@@ -32,7 +33,9 @@ describe('Router', ()=> {
 
 		let router$ = initRouter();
 
-		link.click();
+		test(link, [
+			element => element.click()
+		], ()=>{});
 
 		router$.map(({route, params}) => {
 			expect(route).toBe('/route');
@@ -44,7 +47,7 @@ describe('Router', ()=> {
     it('should react to browser go back events', (done)=> {
 		let router$ = initRouter();
 
-        history.pushState({}, "", "#/route?param=value");
+        history.pushState({}, "", "/route?param=value");
         history.back();
 
 		router$.map(({route, params}) => {

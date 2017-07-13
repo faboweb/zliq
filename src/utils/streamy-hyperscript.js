@@ -28,12 +28,12 @@ export const h = (tag, props, ...children) => {
 		component = {
 			vdom$: merge$(
 					wrapProps$(props, deleted$).distinct(),
-					mergedChildren$
-				).map(([props, ...children]) => {
+					mergedChildren$.map(flatten)
+				).map(([props, children]) => {
 					return {
 						tag,
 						props,
-						children: children === undefined ? [] : flatten(children),
+						children,
 						version: guid()
 				}})
 		};
@@ -66,6 +66,7 @@ function mergeChildren$(children) {
 	if (!Array.isArray(children)) {
 		children = [children];
 	}
+	children = flatten(children);
 	let childrenVdom$arr = children.map(child => {
 		if (isStream(child)) {
 			return child

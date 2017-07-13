@@ -1,18 +1,6 @@
-import {merge$, stream} from './streamy';
+import {isStream} from './streamy';
 
-// deprecated
-export const UPDATE_DONE = 'CHILDREN_CHANGED';
-export const CHILDREN_CHANGED = 'CHILDREN_CHANGED';
-export const ADDED = 'ADDED';
-export const REMOVED = 'REMOVED';
-export const UPDATED = 'UPDATED';
 const TEXT_NODE = '#text';
-
-// js DOM events. add which ones you need
-const DOM_EVENT_LISTENERS = [
-	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
-    'ondblclick'
-];
 
 export function render(component, parentElement) {
 	component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
@@ -33,16 +21,17 @@ export function render(component, parentElement) {
 	})
 }
 
-function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
-	if (newVersion === oldVersion) {
-		return;
+	if (newVersion === undefined && newVersion === oldVersion) {
+		return oldElement;
 	}
 	let newElement = oldElement;
 
-	if (oldElement instanceof window.Text && tag === TEXT_NODE) {
-		oldElement.value = newChildren[0];
-		return;
+	// TODO check performance without equal check
+	if (oldElement instanceof window.Text && tag === TEXT_NODE && oldElement.nodeValue !== newChildren[0]) {
+		oldElement.nodeValue = newChildren[0];
+		return newElement;
 	}
 
 	if (oldElement.nodeName.toLowerCase() !== tag) {
@@ -56,6 +45,8 @@ function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldV
 	if (tag !== TEXT_NODE && newChildren && newChildren.length > 0) {
 		diffChildren(newElement, newChildren, oldChildren);
 	}
+
+	return newElement;
 }
 
 function diffAttributes(element, props) {
@@ -68,25 +59,21 @@ function diffAttributes(element, props) {
 }
 
 function applyAttribute(element, attribute, value) {
-	if (typeof value === 'function') {
-		if (element[attribute] !== undefined) {
-			element[attribute] = value;
-		}
-	} else if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
+	if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
 		element.className = value;
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
 	} else if (attribute === 'style' && typeof value !== "string" ) {
 		Object.assign(element.style, value);
 	// other propertys are just added as is to the DOM
-	} else if (element[attribute] !== undefined) {
+	} else {
 		// also remove attributes on null to allow better handling of streams
 		// streams don't emit on undefined
 		if (value === null) {
-			element.removeAttribute(attribute);
+			element[attribute] = undefined;
 		} else {
-			element[attribute] = value;
 			// element.setAttribute(attribute, value);
+			element[attribute] = value;
 		}
 	}
 }
@@ -105,7 +92,7 @@ function diffChildren(element, newChildren, oldChildren) {
 	let oldChildNodes = element.childNodes;
 	let unifiedChildren = newChildren.map(child => {
 		// if there is no tag we assume it's a number or a string
-		if (!child.IS_STREAM && child.tag === undefined) {
+		if (!isStream(child) && child.tag === undefined) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
@@ -117,7 +104,7 @@ function diffChildren(element, newChildren, oldChildren) {
 	})
 	let unifiedOldChildren = oldChildren.map(child => {
 		// if there is no tag we assume it's a number or a string
-		if (!child.IS_STREAM && child.tag === undefined) {
+		if (!isStream(child) && child.tag === undefined) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
@@ -152,7 +139,7 @@ function diffChildren(element, newChildren, oldChildren) {
 
 // create text_nodes from numbers or strings
 // create domNodes from regular vdom descriptions
-function createNode(tag, children) {
+export function createNode(tag, children) {
 	if (tag === TEXT_NODE) {
 		return document.createTextNode(children[0]);
 	} else {

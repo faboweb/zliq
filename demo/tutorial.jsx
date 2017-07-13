@@ -56,7 +56,11 @@ export const Tutorial = () =>
         <p>Insert the generated element into the DOM where you please:</p>
 
         <Markup>
-            |document.querySelector('#app').appendChild(app);
+            {`
+            |import {render} from 'zliq';
+            |
+            |render(app, document.querySelector('#app'));
+            `}
         </Markup>
 
         <p>ZLIQ doesn't enforce the parent element rule known from React. Do whatever you like with an element array.</p>
@@ -100,6 +104,11 @@ export const Tutorial = () =>
             |// 6
             |newStream(7);
             |// 7
+            |
+            |// the format of the steam as a function makes it easy to pipe events into streams
+            |element.attachEventListener(newStream);
+            |// or pipe streams into streams
+            |newStream.map(otherStream);
             `}
         </Markup>
 
@@ -145,14 +154,16 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <p>An important difference to RXJS is that streams in ZLIQ always have a value. This actually simplifies the way we think about streams as we always have to expect null values instead of guessing when to expect null values and when not.</p>
+        <p>ZLIQ are always hot, meaning they will send their last value on hooking into it. BUT the streams will not emit `undefined`!</p>
 
         <Markup>
             {`
             |let newStream = stream();
-            |assert(newStream() == null);
-            |let filteredStream = newStream.filter(x => x != null);
-            |assert(filteredStream() == null);
+            |assert(newStream() == undefined);
+            |newStream.map(console.log); // nothing is written
+            |newStream('Hallo World'); // Hallo World is written
+            |
+            |newStream.map(console.log); // Hallo World is written again
             `}
         </Markup>
 
@@ -329,7 +340,7 @@ export const Tutorial = () =>
 
         <p>Test the router on this page: <a href="/subpage?foo=bar">Go to Subpage</a></p>
 
-        <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
+        {/* <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
 
         <p>ZLIQ dispatches lifecycle events `CHILDREN_CHANGED`, `ADDED`, `REMOVED` and `UPDATED` on the element. This way you can perform actions like initialization jQuery plugins on the element.</p>
 
@@ -364,21 +375,26 @@ export const Tutorial = () =>
             |    done();
             |});
             `}
-        </Markup>
+        </Markup> */}
 
         <Subheader title="Testing" subtitle="A good framework is easy to test" id="testing" />
 
-        <p>ZLIQ returns the actual DOM element. This enables you to easily test the components:</p>
+        <p>ZLIQ provides a helper to test the output of your components over time:</p>
 
         <Markup>
             {`
+            |import {test} from 'zliq';
             |import {Highlight} from './highlight.js';
-            |let element = <Highlight text="Hello World!!!"></Highlight>;
-            |assert.equal(element.outerHTML, '<p>Hello World!!!</p>');
+            |
+            |let text$ = stream('Hello World!!!');
+            |test(<p>{text$}></p>, [
+            |    // on each update of an element, we can test it
+            |    element => assert.equal(element.outerHTML, '<p>Hello World!!!</p>'),
+            |    element => assert.equal(element.outerHTML, '<p>Bye World!!!</p>'),
+            |]);
+            |text$('Bye World!!!');
             `}
         </Markup>
-
-        <p>ATTENTION: The `CHILDREN_CHANGED` event is async for long lists of elements. Checkout the list example above.</p>
 
         <p>If you need an easy test setup checkout how the ZLIQ project uses <a href="https://facebook.github.io/jest/">Jest</a> with almost 0 configuration.</p>
     </div>

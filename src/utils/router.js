@@ -8,52 +8,46 @@ function interceptLinks(routerState$) {
         if (target.tagName === 'A') {
             let href = target.getAttribute('href');
             let isLocal = href != null && href.startsWith('/');
+            let isAnchor = href != null && href.startsWith('#');
 
-            parseLink(href);
-            if (isLocal) {
-                goTo(null, href.substr(1));
-                e.preventDefault();
-            } else if (href.startsWith('#')) {
-                let id = href.substr(1);
-                let route = routerState$.value.route;
-                goTo(id, route)
+            if (isLocal || isAnchor) {
+                let {anchor, route, query} = parseLink(href);
+                if (route === undefined) {
+                    route = routerState$.value.route;
+                }
+                goTo(routerState$, anchor, route, query);
+                //tell the browser not to respond to the link click
                 e.preventDefault();
             }
         }
     }
 
-    // callback for HTML5 navigation events
-    // save the routing info in the routerState
-    function dispatchRouteChange() {
-        // remove hash
-        let href = location.hash.substr(1, location.hash.length - 1);
-
-        routerState$.patch({
-            route: href === '' ? '/' : href.split('?')[0],
-            params: getUrlParams(href, location.search)
-        });
-    }
-
     // react to HTML5 go back and forward events
-    window.onpopstate = function() {
-        dispatchRouteChange();
+    window.onpopstate = function(event) {
+        if (event.state) {
+            let {route, query} = event.state;
+            dispatchRouteChange(routerState$, route, query);
+        }
     };
 
     // listen for link click events at the document level
     document.addEventListener('click', interceptClickEvent);
 
     // react to initial routing info
-    if (location.hash != '' || location.search != '') {
-        dispatchRouteChange();
+    if (location.pathname !== '/' || location.search !== "") {
+        let {route, query} = parseLink(location.href);
+        dispatchRouteChange(routerState$, route, query);
     }
 }
 
+
+// TODO refactor
 function getUrlParams(hash, search) {
     // match query params in urls like:
     // http://localhost:8080/?code=e4a4f94f008a92f12221&code2=abc#/location?code=e4a4f94f008a92f12221&code2=abc
     // the query could be set internaly; then it would be behind the #
     // the query could be set at start; then it would be before the #
-    let urlRegex = /(#\/\w*)?(\?(\w+=.*)(&\w+=.*)*)+/g;
+    let urlRegex = /(#\/\w*)?(\?(\w+=\w*)(&\w+=\w*)*)+(#\w+)?/g;
     let regExResultHash = RegExp(urlRegex).exec(hash);
     let regExResultSearch = RegExp(urlRegex).exec(search);
 
@@ -122,15 +116,32 @@ export function initRouter() {
     return routerState$;
 }
 
+// matching links in the form of /route/subroute?param1=a&param2=b#anchor
 function parseLink(link) {
-    let regexp = /(#(\w+))?((\/\w+)+)?(\?(\w+=.*)(&\w+=.*)*)?/;
-    let matches = regexp.exec(link);
-    let anchor = matches[2];
-    let route = matches[3];
-    let params = matches[6];
-    console.log(regexp.exec(link));
+    let regexp = /((\/\w*)*)?(\?((\w+=\w*)(&(\w+=\w*)+)*))?(#(\w+))?/;
+    let matchArr = regexp.exec(link);
+    return {
+        anchor: matchArr[9],
+        route: matchArr[1],
+        query: matchArr[4],
+    }
 }
 
-function goTo(anchor, route) {
-    location.hash = `${anchor ? anchor : ''}${route ? '/' + route : ''}${location.search ? '?' + location.search : ''}`;
+// callback for HTML5 navigation events
+// save the routing info in the routerState
+function dispatchRouteChange(routerState$, route, query) {
+    // remove hash
+    let href = location.hash.substr(1);
+    routerState$.patch({
+        route: route || '',
+        params: getUrlParams(href, location.search)
+    });
+}
+
+function goTo(routerState$, anchor, route, query) {
+    history.pushState({anchor, route, query}, '', `/${route ? route.substr(1) : ''}${query ? '?' + query : ''}`);
+    if(anchor) {
+       location.hash = '#' + anchor;
+    }
+    dispatchRouteChange(routerState$, route, query);
 }
