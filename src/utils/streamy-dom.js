@@ -1,18 +1,6 @@
-import {merge$, stream} from './streamy';
+import {isStream} from './streamy';
 
-// deprecated
-export const UPDATE_DONE = 'CHILDREN_CHANGED';
-export const CHILDREN_CHANGED = 'CHILDREN_CHANGED';
-export const ADDED = 'ADDED';
-export const REMOVED = 'REMOVED';
-export const UPDATED = 'UPDATED';
 const TEXT_NODE = '#text';
-
-// js DOM events. add which ones you need
-const DOM_EVENT_LISTENERS = [
-	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
-    'ondblclick'
-];
 
 export function render(component, parentElement) {
 	component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
@@ -104,7 +92,7 @@ function diffChildren(element, newChildren, oldChildren) {
 	let oldChildNodes = element.childNodes;
 	let unifiedChildren = newChildren.map(child => {
 		// if there is no tag we assume it's a number or a string
-		if (!child.IS_STREAM && child.tag === undefined) {
+		if (!isStream(child) && child.tag === undefined) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
@@ -116,7 +104,7 @@ function diffChildren(element, newChildren, oldChildren) {
 	})
 	let unifiedOldChildren = oldChildren.map(child => {
 		// if there is no tag we assume it's a number or a string
-		if (!child.IS_STREAM && child.tag === undefined) {
+		if (!isStream(child) && child.tag === undefined) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
