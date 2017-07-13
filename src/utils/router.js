@@ -23,15 +23,18 @@ function interceptLinks(routerState$) {
     }
 
     // react to HTML5 go back and forward events
-    window.onpopstate = function({state: {route, query}}) {
-        dispatchRouteChange(routerState$, route, query);
+    window.onpopstate = function(event) {
+        if (event.state) {
+            let {route, query} = event.state;
+            dispatchRouteChange(routerState$, route, query);
+        }
     };
 
     // listen for link click events at the document level
     document.addEventListener('click', interceptClickEvent);
 
     // react to initial routing info
-    if (location.hash != '' || location.search != '') {
+    if (location.pathname !== '/' || location.search !== "") {
         let {route, query} = parseLink(location.href);
         dispatchRouteChange(routerState$, route, query);
     }
