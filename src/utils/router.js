@@ -15,28 +15,16 @@ function interceptLinks(routerState$) {
                 if (route === undefined) {
                     route = routerState$.value.route;
                 }
-                goTo(anchor, route, query);
+                goTo(routerState$, anchor, route, query);
                 //tell the browser not to respond to the link click
                 e.preventDefault();
             }
         }
     }
 
-    // callback for HTML5 navigation events
-    // save the routing info in the routerState
-    function dispatchRouteChange() {
-        // remove hash
-        let href = location.hash.substr(1);
-        let {route} = parseLink(href);
-        routerState$.patch({
-            route: route || '',
-            params: getUrlParams(href, location.search)
-        });
-    }
-
     // react to HTML5 go back and forward events
-    window.onpopstate = function() {
-        dispatchRouteChange();
+    window.onpopstate = function({state: {route, query}}) {
+        dispatchRouteChange(routerState$, route, query);
     };
 
     // listen for link click events at the document level
@@ -44,7 +32,8 @@ function interceptLinks(routerState$) {
 
     // react to initial routing info
     if (location.hash != '' || location.search != '') {
-        dispatchRouteChange();
+        let {route, query} = parseLink(location.href);
+        dispatchRouteChange(routerState$, route, query);
     }
 }
 
@@ -135,6 +124,18 @@ function parseLink(link) {
     }
 }
 
-function goTo(anchor, route, query) {
-    location.href = `#/${route ? route.substr(1) : ''}${query ? '?' + query : ''}${anchor ? '#' + anchor : ''}`;
+// callback for HTML5 navigation events
+// save the routing info in the routerState
+function dispatchRouteChange(routerState$, route, query) {
+    // remove hash
+    let href = location.hash.substr(1);
+    routerState$.patch({
+        route: route || '',
+        params: getUrlParams(href, location.search)
+    });
+}
+
+function goTo(routerState$, anchor, route, query) {
+    history.pushState({anchor, route, query}, '', `/${route ? route.substr(1) : ''}${query ? '?' + query : ''}${anchor ? '#' + anchor : ''}`);
+    dispatchRouteChange(routerState$, route, query);
 }
