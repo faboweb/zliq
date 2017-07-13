@@ -141,17 +141,17 @@ describe('Components', () => {
 	});
 
 	it('should remove attributes on null value', done => {
-		let value$ = stream(null);
+		let value$ = stream(true);
 		let component = <div disabled={value$}></div>;
 		test(component, [
 			element => {
-				assert(element.getAttribute('disabled'), false);
+				assert.equal(element.getAttribute('disabled'), "true");
 			},
 			element => {
-				assert(element.getAttribute('disabled'), true);
+				assert.equal(element.getAttribute('disabled'), null);
 			}
 		], done);
-		value$(true);
+		value$(null);
 	});
 
     xit('should cleanup component stream subscriptions', (done) => {

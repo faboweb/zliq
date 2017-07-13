@@ -1,15 +1,7 @@
 import {diff, createNode} from '../../src'
 
 export function test({vdom$}, schedule, done) {
-    vdom$.reduce((
-        {element: oldElement, version: oldVersion, children: oldChildren, iteration},
-        {tag, props, children, version}
-    ) => {
-        if (oldElement === null) {
-            oldElement = createNode(tag, children);
-        }
-        let newElement = diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
-
+    renderedElement$({vdom$}).reduce((iteration, newElement) => {
         if (schedule[iteration] === undefined) {
             throw new Error('Unexpected Update!');
         }
@@ -18,16 +10,30 @@ export function test({vdom$}, schedule, done) {
             done();
         }
 
+        return iteration +1;
+    }, 0);
+}
+
+function renderedElement$({vdom$}) {
+    let rendering$ = vdom$.reduce((
+        {element: oldElement, version: oldVersion, children: oldChildren},
+        {tag, props, children, version}
+    ) => {
+        if (oldElement === undefined) {
+            oldElement = createNode(tag, children);
+        }
+        let newElement = diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
+
         return {
             element: oldElement,
             version,
-            children,
-            iteration: iteration + 1
+            children
         };
     }, {
-        element: null,
+        element: undefined,
         version: -1,
-        children: [],
-        iteration: 0
-    })
+        children: []
+    });
+
+    return rendering$.$('element');
 }

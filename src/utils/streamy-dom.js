@@ -82,14 +82,13 @@ function applyAttribute(element, attribute, value) {
 	} else if (attribute === 'style' && typeof value !== "string" ) {
 		Object.assign(element.style, value);
 	// other propertys are just added as is to the DOM
-	} else if (element[attribute] !== undefined) {
+	} else {
 		// also remove attributes on null to allow better handling of streams
 		// streams don't emit on undefined
 		if (value === null) {
 			element.removeAttribute(attribute);
 		} else {
-			element[attribute] = value;
-			// element.setAttribute(attribute, value);
+			element.setAttribute(attribute, value);
 		}
 	}
 }
