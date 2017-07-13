@@ -136,6 +136,9 @@ function dispatchRouteChange(routerState$, route, query) {
 }
 
 function goTo(routerState$, anchor, route, query) {
-    history.pushState({anchor, route, query}, '', `/${route ? route.substr(1) : ''}${query ? '?' + query : ''}${anchor ? '#' + anchor : ''}`);
+    history.pushState({anchor, route, query}, '', `/${route ? route.substr(1) : ''}${query ? '?' + query : ''}`);
+    if(anchor) {
+       location.hash = '#' + anchor;
+    }
     dispatchRouteChange(routerState$, route, query);
 }
