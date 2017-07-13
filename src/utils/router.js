@@ -35,7 +35,9 @@ function interceptLinks(routerState$) {
 
     // react to initial routing info
     if (location.pathname !== '/' || location.search !== "") {
-        let {route, query} = parseLink(location.href);
+        // construct initial routing link
+        let href = location.pathname + location.search + location.hash;
+        let {route, query} = parseLink(location.pathname + location.search + location.hash);
         dispatchRouteChange(routerState$, route, query);
     }
 }

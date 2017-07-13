@@ -68,6 +68,7 @@
       "/demo/",
       "/test/",
       "/lib/"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }
