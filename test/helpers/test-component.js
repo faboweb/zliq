@@ -7,7 +7,7 @@ export function test({vdom$}, schedule, done) {
         }
         schedule[iteration](newElement);
         if (schedule.length === iteration + 1) {
-            done();
+            done && done();
         }
 
         return iteration +1;
