@@ -47,7 +47,7 @@ let app = <div>
 		</Router>
 		<Router router$={router$} route="/subpage">
 			You are at a subpage. The router detected the params:
-			{router$.$('params').map(params => { throw new Error('This error') })}.
+			{router$.$('params').map(params => JSON.stringify(params))}.
 			<a href="/#routing">Go Back</a>
 		</Router>
 	</div>
