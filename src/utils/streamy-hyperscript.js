@@ -1,28 +1,61 @@
 import {stream, merge$, isStream} from './streamy';
-import {createElement} from './streamy-dom';
+import {createElement, REMOVED, ADDED} from './streamy-dom';
 
 /*
 * wrap hyperscript elements in reactive streams dependent on their children streams
 */
 export const h = (tag, props, ...children) => {
-	// jsx usally resolves known tags as strings and unknown tags as functions
+	let deleted$ = stream(false);
+	let elem;
+	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
-		return tag(props, children);
+		elem = tag(
+			addStreamDetacher(props, deleted$),
+			addStreamDetacher(children, deleted$),
+			deleted$
+		);
+	} else {
+		elem = createElement(
+			tag,
+			wrapProps$(props, deleted$),
+			makeChildrenStreams$(children, deleted$)
+		);
 	}
-	return createElement(
-		tag,
-		wrapProps$(props),
-		makeChildrenStreams$(children)
-	);
+
+	// ATTENTION: the stream breaking is not working for returned arrays currently
+	if (elem.addEventListener !== undefined) {
+		elem.addEventListener(REMOVED, () => deleted$(true));
+		elem.addEventListener(ADDED, () => deleted$(false));
+	}
+
+	return elem;
 };
+
+function addStreamDetacher(obj, deleted$) {
+	if (obj === null || obj === undefined) return obj;
+	if (Array.isArray(obj)) {
+		return obj.map(item => {
+			if (isStream(item)) {
+				return item.until(deleted$);
+			}
+			return item;
+		});
+	}
+	Object.keys(obj).map((propName, index) => {
+		if (isStream(obj[propName])) {
+			obj[propName] = obj[propName].until(deleted$);
+		}
+	});
+	return obj;
+}
 
 /*
 * wrap all children in streams and merge those
 * we make sure that all children streams are flat arrays to make processing uniform
 * output: stream([stream([])])
 */
-function makeChildrenStreams$(childrenArr) {
+function makeChildrenStreams$(childrenArr, deleted$) {
 	// flatten children arr
 	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
 	childrenArr = [].concat(...childrenArr);
@@ -30,12 +63,15 @@ function makeChildrenStreams$(childrenArr) {
 	let children$Arr = makeStreams(childrenArr);
 
 	return children$Arr
+		// unsubscribe on the child when deleted
+		.map(child$ => child$.until(deleted$))
 		// make sure children are arrays and not nest
 		.map(child$ => flatten(makeArray(child$)))
 		// make sure subchildren are all streams
 		.map(child$ => child$.map(children => makeStreams(children)))
 		// so we can easily merge them
-		.map(child$ => child$.flatMap(children => merge$(...children)));
+		.map(child$ => child$.flatMap(children =>
+				merge$(...children)));
 }
 
 // make sure all children are handled as streams
@@ -75,10 +111,10 @@ function flatten(stream) {
 /*
 * Wrap props into one stream
 */
-function wrapProps$(props) {
+function wrapProps$(props, deleted$) {
 	if (props === null) return stream();
 	if (isStream(props)) {
-		return props;
+		return props.until(deleted$);
 	}
 
 	// go through all the props and make them a stream
@@ -86,7 +122,7 @@ function wrapProps$(props) {
 	let props$Arr = Object.keys(props).map((propName, index) => {
 		let value = props[propName];
 		if (isStream(value)) {
-			return value.map(value => {
+			return value.until(deleted$).map(value => {
 				return {
 					key: propName,
 					value
@@ -95,7 +131,7 @@ function wrapProps$(props) {
 		} else {
 			// if it's an object, traverse the sub-object making it a stream
 			if (value !== null && typeof value === 'object') {
-				return wrapProps$(value).map(value => {
+				return wrapProps$(value, deleted$).map(value => {
 					return {
 						key: propName,
 						value

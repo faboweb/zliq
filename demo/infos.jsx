@@ -12,7 +12,7 @@ let InfoBullet = ({icon, title}, children) => {
     </div>;
 }
 
-export const Infos = () => [
+export const Infos = () =>
     <div class="section">
         <div class="row">
             <InfoBullet icon="fast_forward" title="Few concepts">
@@ -30,5 +30,4 @@ export const Infos = () => [
                 <br />Bend it to your will.
             </InfoBullet>
         </div>
-    </div>
-];
+    </div>;
