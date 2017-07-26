@@ -15,4 +15,5 @@
   - node_modules/
   - lib/
   - demo/bundle.js
+  - **.js.map
   - demo/benchmark.jsx
