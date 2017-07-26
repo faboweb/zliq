@@ -1,6 +1,7 @@
 var path = require('path');
 
 module.exports = {
+    devtool: '#inline-source-map',
     entry: './demo/demo_app.jsx',
     output: {
         path: path.resolve(__dirname, '../demo'),
@@ -19,7 +20,11 @@ module.exports = {
         },{
             test: /\.(js|jsx)$/,
             use: [{
-                loader: 'babel-loader'
+                loader: 'babel-loader',
+                query: {
+                    retainLines: true,
+                    cacheDirectory: true
+                }
             }]
         },{
             test: /\.(tff|woff|woff2)$/,
@@ -29,8 +34,6 @@ module.exports = {
         }]
     },
     devServer: {
-        contentBase: path.join(__dirname, "../demo"),
-        compress: true,
-        port: 8080
+        contentBase: path.join(__dirname, "../demo")
     }
 }

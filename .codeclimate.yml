@@ -12,7 +12,8 @@
      paths:
      - "src/**"
  exclude_paths:
-  - node_modules/
-  - lib/
-  - demo/bundle.js
-  - demo/benchmark.jsx
+  - "node_modules/"
+  - "lib/"
+  - "demo/bundle.js"
+  - "**.js.map"
+  - "demo/benchmark.jsx"
