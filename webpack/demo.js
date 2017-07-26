@@ -20,7 +20,11 @@ module.exports = {
         },{
             test: /\.(js|jsx)$/,
             use: [{
-                loader: 'babel-loader'
+                loader: 'babel-loader',
+                query: {
+                    retainLines: true,
+                    cacheDirectory: true
+                }
             }]
         },{
             test: /\.(tff|woff|woff2)$/,
