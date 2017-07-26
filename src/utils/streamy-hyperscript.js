@@ -7,6 +7,7 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
 	let component;
+	let version = -1;
 
 	// let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$);
 	let mergedChildren$ = mergeChildren$(flatten(children));
@@ -34,7 +35,7 @@ export const h = (tag, props, ...children) => {
 						tag,
 						props,
 						children,
-						version: guid()
+						version: ++version
 				}})
 		};
 	}
@@ -154,7 +155,7 @@ function wrapProps$(props, deleted$) {
 
 	// go through all the props and make them a stream
 	// if they are objects, traverse them to check if they include streams
-	let props$Arr = Object.keys(props).map((propName, index) => {
+	let props$Arr = Object.keys(props).map(function makePropStream(propName, index) {
 		let value = props[propName];
 		if (isStream(value)) {
 			return value.until(deleted$).map(value => {
@@ -209,14 +210,4 @@ export function mixedMerge$(...potentialStreams) {
 		});
 	});
 	return newStream;
-}
-
-function guid() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
-  }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4();
 }
