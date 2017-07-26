@@ -3,31 +3,27 @@ import StackTrace from 'stacktrace-js';
 
 /*
 * ATTENTION: Enable sourcemaps in Chrome!!
-*
+* ATTENTION: Use "devtool: '#inline-source-map'" for webpack -> only config that worked
 */
 export function shrink_stacktrace() {
     window.onerror = function(msg, file, line, col, error) {
-        let stack = error.stack.split('\n');
-        // callback is called with an Array[StackFrame]
-        StackTrace.fromError(error).then(frames => callback(frames, stack, msg)).catch(errback);
+        StackTrace.fromError(error)
+        .then(frames => console.error(formatFrames(frames, msg)))
+        .catch(console.error);
 
         return true;
     };
 
-    function callback(mappedFrames, nativeStack, msg) {
-        let x = 0;
-        let filteredFrames = mappedFrames
-        .filter((stackLine, i) => mappedFrames[i] && mappedFrames[i].fileName.startsWith(`webpack://`))
+    function formatFrames(stackFrames, errorMessage) {
+        let formatedFrames = stackFrames
+        .filter(({fileName}) => fileName.startsWith(`webpack://`))
         .map(({functionName, columnNumber, fileName, lineNumber}) => {
+            // chrome does not redirect to the sources with the default webpack sourcemap url in the console
             let chromeFileDirection = fileName.replace(`webpack://`, `webpack:///.`);
+
             return `\t${(functionName !== undefined ? functionName  : '(anonymous)')} \t\tat ${chromeFileDirection}:${lineNumber}:${columnNumber}`;
         });
 
-        let message = ['(ZLIQ) ' + msg].concat(filteredFrames).join('\n');
-        console.error(message);
+        return ['(ZLIQ) ' + errorMessage].concat(formatedFrames).join('\n');
     }
-
-    function errback (err) {
-        console.error(err);
-    };
 }
