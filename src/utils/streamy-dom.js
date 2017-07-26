@@ -12,7 +12,7 @@ export function render(component, parentElement) {
 		return {
 			element: oldElement,
 			version,
-			children
+			children: JSON.parse(JSON.stringify(children))
 		}
 	}, {
 		element: null,
