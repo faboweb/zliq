@@ -42,7 +42,7 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	}
 
 	diffAttributes(newElement, props);
-	if (tag !== TEXT_NODE && newChildren && newChildren.length > 0) {
+	if (tag !== TEXT_NODE && !(newChildren.length === 0 && oldChildren.length === 0)) {
 		diffChildren(newElement, newChildren, oldChildren);
 	}
 
@@ -78,6 +78,7 @@ function applyAttribute(element, attribute, value) {
 	}
 }
 
+// remove attributes that are not in props anymore
 function cleanupAttributes(element, props) {
 	if (element.props !== undefined) {
 		for(let attribute in element.props) {
@@ -88,32 +89,25 @@ function cleanupAttributes(element, props) {
 	}
 }
 
+function unifyChildren(children) {
+	return children.map(child => {
+		// if there is no tag we assume it's a number or a string
+		if (!isStream(child) && child.tag === undefined) {
+			return {
+				tag: TEXT_NODE,
+				children: [child],
+				version: 1
+			}
+		} else {
+			return child;
+		}
+	})
+}
+
 function diffChildren(element, newChildren, oldChildren) {
 	let oldChildNodes = element.childNodes;
-	let unifiedChildren = newChildren.map(child => {
-		// if there is no tag we assume it's a number or a string
-		if (!isStream(child) && child.tag === undefined) {
-			return {
-				tag: TEXT_NODE,
-				children: [child],
-				version: 1
-			}
-		} else {
-			return child;
-		}
-	})
-	let unifiedOldChildren = oldChildren.map(child => {
-		// if there is no tag we assume it's a number or a string
-		if (!isStream(child) && child.tag === undefined) {
-			return {
-				tag: TEXT_NODE,
-				children: [child],
-				version: 1
-			}
-		} else {
-			return child;
-		}
-	})
+	let unifiedChildren = unifyChildren(newChildren);
+	let unifiedOldChildren = unifyChildren(oldChildren);
 
 	// diff existing nodes
 	for(let i = 0; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
