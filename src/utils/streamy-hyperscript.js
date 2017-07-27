@@ -160,11 +160,11 @@ function wrapProps$(props, deleted$) {
 	}
 
 	let nestedStreams = extractNestedStreams(props);
-	let updateStreams = nestedStreams.map(({parent, key, stream}) =>
-		stream
+	let updateStreams = nestedStreams.map(function makeNestedStreamUpdateProps({parent, key, stream}) {
+		return stream
 		.until(deleted$)
 		.map(value => parent[key] = value)
-	);
+	});
 	return merge$(updateStreams).map(_ => props);
 }
 
@@ -189,6 +189,8 @@ export function mixedMerge$(potentialStreamsArr) {
 	return newStream;
 }
 
+// to react to nested streams in an object, we extract the streams and a reference to their position
+// returns [{parentObject, propertyName, stream}]
 function extractNestedStreams(obj) {
 	return flatten(Object.keys(obj).map(key => {
 		if (typeof obj[key] === 'object') {
