@@ -159,42 +159,13 @@ function wrapProps$(props, deleted$) {
 		return props.until(deleted$);
 	}
 
-	// go through all the props and make them a stream
-	// if they are objects, traverse them to check if they include streams
-	let props$Arr = Object.keys(props).map(function makePropStream(propName, index) {
-		let value = props[propName];
-		if (isStream(value)) {
-			return value.until(deleted$).map(value => {
-				return {
-					key: propName,
-					value
-				};
-			});
-		} else {
-			// if it's an object, traverse the sub-object making it a stream
-			if (value !== null && typeof value === 'object') {
-				return wrapProps$(value, deleted$).map(value => {
-					return {
-						key: propName,
-						value
-					};
-				});
-			}
-			// if it's a plain value wrap it in a stream
-			return stream({
-				key: propName,
-				value
-			});
-		}
-	});
-	// merge streams of all properties
-	// on changes, reconstruct the properties object from the properties
-	return merge$(props$Arr).map(props => {
-		return props.reduce((obj, {key, value}) => {
-			obj[key] = value;
-			return obj;
-		}, {});
-	});
+	let nestedStreams = extractNestedStreams(props);
+	let updateStreams = nestedStreams.map(({parent, key, stream}) =>
+		stream
+		.until(deleted$)
+		.map(value => parent[key] = value)
+	);
+	return merge$(updateStreams).map(_ => props);
 }
 
 export function mixedMerge$(potentialStreamsArr) {
@@ -216,4 +187,20 @@ export function mixedMerge$(potentialStreamsArr) {
 		});
 	});
 	return newStream;
+}
+
+function extractNestedStreams(obj) {
+	return flatten(Object.keys(obj).map(key => {
+		if (typeof obj[key] === 'object') {
+			return extractNestedStreams(obj[key]);
+		}
+		if (isStream(obj[key])) {
+			return [{
+				parent: obj,
+				key,
+				stream: obj[key]
+			}];
+		}
+		return [];
+	}))
 }
