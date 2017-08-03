@@ -36,7 +36,7 @@ describe('Components', () => {
 		let component = <DoubleClicks clicks$={clicks$} />;
 		test(component, [
 			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>'),
-			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>'),
+			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
 		], done);
 		clicks$(6);
 	});
@@ -85,7 +85,7 @@ describe('Components', () => {
 		let Child = ()=>{
 			let elem = <div class="child"></div>;
 			elem.addEventListener(ADDED, ()=>{
-				assert(container.querySelectorAll('.child').length, 1);
+				assert.equal(container.querySelectorAll('.child').length, 1);
 				done();
 			});
 			return elem;
@@ -102,7 +102,7 @@ describe('Components', () => {
 		let Child = ()=>{
 			let elem = <div class="child"></div>;
 			elem.addEventListener(REMOVED, ()=>{
-				assert(container.querySelectorAll('.child').length === 0, true);
+				assert.equal(container.querySelectorAll('.child').length === 0, true);
 				done();
 			});
 			return elem;
@@ -133,7 +133,7 @@ describe('Components', () => {
 			element => {
 				assert.equal(element.querySelectorAll('li').length, 2);
 				assert.equal(element.querySelectorAll('li')[1].innerHTML, '2');
-			},
+			}
 		], done);
 
 		let newArr = arr.slice(1);

@@ -6,8 +6,8 @@ export function test({vdom$}, schedule, done) {
             throw new Error('Unexpected Update!');
         }
         schedule[iteration](newElement);
-        if (schedule.length === iteration + 1) {
-            done && done();
+        if (schedule.length === iteration + 1 && done) {
+            done();
         }
 
         return iteration +1;

@@ -5,14 +5,14 @@ function interceptLinks(routerState$) {
     // if the link is local '/...' we change the location hash instead
 	function interceptClickEvent(e) {
         let target = e.target || e.srcElement;
-        if (target.tagName === 'A') {
+        if(target.tagName === 'A') {
             let href = target.getAttribute('href');
             let isLocal = href != null && href.startsWith('/');
             let isAnchor = href != null && href.startsWith('#');
 
-            if (isLocal || isAnchor) {
+            if(isLocal || isAnchor) {
                 let {anchor, route, query} = parseLink(href);
-                if (route === undefined) {
+                if(route === undefined) {
                     route = routerState$.value.route;
                 }
                 goTo(routerState$, anchor, route, query);
@@ -24,7 +24,7 @@ function interceptLinks(routerState$) {
 
     // react to HTML5 go back and forward events
     window.onpopstate = function(event) {
-        if (event.state) {
+        if(event.state) {
             let {route, query} = event.state;
             dispatchRouteChange(routerState$, route, query);
         }
@@ -34,7 +34,7 @@ function interceptLinks(routerState$) {
     document.addEventListener('click', interceptClickEvent);
 
     // react to initial routing info
-    if (location.pathname !== '/' || location.search !== "") {
+    if(location.pathname !== '/' || location.search !== "") {
         // construct initial routing link
         let href = location.pathname + location.search + location.hash;
         let {route, query} = parseLink(location.pathname + location.search + location.hash);
@@ -61,10 +61,10 @@ function getUrlParams(hash, search) {
     for (var i=0;i<vars.length;i++) {
         var pair = vars[i].split("=");
             // If first entry with this name
-        if (typeof params[pair[0]] === "undefined") {
+        if(typeof params[pair[0]] === "undefined") {
             params[pair[0]] = decodeURIComponent(pair[1]);
             // If second entry with this name
-        } else if (typeof params[pair[0]] === "string") {
+        } else if(typeof params[pair[0]] === "string") {
             var arr = [ params[pair[0]],decodeURIComponent(pair[1]) ];
             params[pair[0]] = arr;
             // If third or later entry with this name
@@ -77,11 +77,11 @@ function getUrlParams(hash, search) {
 
 // this is an element that shows it's content only if the expected route is met
 export function Router({router$, route}, children$) {
-    if (router$ == null) {
+    if(router$ == null) {
         console.log('The Router component needs the routerState$ as attribute.')
         return null;
     }
-    if (route == null) {
+    if(route == null) {
         console.log('The Router component needs the route as attribute.')
         return null;
     }
@@ -94,7 +94,7 @@ export function Router({router$, route}, children$) {
     // check if no registered route was hit and set default if so
     let sanitizedRoute$ = router$
         .map(({route, routes}) => {
-            if (routes.indexOf(route) === -1) {
+            if(routes.indexOf(route) === -1) {
                 return '/';
             }
             return route;
@@ -125,7 +125,7 @@ function parseLink(link) {
     return {
         anchor: matchArr[9],
         route: matchArr[1],
-        query: matchArr[4],
+        query: matchArr[4]
     }
 }
 

@@ -28,7 +28,6 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	}
 	let newElement = oldElement;
 
-	// TODO check performance without equal check
 	if (oldElement instanceof window.Text && tag === TEXT_NODE && oldElement.nodeValue !== newChildren[0]) {
 		oldElement.nodeValue = newChildren[0];
 		return newElement;

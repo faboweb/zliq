@@ -21,11 +21,13 @@ export const h = (tag, props, ...children) => {
 		);
 	}
 	// add detachers to props
-	props !== null && Object.keys(props).map((propName, index) => {
-		if (isStream(props[propName])) {
-			props[propName] = props[propName].until(deleted$);
-		}
-	});
+	if (props !== null) {
+		Object.keys(props).map((propName, index) => {
+			if (isStream(props[propName])) {
+				props[propName] = props[propName].until(deleted$);
+			}
+		});
+	}
 	return {
 		vdom$: merge$([
 				wrapProps$(props, deleted$),
@@ -87,10 +89,6 @@ function getChildrenVdom$arr(childrenArr, deleted$) {
 	childrenArr = [].concat(...childrenArr);
 	// only handle vdom for now
 	let children$Arr = childrenArr.map(component => {
-		// TODO
-		// if (component.IS_STREAM) {
-		// 	return
-		// }
 		// if there is no vdom$ it is a string or number
 		if (component.vdom$ === undefined) {
 			return stream(component);
@@ -174,7 +172,7 @@ function wrapProps$(props, deleted$) {
 		return stream
 		.until(deleted$)
 		.distinct()
-		.map(value => parent[key] = value)
+		.map(value => { parent[key] = value })
 	});
 	return merge$(updateStreams).map(_ => props);
 }
