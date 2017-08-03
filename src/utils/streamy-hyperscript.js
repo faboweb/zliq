@@ -14,39 +14,30 @@ export const h = (tag, props, ...children) => {
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
-		component = tag(
+		return tag(
 			props,
 			mergedChildren$,
 			deleted$
 		);
-	} else {
-		// add detachers to props
-		props !== null && Object.keys(props).map((propName, index) => {
-			if (isStream(props[propName])) {
-				props[propName] = props[propName].until(deleted$);
-			}
-		});
-		let state = {
-			tag: '',
-			props: {},
-			children: [],
-			version
-		}
-		component = {
-			vdom$: merge$([
-					wrapProps$(props, deleted$).distinct(),
-					mergedChildren$.map(flatten)
-				]).map(([props, children]) => {
-					return {
-						tag,
-						props,
-						children,
-						version: ++version
-				}})
-		};
 	}
-
-	return component;
+	// add detachers to props
+	props !== null && Object.keys(props).map((propName, index) => {
+		if (isStream(props[propName])) {
+			props[propName] = props[propName].until(deleted$);
+		}
+	});
+	return {
+		vdom$: merge$([
+				wrapProps$(props, deleted$).distinct(),
+				mergedChildren$.map(flatten)
+			]).map(([props, children]) => {
+				return {
+					tag,
+					props,
+					children,
+					version: ++version
+			}})
+	};
 };
 
 function addStreamDetacher(obj, deleted$) {
@@ -143,11 +134,30 @@ function makeArray(stream) {
 }
 
 // flattens an array
-export function flatten(arr) {
-	while (arr.some(value => Array.isArray(value))) {
-		arr = [].concat(...arr);
-	}
-	return arr;
+export function flatten(array, mutable) {
+    var toString = Object.prototype.toString;
+    var arrayTypeStr = '[object Array]';
+    
+    var result = [];
+    var nodes = (mutable && array) || array.slice();
+    var node;
+
+    if (!array.length) {
+        return result;
+    }
+
+    node = nodes.pop();
+    
+    do {
+        if (toString.call(node) === arrayTypeStr) {
+            nodes.push.apply(nodes, node);
+        } else {
+            result.push(node);
+        }
+    } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+    result.reverse(); // we reverse result to restore the original order
+    return result;
 }
 
 /*

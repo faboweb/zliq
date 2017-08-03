@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "deep-equal": "^1.0.1",
-    "stacktrace-js": "2.0.0"
+    "stacktrace-js": "^2.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

@@ -3,11 +3,13 @@ import deepEqual from 'deep-equal';
 /*
 * stream constructor
 * constructor returns a stream
-* get the current value of stream like: stream()
+* get the current value of stream like: stream.value
 */
 export const stream = function(init_value) {
-	function s(value) {
-		if (arguments.length === 0) return s.value;
+	let s = function(value) {
+		if (value === undefined) {
+			return s.value;
+		}
 		update(s, value);
 		return s;
 	}
@@ -40,9 +42,6 @@ function valuesChanged(oldValue, newValue) {
 * update the stream value and notify listeners on the stream
 */
 function update(parent$, newValue) {
-	if (newValue === undefined) {
-		return parent$.value;
-	}
 	parent$.value = newValue;
 	notifyListeners(parent$.listeners, newValue);
 };
@@ -80,7 +79,7 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value)(); });
+	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value).value; });
 	parent$.listeners.push(function flatMapValue(value) {
 		fn(value).map(function updateOuterStream(result) {
 			newStream(result);
@@ -168,7 +167,7 @@ function until(parent$, stopEmitValues$) {
 			stream.listeners.splice(index, 1);
 		}
 	};
-	stopEmitValues$.distinct().map(stopEmitValues => {
+	stopEmitValues$.map(stopEmitValues => {
 		if(stopEmitValues) {
 			unsubscribeFrom(parent$);
 		} else {
