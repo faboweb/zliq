@@ -1,258 +1,144 @@
-import {merge$, stream} from './streamy';
+import {isStream} from './streamy';
 
-// deprecated
-export const UPDATE_DONE = 'CHILDREN_CHANGED';
-export const CHILDREN_CHANGED = 'CHILDREN_CHANGED';
-export const ADDED = 'ADDED';
-export const REMOVED = 'REMOVED';
-export const UPDATED = 'UPDATED';
+const TEXT_NODE = '#text';
 
-// js DOM events. add which ones you need
-const DOM_EVENT_LISTENERS = [
-	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
-    'ondblclick'
-];
-
-const BATCH_CHILD_CHANGE_TRESHOLD = 5;
-
-/*
-* Entry point for the streamy-dom
-* creates a DOM element attaches handler for property changes and child changes and returns it immediatly
-* this way we already pass around the actual dom element
-*/
-export function createElement(tagName, properties$, children$Arr) {
-    let elem = document.createElement(tagName);
-    manageProperties(elem, properties$)
-    manageChildren(elem, children$Arr);
-    return elem;
-}
-
-// reacts to property changes and applies these changes to the dom element
-function manageProperties(elem, properties$) {
-    properties$.map(properties => {
-        if (!properties) return;
-        Object.getOwnPropertyNames(properties).map(function applyPropertyToElement(property) {
-            let value = properties[property];
-            // check if event
-            if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
-                // we can't pass the function as a property
-                // so we bind to the event
-
-				// property event binder start with 'on' but events not so we need to strip that
-                let eventName = property.substr(2);
-				if (typeof value === 'function') {
-					// TODO remove based on old eventlistener-function not new one
-					elem.removeEventListener(eventName, value);
-					elem.addEventListener(eventName, value);
-				}
-            } else if (property === 'class' || property.toLowerCase() === 'classname') {
-                elem.className = value;
-			// we leave the possibility to define styles as strings
-			// but we allow styles to be defined as an object
-            } else if (property === 'style' && typeof value !== "string" ) {
-                Object.assign(elem.style, value);
-			// other propertys are just added as is to the DOM
-            } else {
-				if (value === null || value === undefined) {
-					elem.removeAttribute(property);
-				} else {
-                	elem.setAttribute(property, value);
-				}
-            }
-        });
-    });
-}
-
-// manage changes in the childrens (not deep changes, those are handled by the children)
-function manageChildren(parentElem, children$Arr) {
-	// hook into every child stream for changes
-	// children can be arrays and are always treated like such
-	// changes are then performed on the parent
-	children$Arr.map((child$, index) => {
-		child$.reduce((oldChildArr, childArr) => {
-			oldChildArr = oldChildArr || [null];
-			// the default childArr will be [null]
-			let changes = calcChanges(childArr, oldChildArr);
-
-			if (changes.length === 0) {
-				return childArr;
+export function render(component, parentElement) {
+	return component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
+		if (oldElement === null) {
+			oldElement = createNode(tag, children);
+			if (parentElement) {
+				parentElement.appendChild(oldElement);
 			}
-
-			let elementsBefore = getElementsBefore(children$Arr, index);
-			// apply the changes
-			Promise.all(
-				changes.map(({indexes: subIndexes, type, num, elems}) => {
-					return updateDOMforChild(elems, elementsBefore, subIndexes, type, num, parentElem)
-				})
-			)
-				// after changes are done notify listeners
-				.then(() => {
-					notify(parentElem, UPDATE_DONE);
-				})
-
-			return childArr;
-		}, []);
-	});
+		}
+		diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
+		return {
+			element: oldElement,
+			version,
+			children: JSON.parse(JSON.stringify(children))
+		}
+	}, {
+		element: null,
+		version: -1,
+		children: []
+	})
 }
 
-// when we insert into the DOM we need to know where
-// as children can be arrays we need to know how many children are before the one we want to put into the DOM
-function getElementsBefore(children$Arr, index) {
-	return children$Arr.slice(0, index).reduce((sum, cur$) => sum += cur$() && cur$().length, 0);
-}
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
+	// if the dom-tree hasn't changed, don't process it
+	if (newVersion === undefined && newVersion === oldVersion) {
+		return oldElement;
+	}
+	let newElement = oldElement;
 
-// very simple change detection
-// if the children objects are not the same, they changed
-// if there was an element before and there is no one know it got removed
-function calcChanges(childArr, oldChildArr) {
-	let subIndex = 0;
-	let changes = [];
-
-	if (oldChildArr.length === 0 && childArr.length === 0) {
-		return [];
+	if (oldElement instanceof window.Text && tag === TEXT_NODE && oldElement.nodeValue !== newChildren[0]) {
+		oldElement.nodeValue = newChildren[0];
+		return newElement;
 	}
 
-	for (; subIndex < childArr.length; subIndex++) {
-		let oldChild = oldChildArr[subIndex];
-		let newChild = childArr[subIndex];
-		if (oldChild === newChild) {
-			continue;
-		};
-		let type = oldChild != null && newChild == null ? 'rm'
-				: oldChild == null && newChild != null ? 'add'
-				: 'set';
+	if (oldElement.nodeName.toLowerCase() !== tag) {
+		newElement = createNode(tag, newChildren);
+		oldElement.parentElement.replaceChild(newElement, oldElement);
+		oldChildren = [];
+		oldVersion = -1;
+	}
 
-		// aggregate consecutive changes of the similar type to perform batch operations
-		let lastChange = changes.length > 0 ? changes[changes.length - 1] : null;
-		// if there was a similiar change we add this change to the last change
-		if (lastChange && lastChange.type === type) {
-			if (type == 'rm') {
-				// we just count the positions
-				lastChange.num++;
-			} else {
-				// for add and set operations we need the exact index of the child and the child element to insert
-				lastChange.indexes.push(subIndex);
-				lastChange.elems.push(newChild);
+	diffAttributes(newElement, props);
+	if (tag !== TEXT_NODE && !(newChildren.length === 0 && oldChildren.length === 0)) {
+		diffChildren(newElement, newChildren, oldChildren);
+	}
+
+	return newElement;
+}
+
+function diffAttributes(element, props) {
+	if (props !== undefined) {
+		Object.getOwnPropertyNames(props).map(function applyPropertyToElement(attribute) {
+			applyAttribute(element, attribute, props[attribute])
+		});
+		cleanupAttributes(element, props);
+	}
+}
+
+function applyAttribute(element, attribute, value) {
+	if (attribute === 'class' || attribute === 'className') {
+		element.className = value;
+	// we leave the possibility to define styles as strings
+	// but we allow styles to be defined as an object
+	} else if (attribute === 'style' && typeof value !== "string" ) {
+		Object.assign(element.style, value);
+	// other propertys are just added as is to the DOM
+	} else {
+		// also remove attributes on null to allow better handling of streams
+		// streams don't emit on undefined
+		if (value === null) {
+			element[attribute] = undefined;
+		} else {
+			// element.setAttribute(attribute, value);
+			element[attribute] = value;
+		}
+	}
+}
+
+// remove attributes that are not in props anymore
+function cleanupAttributes(element, props) {
+	if (element.props !== undefined) {
+		for(let attribute in element.props) {
+			if (props[attribute] === undefined) {
+				element.removeAttribute(attribute);
+			}
+		}
+	}
+}
+
+function unifyChildren(children) {
+	return children.map(child => {
+		// if there is no tag we assume it's a number or a string
+		if (!isStream(child) && child.tag === undefined) {
+			return {
+				tag: TEXT_NODE,
+				children: [child],
+				version: 1
 			}
 		} else {
-			// if we couldn't aggregate we push a new change
-			changes.push({
-				indexes: [subIndex],
-				elems: [newChild],
-				num: 1,
-				type
-			})
-		}
-	}
-	// all elements that are not in the new list got deleted
-	if (subIndex < oldChildArr.length) {
-		changes.push({
-			indexes: [subIndex],
-			num: oldChildArr.length - subIndex,
-			type: 'rm'
-		})
-	}
-
-	// if changes get performed in detection order, shrinking lists do not remove elements
-	return changes.reverse();
-}
-
-// list of operations
-// remove all the elements starting from a certain index
-function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, resolve) {
-	for(let times = 0; times<countOfElementsToRemove; times++) {
-		let node = parentElem.childNodes[index];
-		if (node != null) {
-			parentElem.removeChild(node);
-			notify(node, REMOVED);
-		}
-	}
-	resolve();
-}
-// replace elements with new ones
-function setElements(index, subIndexes, children, parentElem, resolve) {
-	children.forEach((child, childIndex) => {
-		let actualIndex = index + subIndexes[childIndex];
-		let elementAtPosition = parentElem.childNodes[actualIndex];
-		parentElem.replaceChild(child, elementAtPosition);
-	});
-	resolve();
-};
-// add elements at a certain index
-function addElements(index, subIndexes, children, parentElem, resolve) {
-	// get right neighbor element and insert one after another before this element
-	// index is now on position of insertion as we removed the element from this position before
-	let elementAtPosition = parentElem.childNodes[index + subIndexes[0]];
-	children.forEach(child => {
-		if (elementAtPosition == null) {
-			parentElem.appendChild(child);
-		} else {
-			parentElem.insertBefore(child, elementAtPosition);
-		}
-		notify(child, ADDED);
-	});
-	resolve();
-}
-
-// perform the actual manipulation on the parentElem
-function updateDOMforChild(children, index, subIndexes, type, num, parentElem) {
-	// make sure children are document nodes as we insert them into the DOM
-	let nodeChildren = makeChildrenNodes(children);
-
-	// choose witch change to perform
-	let operation;
-	switch (type) {
-		case 'add': operation = addElements;
-			break;
-		case 'set': operation = setElements;
-			break;
-		case 'rm': operation = removeElements;
-			break;
-		default:
-			return Promise.reject('Trying to perform a change with unknown change-type:', type);
-	}
-
-	// to minor changes directly but bundle long langes with many elements into one animationFrame to speed things update_done
-	// if we do this for every change, this slows things down as we have to wait for the animationframe
-	return new Promise((resolve, reject) => {
-		if (nodeChildren && nodeChildren.length > BATCH_CHILD_CHANGE_TRESHOLD) {
-			requestAnimationFrame(operation.bind(
-				this,
-				index,
-				subIndexes,
-				type === 'rm' ? num : nodeChildren,
-				parentElem,
-				resolve
-			));
-		} else {
-			operation(
-				index,
-				subIndexes,
-				type === 'rm' ? num : nodeChildren,
-				parentElem,
-				resolve
-			);
+			return child;
 		}
 	})
 }
 
-// transforms children into elements
-// children can be calculated child elements or strings and numbers
-function makeChildrenNodes(children) {
-	return children == null ? [] : children.map(child => {
-		if (child == null || typeof child === 'string' || typeof child === 'number') {
-			return document.createTextNode(child);
-		} else {
-			return child;
-		}
-	});
+function diffChildren(element, newChildren, oldChildren) {
+	let oldChildNodes = element.childNodes;
+	let unifiedChildren = unifyChildren(newChildren);
+	let unifiedOldChildren = unifyChildren(oldChildren);
+
+	let i = 0;
+	// diff existing nodes
+	for(; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
+		let oldElement = oldChildNodes[i];
+		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
+		let {tag, props, children, version} = unifiedChildren[i];
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
+	};
+
+	// remove not needed nodes at the end
+	for(; i < unifiedOldChildren.length; i++) {
+		element.removeChild(element.lastChild);
+	}
+
+	// add new nodes
+	for(; i < unifiedChildren.length; i++) {
+		let {tag, props, children, version} = unifiedChildren[i];
+		let newElement = createNode(tag, children);
+		element.appendChild(newElement);
+		diff(newElement, tag, props, children, version, [], -1);
+	}
 }
 
-// emit an event on the handled parent element
-// this helps to test asynchronous rendered elements
-function notify(element, event_name) {
-	let event = new CustomEvent(event_name, {
-		bubbles: false
-	});
-	element.dispatchEvent(event);
+// create text_nodes from numbers or strings
+// create domNodes from regular vdom descriptions
+export function createNode(tag, children) {
+	if (tag === TEXT_NODE) {
+		return document.createTextNode(children[0]);
+	} else {
+		return document.createElement(tag);
+	}
 }

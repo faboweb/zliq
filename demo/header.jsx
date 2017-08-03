@@ -20,14 +20,14 @@ export const Header = () => {
                 <h3 class="center highlight-less">The web-framework-force you want your Padawan to learn.</h3>
             </div>
             <div class="link-list center">
-                <a href="#motivation">Motivation</a>
-                <a href="#tutorial">Tutorial</a>
-                <a href="#streams">Streams</a>
-                <a href="#state">State</a>
-                <a href="#helpers">Helpers</a>
-                <a href="#routing">Routing</a>
-                <a href="#lifecycle">Lifecycle</a>
-                <a href="#testing">Testing</a>
+                <a href="/#motivation">Motivation</a>
+                <a href="/#tutorial">Tutorial</a>
+                <a href="/#streams">Streams</a>
+                <a href="/#state">State</a>
+                <a href="/#helpers">Helpers</a>
+                <a href="/#routing">Routing</a>
+                <a href="/#lifecycle">Lifecycle</a>
+                <a href="/#testing">Testing</a>
             </div>
         </div>;
 

@@ -2,7 +2,7 @@
 import 'materialize-css/css/ghpages-materialize.css';
 
 // core
-import { h, stream, merge$ } from '../src';
+import { render, h, stream, merge$ } from '../src';
 
 // router
 import { initRouter, Router } from '../src';
@@ -52,4 +52,4 @@ let app = <div>
 		</Router>
 	</div>
 </div>;
-document.querySelector('#app').appendChild(app);
+render(app, document.querySelector('#app'));

@@ -3,11 +3,13 @@ import deepEqual from 'deep-equal';
 /*
 * stream constructor
 * constructor returns a stream
-* get the current value of stream like: stream()
+* get the current value of stream like: stream.value
 */
 export const stream = function(init_value) {
-	function s(value) {
-		if (arguments.length === 0) return s.value;
+	let s = function(value) {
+		if (value === undefined) {
+			return s.value;
+		}
 		update(s, value);
 		return s;
 	}
@@ -17,6 +19,7 @@ export const stream = function(init_value) {
 	s.listeners = [];
 
 	s.map = (fn) => map(s, fn);
+	s.is = (value) => map(s, (cur) => cur === value);
 	s.flatMap = (fn) => flatMap(s, fn);
 	s.filter = (fn) => filter(s, fn);
 	s.deepSelect = (fn) => deepSelect(s, fn);
@@ -40,9 +43,6 @@ function valuesChanged(oldValue, newValue) {
 * update the stream value and notify listeners on the stream
 */
 function update(parent$, newValue) {
-	if (newValue === undefined) {
-		return parent$.value;
-	}
 	parent$.value = newValue;
 	notifyListeners(parent$.listeners, newValue);
 };
@@ -69,7 +69,7 @@ function fork$(parent$, mapFunction) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function map(parent$, fn) {
-	let newStream = fork$(parent$, (value) => fn(value));
+	let newStream = fork$(parent$, fn);
 	parent$.listeners.push(function mapValue(value) {
 		newStream(fn(value));
 	});
@@ -80,7 +80,7 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, (value) => fn(value)());
+	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value).value; });
 	parent$.listeners.push(function flatMapValue(value) {
 		fn(value).map(function updateOuterStream(result) {
 			newStream(result);
@@ -127,7 +127,7 @@ function query(parent$, selectorArr) {
 	if(!Array.isArray(selectorArr)) {
 		return deepSelect(parent$, selectorArr);
 	}
-	return merge$(...selectorArr.map(selector => deepSelect(parent$, selector)));
+	return merge$(selectorArr.map(selector => deepSelect(parent$, selector)));
 }
 
 // TODO: maybe refactor with filter
@@ -168,7 +168,7 @@ function until(parent$, stopEmitValues$) {
 			stream.listeners.splice(index, 1);
 		}
 	};
-	stopEmitValues$.distinct().map(stopEmitValues => {
+	stopEmitValues$.map(stopEmitValues => {
 		if(stopEmitValues) {
 			unsubscribeFrom(parent$);
 		} else {
@@ -195,13 +195,23 @@ function reduce(parent$, fn, startValue) {
 
 /*
 * merge several streams into one stream providing the values of all streams as an array
+* accepts also non stream elements, those are just copied to the output
 * the merge will only have a value if every stream for the merge has a value
 */
-export function merge$(...streams) {
-	let values = streams.map(parent$ => parent$.value);
+export function merge$(potentialStreamsArr) {
+	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
+	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
+		if (potentialStream.IS_STREAM) {
+			streams.push({
+				stream: potentialStream,
+				index
+			})
+		}
+		return streams;
+	}, []);
 	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
-		parent$.listeners.push(function updateMergedStream(value) {
+	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
+		stream.listeners.push(function updateMergedStream(value) {
 			values[index] = value;
 			newStream(values.indexOf(undefined) === -1 ? values : undefined);
 		});

@@ -6,48 +6,56 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 */
 export const h = (tag, props, ...children) => {
 	let deleted$ = stream(false);
-	let elem;
+	let component;
+	let version = -1;
+
+	let mergedChildren$ = mergeChildren$(flatten(children));
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
-		elem = tag(
-			addStreamDetacher(props, deleted$),
-			addStreamDetacher(children, deleted$),
+		return tag(
+			props,
+			mergedChildren$,
 			deleted$
 		);
-	} else {
-		elem = createElement(
-			tag,
-			wrapProps$(props, deleted$),
-			makeChildrenStreams$(children, deleted$)
-		);
 	}
-
-	// ATTENTION: the stream breaking is not working for returned arrays currently
-	if (elem.addEventListener !== undefined) {
-		elem.addEventListener(REMOVED, () => deleted$(true));
-		elem.addEventListener(ADDED, () => deleted$(false));
-	}
-
-	return elem;
-};
-
-function addStreamDetacher(obj, deleted$) {
-	if (obj === null || obj === undefined) return obj;
-	if (Array.isArray(obj)) {
-		return obj.map(item => {
-			if (isStream(item)) {
-				return item.until(deleted$);
+	// add detachers to props
+	if (props !== null) {
+		Object.keys(props).map((propName, index) => {
+			if (isStream(props[propName])) {
+				props[propName] = props[propName].until(deleted$);
 			}
-			return item;
 		});
 	}
-	Object.keys(obj).map((propName, index) => {
-		if (isStream(obj[propName])) {
-			obj[propName] = obj[propName].until(deleted$);
+	return {
+		vdom$: merge$([
+				wrapProps$(props, deleted$),
+				mergedChildren$.map(flatten)
+			]).map(([props, children]) => {
+				return {
+					tag,
+					props,
+					children,
+					version: ++version
+			}})
+	};
+};
+
+// input has format [stream | {vdom$}]
+function mergeChildren$(children) {
+	if (!Array.isArray(children)) {
+		children = [children];
+	}
+	children = flatten(children);
+	let childrenVdom$arr = children.map(child => {
+		if (isStream(child)) {
+			return child
+			.flatMap(mergeChildren$);
 		}
-	});
-	return obj;
+		return child.vdom$ || child;
+	})
+
+	return merge$(childrenVdom$arr);
 }
 
 /*
@@ -55,27 +63,32 @@ function addStreamDetacher(obj, deleted$) {
 * we make sure that all children streams are flat arrays to make processing uniform
 * output: stream([stream([])])
 */
-function makeChildrenStreams$(childrenArr, deleted$) {
+function getChildrenVdom$arr(childrenArr, deleted$) {
 	// flatten children arr
 	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
 	childrenArr = [].concat(...childrenArr);
-	// wrap all children in streams
-	let children$Arr = makeStreams(childrenArr);
+	// only handle vdom for now
+	let children$Arr = childrenArr.map(component => {
+		// if there is no vdom$ it is a string or number
+		if (component.vdom$ === undefined) {
+			return stream(component);
+		}
+		return component.vdom$
+	});
 
 	return children$Arr
 		// unsubscribe on the child when deleted
-		.map(child$ => child$.until(deleted$))
+		.map(vdom$ => vdom$.until(deleted$))
 		// make sure children are arrays and not nest
-		.map(child$ => flatten(makeArray(child$)))
-		// make sure subchildren are all streams
-		.map(child$ => child$.map(children => makeStreams(children)))
+		.map(_ => makeArray(_)
+			.map(flatten))
 		// so we can easily merge them
-		.map(child$ => child$.flatMap(children =>
-				merge$(...children)));
+		.map(vdom$ => vdom$.flatMap(vdomArr =>
+				merge$(vdomArr)));
 }
 
 // make sure all children are handled as streams
-// so we can later easily merge them 
+// so we can later easily merge them
 function makeStreams(childrenArr) {
 	return childrenArr.map(child => {
 		if (child === null || !isStream(child)) {
@@ -99,58 +112,70 @@ function makeArray(stream) {
 }
 
 // flattens an array
-function flatten(stream) {
-	return stream.map(arr => {
-		while (arr.some(value => Array.isArray(value))) {
-			arr = [].concat(...arr);
-		}
-		return arr;
-	})
+export function flatten(array, mutable) {
+    var toString = Object.prototype.toString;
+    var arrayTypeStr = '[object Array]';
+    
+    var result = [];
+    var nodes = (mutable && array) || array.slice();
+    var node;
+
+    if (!array.length) {
+        return result;
+    }
+
+    node = nodes.pop();
+    
+    do {
+        if (toString.call(node) === arrayTypeStr) {
+            nodes.push.apply(nodes, node);
+        } else {
+            result.push(node);
+        }
+    } while (nodes.length && (node = nodes.pop()) !== undefined);
+
+    result.reverse(); // we reverse result to restore the original order
+    return result;
 }
 
 /*
 * Wrap props into one stream
 */
 function wrapProps$(props, deleted$) {
-	if (props === null) return stream();
+	if (props === null) return stream({});
 	if (isStream(props)) {
 		return props.until(deleted$);
 	}
 
-	// go through all the props and make them a stream
-	// if they are objects, traverse them to check if they include streams	
-	let props$Arr = Object.keys(props).map((propName, index) => {
-		let value = props[propName];
-		if (isStream(value)) {
-			return value.until(deleted$).map(value => {
-				return {
-					key: propName,
-					value
-				};
-			});
-		} else {
-			// if it's an object, traverse the sub-object making it a stream
-			if (value !== null && typeof value === 'object') {
-				return wrapProps$(value, deleted$).map(value => {
-					return {
-						key: propName,
-						value
-					};
-				});
-			}
-			// if it's a plain value wrap it in a stream
-			return stream({
-				key: propName,
-				value
-			});
+	let nestedStreams = extractNestedStreams(props);
+	let updateStreams = nestedStreams.map(function makeNestedStreamUpdateProps({parent, key, stream}) {
+		return stream
+		.until(deleted$)
+		.distinct()
+		// here we produce a sideeffect on the props object -> low GC
+		// to trigger the merge we also need to return sth (as undefined does not trigger listeners)
+		.map(value => {
+			parent[key] = value;
+			return value; 
+		})
+	});
+	return merge$(updateStreams).map(_ => props);
+}
+
+// to react to nested streams in an object, we extract the streams and a reference to their position
+// returns [{parentObject, propertyName, stream}]
+function extractNestedStreams(obj) {
+	return flatten(Object.keys(obj).map(key => {
+		if (typeof obj[key] === 'object') {
+			return extractNestedStreams(obj[key]);
 		}
-	});
-	// merge streams of all properties
-	// on changes, reconstruct the properties object from the properties
-	return merge$(...props$Arr).map(props => {
-		return props.reduce((obj, {key, value}) => {
-			obj[key] = value;
-			return obj;
-		}, {});
-	});
+		if (isStream(obj[key])) {
+			return [{
+				parent: obj,
+				key,
+				stream: obj[key]
+			}];
+		}
+		return [];
+	}))
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "tdd": "jest --watch",
-    "test-debug": "node --debug --harmony node_modules/jest/bin/jest.js -i --watch",
+    "test:debug": "node --inspect-brk ./node_modules/.bin/jest --runInBand --watch",
     "start": "webpack-dev-server --config webpack/demo.js",
     "build": "webpack --config webpack/build.js --output-filename=zliq.js --output-path=lib/",
     "build:min": "webpack -p --config webpack/build_min.js --output-filename=zliq.min.js --output-path=lib/",
@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "deep-equal": "^1.0.1",
-    "stacktrace-js": "2.0.0"
+    "stacktrace-js": "^2.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
@@ -34,7 +34,7 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-register": "^6.24.0",
     "css-loader": "^0.26.1",
-    "jest": "^20.0.0",
+    "jest": "^20.0.4",
     "jquery": "^3.2.1",
     "materialize-css": "^0.98.2",
     "node-sass": "^4.5.0",
@@ -69,6 +69,7 @@
       "/demo/",
       "/test/",
       "/lib/"
-    ]
+    ],
+    "testURL": "http://localhost"
   }
 }

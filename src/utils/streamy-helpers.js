@@ -41,11 +41,5 @@ export function join$(...arr) {
         }
         return stream(item);
     });
-    return merge$(...$arr).map(arr => arr.join(' '));
-}
-
-// make it easy to check a stream for a value
-// returns a boolean
-export function is$(stream, value) {
-	return stream.map(x => x === value);
+    return merge$($arr).map(arr => arr.join(' '));
 }

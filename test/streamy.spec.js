@@ -10,7 +10,7 @@ describe('Streamy', () => {
         myStream.deepSelect('test').map(myMock);
         // myStream.distinct().map(myMock);
         myStream.reduce(myMock, null);
-        merge$(myStream).map(myMock);
+        merge$([myStream]).map(myMock);
         myStream.map(() => {
             expect(myMock.mock.calls.length).toBe(6);
             done();
@@ -26,7 +26,7 @@ describe('Streamy', () => {
         myStream.deepSelect('test').map(myMock);
         // myStream.distinct().map(myMock);
         myStream.reduce(myMock, null);
-        merge$(myStream).map(myMock);
+        merge$([myStream]).map(myMock);
 
         expect(myMock.mock.calls.length).toBe(0);
         myStream.map(() => {
@@ -49,4 +49,19 @@ describe('Streamy', () => {
         myStream('WORLD');
         expect(myMock.mock.calls.length).toBe(1);
     })
+
+    describe('is-operator', () => {
+        it('should emit true if value is matched', (done)=> {
+            stream('foo').is('foo').map(x => {
+                expect(x).toBe(true);
+                done();
+            })
+        });
+        it('should emit false if value is not matched', (done)=> {
+            stream('foo').is('bar').map(x => {
+                expect(x).toBe(false);
+                done();
+            })
+        });
+    });
 })
