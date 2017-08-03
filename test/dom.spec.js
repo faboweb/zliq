@@ -56,7 +56,7 @@ describe('Components', () => {
 			element => {
 				element.querySelector('button').click();
 				assert.equal(clicks$(), 1);
-			},
+			}
 		], done);
 	});
 
@@ -145,10 +145,10 @@ describe('Components', () => {
 		let component = <div disabled={value$}></div>;
 		test(component, [
 			element => {
-				assert.equal(element.disabled, true);
+				expect(element.disabled).toBe(true);
 			},
 			element => {
-				assert.equal(element.disabled, undefined);
+				expect(element.disabled).toBe(undefined);
 			}
 		], done);
 		value$(null);

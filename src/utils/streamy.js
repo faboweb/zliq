@@ -195,13 +195,23 @@ function reduce(parent$, fn, startValue) {
 
 /*
 * merge several streams into one stream providing the values of all streams as an array
+* accepts also non stream elements, those are just copied to the output
 * the merge will only have a value if every stream for the merge has a value
 */
-export function merge$(streamArr) {
-	let values = streamArr.map(parent$ => parent$.value);
+export function merge$(potentialStreamsArr) {
+	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
+	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
+		if (potentialStream.IS_STREAM) {
+			streams.push({
+				stream: potentialStream,
+				index
+			})
+		}
+		return streams;
+	}, []);
 	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	streamArr.forEach(function triggerMergedStreamUpdate(parent$, index) {
-		parent$.listeners.push(function updateMergedStream(value) {
+	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
+		stream.listeners.push(function updateMergedStream(value) {
 			values[index] = value;
 			newStream(values.indexOf(undefined) === -1 ? values : undefined);
 		});

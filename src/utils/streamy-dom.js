@@ -3,10 +3,12 @@ import {isStream} from './streamy';
 const TEXT_NODE = '#text';
 
 export function render(component, parentElement) {
-	component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
+	return component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
 		if (oldElement === null) {
 			oldElement = createNode(tag, children);
-			parentElement.appendChild(oldElement);
+			if (parentElement) {
+				parentElement.appendChild(oldElement);
+			}
 		}
 		diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
 		return {
@@ -58,7 +60,7 @@ function diffAttributes(element, props) {
 }
 
 function applyAttribute(element, attribute, value) {
-	if (attribute === 'class' || attribute.toLowerCase() === 'classname') {
+	if (attribute === 'class' || attribute === 'className') {
 		element.className = value;
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
@@ -108,8 +110,9 @@ function diffChildren(element, newChildren, oldChildren) {
 	let unifiedChildren = unifyChildren(newChildren);
 	let unifiedOldChildren = unifyChildren(oldChildren);
 
+	let i = 0;
 	// diff existing nodes
-	for(let i = 0; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
+	for(; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
@@ -117,12 +120,12 @@ function diffChildren(element, newChildren, oldChildren) {
 	};
 
 	// remove not needed nodes at the end
-	for(let i = unifiedChildren.length; i < unifiedOldChildren.length; i++) {
+	for(; i < unifiedOldChildren.length; i++) {
 		element.removeChild(element.lastChild);
 	}
 
 	// add new nodes
-	for(let i = unifiedOldChildren.length; i < unifiedChildren.length; i++) {
+	for(; i < unifiedChildren.length; i++) {
 		let {tag, props, children, version} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
 		element.appendChild(newElement);

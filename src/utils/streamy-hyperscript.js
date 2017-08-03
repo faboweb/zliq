@@ -9,7 +9,6 @@ export const h = (tag, props, ...children) => {
 	let component;
 	let version = -1;
 
-	// let childrenWithDetacher = addStreamDetacher(flatten(children), deleted$);
 	let mergedChildren$ = mergeChildren$(flatten(children));
 	// jsx usually resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
@@ -42,25 +41,6 @@ export const h = (tag, props, ...children) => {
 	};
 };
 
-function addStreamDetacher(obj, deleted$) {
-	if (obj === null || obj === undefined) return obj;
-	if (Array.isArray(obj)) {
-		return obj.map(item => {
-			if (isStream(item)) {
-				return item.until(deleted$);
-			}
-			return item;
-		});
-	}
-	Object.keys(obj).map((propName, index) => {
-		if (isStream(obj[propName])) {
-			obj[propName] = obj[propName].until(deleted$);
-		}
-	});
-	return obj;
-}
-
-
 // input has format [stream | {vdom$}]
 function mergeChildren$(children) {
 	if (!Array.isArray(children)) {
@@ -75,7 +55,7 @@ function mergeChildren$(children) {
 		return child.vdom$ || child;
 	})
 
-	return mixedMerge$(childrenVdom$arr);
+	return merge$(childrenVdom$arr);
 }
 
 /*
@@ -104,7 +84,7 @@ function getChildrenVdom$arr(childrenArr, deleted$) {
 			.map(flatten))
 		// so we can easily merge them
 		.map(vdom$ => vdom$.flatMap(vdomArr =>
-				mixedMerge$(vdomArr)));
+				merge$(vdomArr)));
 }
 
 // make sure all children are handled as streams
@@ -172,30 +152,14 @@ function wrapProps$(props, deleted$) {
 		return stream
 		.until(deleted$)
 		.distinct()
-		.map(value => { parent[key] = value })
+		// here we produce a sideeffect on the props object -> low GC
+		// to trigger the merge we also need to return sth (as undefined does not trigger listeners)
+		.map(value => {
+			parent[key] = value;
+			return value; 
+		})
 	});
 	return merge$(updateStreams).map(_ => props);
-}
-
-export function mixedMerge$(potentialStreamsArr) {
-	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
-	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
-		if (potentialStream.IS_STREAM) {
-			streams.push({
-				stream: potentialStream,
-				index
-			})
-		}
-		return streams;
-	}, []);
-	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
-		stream.listeners.push(function updateMergedStream(value) {
-			values[index] = value;
-			newStream(values.indexOf(undefined) === -1 ? values : undefined);
-		});
-	});
-	return newStream;
 }
 
 // to react to nested streams in an object, we extract the streams and a reference to their position
