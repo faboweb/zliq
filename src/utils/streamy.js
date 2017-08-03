@@ -19,6 +19,7 @@ export const stream = function(init_value) {
 	s.listeners = [];
 
 	s.map = (fn) => map(s, fn);
+	s.is = (value) => map(s, (cur) => cur === value);
 	s.flatMap = (fn) => flatMap(s, fn);
 	s.filter = (fn) => filter(s, fn);
 	s.deepSelect = (fn) => deepSelect(s, fn);

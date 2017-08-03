@@ -101,19 +101,4 @@ describe('Helpers', () => {
             })
         });
     });
-
-    describe('is$', () => {
-        it('should emit true if value is matched', (done)=> {
-            is$(stream('foo'),'foo').map(x => {
-                assert.equal(x, true);
-                done();
-            })
-        });
-        it('should emit false if value is not matched', (done)=> {
-            is$(stream('foo'),'bar').map(x => {
-                assert.equal(x, false);
-                done();
-            })
-        });
-    });
 })

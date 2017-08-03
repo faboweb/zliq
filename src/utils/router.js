@@ -1,4 +1,4 @@
-import {stream, if$, is$, merge$, flatten} from './';
+import {stream, if$, merge$, flatten} from './';
 
 function interceptLinks(routerState$) {
     // intercepts clicks on links
@@ -100,7 +100,7 @@ export function Router({router$, route}, children$) {
             return route;
         });
 
-    let routeWasHit$ = is$(sanitizedRoute$, route).distinct();
+    let routeWasHit$ = sanitizedRoute$.is(route).distinct();
     return merge$([routeWasHit$, children$]).map(([wasHit, children]) => {
         return wasHit ? children : []
     });
