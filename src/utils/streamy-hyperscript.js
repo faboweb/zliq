@@ -28,7 +28,7 @@ export const h = (tag, props, ...children) => {
 	});
 	return {
 		vdom$: merge$([
-				wrapProps$(props, deleted$).distinct(),
+				wrapProps$(props, deleted$),
 				mergedChildren$.map(flatten)
 			]).map(([props, children]) => {
 				return {
@@ -173,6 +173,7 @@ function wrapProps$(props, deleted$) {
 	let updateStreams = nestedStreams.map(function makeNestedStreamUpdateProps({parent, key, stream}) {
 		return stream
 		.until(deleted$)
+		.distinct()
 		.map(value => parent[key] = value)
 	});
 	return merge$(updateStreams).map(_ => props);
