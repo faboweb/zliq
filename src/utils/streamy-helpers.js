@@ -41,7 +41,7 @@ export function join$(...arr) {
         }
         return stream(item);
     });
-    return merge$(...$arr).map(arr => arr.join(' '));
+    return merge$($arr).map(arr => arr.join(' '));
 }
 
 // make it easy to check a stream for a value

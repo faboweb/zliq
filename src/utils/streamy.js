@@ -69,7 +69,7 @@ function fork$(parent$, mapFunction) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function map(parent$, fn) {
-	let newStream = fork$(parent$, (value) => fn(value));
+	let newStream = fork$(parent$, fn);
 	parent$.listeners.push(function mapValue(value) {
 		newStream(fn(value));
 	});
@@ -80,7 +80,7 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, (value) => fn(value)());
+	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value)(); });
 	parent$.listeners.push(function flatMapValue(value) {
 		fn(value).map(function updateOuterStream(result) {
 			newStream(result);
@@ -127,7 +127,7 @@ function query(parent$, selectorArr) {
 	if(!Array.isArray(selectorArr)) {
 		return deepSelect(parent$, selectorArr);
 	}
-	return merge$(...selectorArr.map(selector => deepSelect(parent$, selector)));
+	return merge$(selectorArr.map(selector => deepSelect(parent$, selector)));
 }
 
 // TODO: maybe refactor with filter
@@ -197,10 +197,10 @@ function reduce(parent$, fn, startValue) {
 * merge several streams into one stream providing the values of all streams as an array
 * the merge will only have a value if every stream for the merge has a value
 */
-export function merge$(...streams) {
-	let values = streams.map(parent$ => parent$.value);
+export function merge$(streamArr) {
+	let values = streamArr.map(parent$ => parent$.value);
 	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	streams.forEach(function triggerMergedStreamUpdate(parent$, index) {
+	streamArr.forEach(function triggerMergedStreamUpdate(parent$, index) {
 		parent$.listeners.push(function updateMergedStream(value) {
 			values[index] = value;
 			newStream(values.indexOf(undefined) === -1 ? values : undefined);

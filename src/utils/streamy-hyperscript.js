@@ -26,11 +26,17 @@ export const h = (tag, props, ...children) => {
 				props[propName] = props[propName].until(deleted$);
 			}
 		});
+		let state = {
+			tag: '',
+			props: {},
+			children: [],
+			version
+		}
 		component = {
-			vdom$: merge$(
+			vdom$: merge$([
 					wrapProps$(props, deleted$).distinct(),
 					mergedChildren$.map(flatten)
-				).map(([props, children]) => {
+				]).map(([props, children]) => {
 					return {
 						tag,
 						props,
@@ -76,7 +82,7 @@ function mergeChildren$(children) {
 		return child.vdom$ || child;
 	})
 
-	return mixedMerge$(...childrenVdom$arr);
+	return mixedMerge$(childrenVdom$arr);
 }
 
 /*
@@ -109,7 +115,7 @@ function getChildrenVdom$arr(childrenArr, deleted$) {
 			.map(flatten))
 		// so we can easily merge them
 		.map(vdom$ => vdom$.flatMap(vdomArr =>
-				mixedMerge$(...vdomArr)));
+				mixedMerge$(vdomArr)));
 }
 
 // make sure all children are handled as streams
@@ -183,7 +189,7 @@ function wrapProps$(props, deleted$) {
 	});
 	// merge streams of all properties
 	// on changes, reconstruct the properties object from the properties
-	return merge$(...props$Arr).map(props => {
+	return merge$(props$Arr).map(props => {
 		return props.reduce((obj, {key, value}) => {
 			obj[key] = value;
 			return obj;
@@ -191,9 +197,9 @@ function wrapProps$(props, deleted$) {
 	});
 }
 
-export function mixedMerge$(...potentialStreams) {
-	let values = potentialStreams.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
-	let actualStreams = potentialStreams.reduce((streams, potentialStream, index) => {
+export function mixedMerge$(potentialStreamsArr) {
+	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
+	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
 		if (potentialStream.IS_STREAM) {
 			streams.push({
 				stream: potentialStream,
