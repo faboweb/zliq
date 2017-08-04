@@ -117,7 +117,7 @@ function diffChildren(element, newChildren, oldChildren) {
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
 		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
-	};
+	}
 
 	// remove not needed nodes at the end
 	for(; i < unifiedOldChildren.length; i++) {
