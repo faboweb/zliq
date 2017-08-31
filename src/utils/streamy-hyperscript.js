@@ -32,12 +32,13 @@ export const h = (tag, props, ...children) => {
 				wrapProps$(props, deleted$),
 				mergedChildren$.map(flatten)
 			]).map(([props, children]) => {
+				let {cycle = {}} = props || {};
 				return {
 					tag,
 					props,
 					children,
 					version: ++version,
-					cycle: {}
+					cycle
 			}})
 	};
 };

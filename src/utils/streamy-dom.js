@@ -2,8 +2,8 @@ import {isStream} from './streamy';
 
 const TEXT_NODE = '#text';
 
-export function render(component, parentElement) {
-	return component.vdom$.reduce(
+export function render({vdom$}, parentElement, onMounted) {
+	return vdom$.reduce(
 		function renderUpdate({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) {
 			if (oldElement === null) {
 				oldElement = createNode(tag, children);
@@ -11,16 +11,16 @@ export function render(component, parentElement) {
 					parentElement.appendChild(oldElement);
 				}
 			}
-			diff(oldElement, tag, props, children, version, oldChildren, oldVersion, component.cycle || {});
+			diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
 
-			if (parentElement && component.cycle && component.cycle.mounted) {
-				component.cycle.mounted(oldElement);
+			// signalise mount of root element on initial render
+			if (parentElement && version === 0 && onMounted) {
+				onMounted(oldElement);
 			}
 			return {
 				element: oldElement,
 				version,
-				children: JSON.parse(JSON.stringify(children)),
-				cycle: component.cycle || {}
+				children: copyChildren(children)
 			}
 		}, {
 			element: null,
@@ -29,7 +29,7 @@ export function render(component, parentElement) {
 		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cycle) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cycle = {}) {
 	// if the dom-tree hasn't changed, don't process it
 	if (newVersion === undefined && newVersion === oldVersion) {
 		return oldElement;
@@ -111,7 +111,7 @@ function unifyChildren(children) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
-				version: 1,
+				version: 0,
 				cycle: child.cycle || {}
 			}
 		} else {
@@ -131,7 +131,11 @@ function diffChildren(element, newChildren, oldChildren) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version, cycle} = unifiedChildren[i];
+
 		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, cycle);
+		if(cycle.updated) {
+			cycle.updated(oldElement);
+		}
 	}
 	
 	// remove not needed nodes at the end
@@ -149,9 +153,9 @@ function diffChildren(element, newChildren, oldChildren) {
 	for(; i < unifiedChildren.length; i++) {
 		let {tag, props, children, version, cycle} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
+
 		element.appendChild(newElement);
 		diff(newElement, tag, props, children, version, [], -1, cycle);
-
 		if(cycle.mounted) {
 			cycle.mounted(newElement);
 		}
@@ -166,4 +170,20 @@ export function createNode(tag, children) {
 	} else {
 		return document.createElement(tag);
 	}
+}
+
+function copyChildren(oldChildren) {
+	if (oldChildren === undefined) return [];
+
+	let newChildren = JSON.parse(JSON.stringify(oldChildren));
+	newChildren.forEach((child, index) => {
+		if (oldChildren[index].cycle) {
+			child.cycle = oldChildren[index].cycle;
+		}
+		
+		if (typeof oldChildren[index] === 'object') {
+			child.children = copyChildren(oldChildren[index].children);
+		}
+	});
+	return newChildren;
 }

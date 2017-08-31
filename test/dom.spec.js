@@ -96,23 +96,6 @@ describe('Components', () => {
 		setTimeout(()=>switch$(true),1);
 	})
 
-	xit('should send removed lifecycle events', (done)=> {
-		var container;
-		let switch$ = stream(true);
-		let Child = ()=>{
-			let elem = <div class="child"></div>;
-			elem.addEventListener(REMOVED, ()=>{
-				assert.equal(container.querySelectorAll('.child').length === 0, true);
-				done();
-			});
-			return elem;
-		};
-		container = <div class="parent">
-			{switch$.map(x=>x?<Child />:null)}
-		</div>;
-		setTimeout(()=>switch$(false),10);
-	})
-
 	it('should update lists correctly', done => {
 		var arr = [];
 		var length = 3;
@@ -189,5 +172,34 @@ describe('Components', () => {
         expect(app.outerHTML).toBe('<div></div>');
         trigger$(false);
         expect(app.outerHTML).toBe('<div>HALLO</div>');
+	})
+
+	xit('should trigger lifecycle events on nested components', done => {
+        const mountedMock = jest.fn();
+        const createdMock = jest.fn();
+        const removedMock = jest.fn();
+		let trigger$ = stream(true);
+		let cycle = {
+			mounted: mountedMock,
+			created: createdMock,
+			removed: removedMock
+		}
+		const component = <div cycle={cycle} />;
+
+		let app = <div>
+			{
+				if$(trigger$, component)
+			}
+		</div>;
+
+		test(app, [
+			() => trigger$(false),
+			() => trigger$(true),
+			() => {
+				expect(mountedMock.mock.calls.length).toBe(2);
+				expect(createdMock.mock.calls.length).toBe(2);
+				expect(removedMock.mock.calls.length).toBe(1);
+			}
+		], done);
 	})
 });
