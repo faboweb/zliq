@@ -189,5 +189,5 @@ describe('Components', () => {
         expect(app.outerHTML).toBe('<div></div>');
         trigger$(false);
         expect(app.outerHTML).toBe('<div>HALLO</div>');
-    })
+	})
 });

@@ -199,7 +199,7 @@ function reduce(parent$, fn, startValue) {
 * the merge will only have a value if every stream for the merge has a value
 */
 export function merge$(potentialStreamsArr) {
-	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
+	let values = potentialStreamsArr.map(parent$ => parent$ && parent$.IS_STREAM ? parent$.value : parent$);
 	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
 		if (potentialStream.IS_STREAM) {
 			streams.push({

@@ -36,7 +36,8 @@ export const h = (tag, props, ...children) => {
 					tag,
 					props,
 					children,
-					version: ++version
+					version: ++version,
+					cycle: {}
 			}})
 	};
 };
@@ -46,7 +47,8 @@ function mergeChildren$(children) {
 	if (!Array.isArray(children)) {
 		children = [children];
 	}
-	children = flatten(children);
+	children = flatten(children)
+	.filter(_ => _ !== null);
 	let childrenVdom$arr = children.map(child => {
 		if (isStream(child)) {
 			return child
@@ -166,6 +168,9 @@ function wrapProps$(props, deleted$) {
 // returns [{parentObject, propertyName, stream}]
 function extractNestedStreams(obj) {
 	return flatten(Object.keys(obj).map(key => {
+		if (obj[key] === null) {
+			return [];
+		}
 		if (typeof obj[key] === 'object') {
 			return extractNestedStreams(obj[key]);
 		}

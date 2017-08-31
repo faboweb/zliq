@@ -3,27 +3,33 @@ import {isStream} from './streamy';
 const TEXT_NODE = '#text';
 
 export function render(component, parentElement) {
-	return component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
-		if (oldElement === null) {
-			oldElement = createNode(tag, children);
-			if (parentElement) {
-				parentElement.appendChild(oldElement);
+	return component.vdom$.reduce(
+		function renderUpdate({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) {
+			if (oldElement === null) {
+				oldElement = createNode(tag, children);
+				if (parentElement) {
+					parentElement.appendChild(oldElement);
+				}
 			}
-		}
-		diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
-		return {
-			element: oldElement,
-			version,
-			children: JSON.parse(JSON.stringify(children))
-		}
-	}, {
-		element: null,
-		version: -1,
-		children: []
-	})
+			diff(oldElement, tag, props, children, version, oldChildren, oldVersion, component.cycle || {});
+
+			if (parentElement && component.cycle && component.cycle.mounted) {
+				component.cycle.mounted(oldElement);
+			}
+			return {
+				element: oldElement,
+				version,
+				children: JSON.parse(JSON.stringify(children)),
+				cycle: component.cycle || {}
+			}
+		}, {
+			element: null,
+			version: -1,
+			children: []
+		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cycle) {
 	// if the dom-tree hasn't changed, don't process it
 	if (newVersion === undefined && newVersion === oldVersion) {
 		return oldElement;
@@ -45,6 +51,14 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	diffAttributes(newElement, props);
 	if (tag !== TEXT_NODE && !(newChildren.length === 0 && oldChildren.length === 0)) {
 		diffChildren(newElement, newChildren, oldChildren);
+	}
+	
+	if (newVersion == 0 && cycle.created) {
+		cycle.created(newElement);
+	}
+
+	if (newVersion > 0 && cycle.updated) {
+		cycle.updated(newElement);
 	}
 
 	return newElement;
@@ -97,7 +111,8 @@ function unifyChildren(children) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
-				version: 1
+				version: 1,
+				cycle: child.cycle || {}
 			}
 		} else {
 			return child;
@@ -115,21 +130,31 @@ function diffChildren(element, newChildren, oldChildren) {
 	for(; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
-		let {tag, props, children, version} = unifiedChildren[i];
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
+		let {tag, props, children, version, cycle} = unifiedChildren[i];
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, cycle);
 	}
-
+	
 	// remove not needed nodes at the end
 	for(; i < unifiedOldChildren.length; i++) {
-		element.removeChild(element.lastChild);
+		let childToRemove = element.childNodes[i];
+		let {children: oldChildChildren, cycle} = unifiedOldChildren[i];
+
+		element.removeChild(childToRemove);
+		if(cycle.removed) {
+			cycle.removed(childToRemove);
+		}
 	}
 
 	// add new nodes
 	for(; i < unifiedChildren.length; i++) {
-		let {tag, props, children, version} = unifiedChildren[i];
+		let {tag, props, children, version, cycle} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
 		element.appendChild(newElement);
-		diff(newElement, tag, props, children, version, [], -1);
+		diff(newElement, tag, props, children, version, [], -1, cycle);
+
+		if(cycle.mounted) {
+			cycle.mounted(newElement);
+		}
 	}
 }
 
