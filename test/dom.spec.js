@@ -175,9 +175,9 @@ describe('Components', () => {
 	})
 
 	xit('should trigger lifecycle events on nested components', done => {
-        const mountedMock = jest.fn();
-        const createdMock = jest.fn();
-        const removedMock = jest.fn();
+		const mountedMock = jest.fn();
+		const createdMock = jest.fn();
+		const removedMock = jest.fn();
 		let trigger$ = stream(true);
 		let cycle = {
 			mounted: mountedMock,

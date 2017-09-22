@@ -80,11 +80,22 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value).value; });
+	let newStream = fork$(parent$, function getChildStreamValue(value) {
+		return fn(value).value;
+	});
+	let child$;
+	let listener = function updateOuterStream(result) {
+		newStream(result);
+	};
 	parent$.listeners.push(function flatMapValue(value) {
-		fn(value).map(function updateOuterStream(result) {
-			newStream(result);
-		});
+		// clean up listeners or they will stack on child streams
+		if (child$) {
+			removeItem(child$.listeners, listener);
+		}
+
+		child$ = fn(value);
+		child$.listeners.push(listener);
+		newStream(child$.value);
 	});
 	return newStream;
 }
@@ -162,15 +173,9 @@ function until(parent$, stopEmitValues$) {
 		newStream(parent$.value);
 		stream.listeners.push(newStream);
 	}
-	let unsubscribeFrom = (stream) => {
-		var index = stream.listeners.indexOf(newStream);
-		if (index !== -1) {
-			stream.listeners.splice(index, 1);
-		}
-	};
 	stopEmitValues$.map(stopEmitValues => {
 		if(stopEmitValues) {
-			unsubscribeFrom(parent$);
+			removeItem(parent$.listeners, newStream);
 		} else {
 			subscribeTo(parent$);
 		}
@@ -222,3 +227,10 @@ export function merge$(potentialStreamsArr) {
 export function isStream(parent$) {
 	return parent$ != null && !!parent$.IS_STREAM;
 }
+
+function removeItem(arr, item) {
+	var index = arr.indexOf(listener);
+	if (index !== -1) {
+		arr.splice(index, 1);
+	}
+};
