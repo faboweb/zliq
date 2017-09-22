@@ -229,7 +229,7 @@ export function isStream(parent$) {
 }
 
 function removeItem(arr, item) {
-	var index = arr.indexOf(listener);
+	var index = arr.indexOf(item);
 	if (index !== -1) {
 		arr.splice(index, 1);
 	}
