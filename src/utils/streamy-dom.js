@@ -2,7 +2,7 @@ import {isStream} from './streamy';
 
 const TEXT_NODE = '#text';
 
-export function render({vdom$}, parentElement, onMounted) {
+export function render({vdom$}, parentElement) {
 	return vdom$.reduce(
 		function renderUpdate({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) {
 			if (oldElement === null) {
@@ -14,8 +14,8 @@ export function render({vdom$}, parentElement, onMounted) {
 			diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
 
 			// signalise mount of root element on initial render
-			if (parentElement && version === 0 && onMounted) {
-				onMounted(oldElement);
+			if (parentElement && version === 0 && props && props.cycle && props.cycle.mounted) {
+				props.cycle.mounted(oldElement);
 			}
 			return {
 				element: oldElement,
@@ -29,7 +29,7 @@ export function render({vdom$}, parentElement, onMounted) {
 		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cycle = {}) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
 	if (newVersion === undefined && newVersion === oldVersion) {
 		return oldElement;
@@ -53,12 +53,12 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 		diffChildren(newElement, newChildren, oldChildren);
 	}
 	
-	if (newVersion == 0 && cycle.created) {
-		cycle.created(newElement);
+	if (newVersion == 0 && props && props.cycle && props.cycle.created) {
+		props.cycle.created(newElement);
 	}
 
-	if (newVersion > 0 && cycle.updated) {
-		cycle.updated(newElement);
+	if (newVersion > 0 && props && props.cycle && props.cycle.updated) {
+		props.cycle.updated(newElement);
 	}
 
 	return newElement;
@@ -127,37 +127,43 @@ function diffChildren(element, newChildren, oldChildren) {
 
 	let i = 0;
 	// diff existing nodes
-	for(; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
+	for(; i < oldChildren.length && i < newChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
-		let {tag, props, children, version, cycle} = unifiedChildren[i];
+		let {tag, props, children, version} = unifiedChildren[i];
 
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, cycle);
-		if(cycle.updated) {
-			cycle.updated(oldElement);
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
+		if(props && props.cycle && props.cycle.updated) {
+			props.cycle.updated(oldElement);
 		}
 	}
 	
 	// remove not needed nodes at the end
-	for(; i < unifiedOldChildren.length; i++) {
-		let childToRemove = element.childNodes[i];
-		let {children: oldChildChildren, cycle} = unifiedOldChildren[i];
-
+	for(let remaining = element.childNodes.length; remaining > newChildren.length; remaining--) {
+		let childToRemove = element.childNodes[remaining - 1];
 		element.removeChild(childToRemove);
-		if(cycle.removed) {
-			cycle.removed(childToRemove);
+
+		if (unifiedOldChildren.length < remaining) {
+			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", element, ". This can lead to sideffects. Please check your code.");
+			continue;
+		} else {
+			let {children: oldChildChildren, props} = unifiedOldChildren[remaining - 1];
+	
+			if(props && props.cycle && props.cycle.removed) {
+				props.cycle.removed(childToRemove);
+			}
 		}
 	}
 
 	// add new nodes
-	for(; i < unifiedChildren.length; i++) {
-		let {tag, props, children, version, cycle} = unifiedChildren[i];
+	for(; i < newChildren.length; i++) {
+		let {tag, props, children, version} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
 
 		element.appendChild(newElement);
-		diff(newElement, tag, props, children, version, [], -1, cycle);
-		if(cycle.mounted) {
-			cycle.mounted(newElement);
+		diff(newElement, tag, props, children, version, [], -1);
+		if(props && props.cycle && props.cycle.mounted) {
+			props.cycle.mounted(newElement);
 		}
 	}
 }
