@@ -2,40 +2,49 @@ import {isStream} from './streamy';
 
 const TEXT_NODE = '#text';
 
-export function render(component, parentElement) {
-	return component.vdom$.reduce(({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) => {
-		if (oldElement === null) {
-			oldElement = createNode(tag, children);
-			if (parentElement) {
-				parentElement.appendChild(oldElement);
+export function render({vdom$}, parentElement) {
+	return vdom$.reduce(
+		function renderUpdate({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) {
+			if (oldElement === null) {
+				oldElement = createNode(tag, children);
+				if (parentElement) {
+					parentElement.appendChild(oldElement);
+				}
 			}
-		}
-		diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
-		return {
-			element: oldElement,
-			version,
-			children: JSON.parse(JSON.stringify(children))
-		}
-	}, {
-		element: null,
-		version: -1,
-		children: []
-	})
+			diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
+
+			// signalise mount of root element on initial render
+			if (parentElement && version === 0) {
+				triggerLifecycle(oldElement, props, 'mounted');
+			}
+			return {
+				element: oldElement,
+				version,
+				children: copyChildren(children)
+			}
+		}, {
+			element: null,
+			version: -1,
+			children: []
+		})
 }
 
 export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
-	if (newVersion === undefined && newVersion === oldVersion) {
-		return oldElement;
-	}
+	// !! does not work
+	// if (newVersion === oldVersion) {
+	// // if (newVersion === oldVersion) {
+	// 	return oldElement;
+	// }
 	let newElement = oldElement;
 
-	if (oldElement instanceof window.Text && tag === TEXT_NODE && oldElement.nodeValue !== newChildren[0]) {
-		oldElement.nodeValue = newChildren[0];
+	if (isTextNode(oldElement) && tag === TEXT_NODE ) {
+		updateTextNode(newElement, newChildren[0]);
 		return newElement;
 	}
 
-	if (oldElement.nodeName.toLowerCase() !== tag) {
+	// if the node types do not differ, we reuse the old node
+	if (nodeTypeDiffers(oldElement, tag)) {
 		newElement = createNode(tag, newChildren);
 		oldElement.parentElement.replaceChild(newElement, oldElement);
 		oldChildren = [];
@@ -43,8 +52,18 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	}
 
 	diffAttributes(newElement, props);
-	if (tag !== TEXT_NODE && !(newChildren.length === 0 && oldChildren.length === 0)) {
+
+	// text nodes have no real child-nodes, but have a string value as first child
+	if (tag !== TEXT_NODE) {
 		diffChildren(newElement, newChildren, oldChildren);
+	}
+	
+	if (newVersion === 0) {
+		triggerLifecycle(newElement, props, 'created');
+	}
+
+	if (newVersion > 0) {
+		triggerLifecycle(newElement, props, 'updated');
 	}
 
 	return newElement;
@@ -97,7 +116,8 @@ function unifyChildren(children) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
-				version: 1
+				version: 0,
+				cycle: child.cycle || {}
 			}
 		} else {
 			return child;
@@ -110,26 +130,43 @@ function diffChildren(element, newChildren, oldChildren) {
 	let unifiedChildren = unifyChildren(newChildren);
 	let unifiedOldChildren = unifyChildren(oldChildren);
 
+	if (newChildren.length === 0 && oldChildren.length === 0) {
+		return;
+	}
+
 	let i = 0;
 	// diff existing nodes
-	for(; i < unifiedOldChildren.length && i < unifiedChildren.length; i++) {
+	for(; i < oldChildren.length && i < newChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
+
 		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
 	}
-
+	
 	// remove not needed nodes at the end
-	for(; i < unifiedOldChildren.length; i++) {
-		element.removeChild(element.lastChild);
+	for(let remaining = element.childNodes.length; remaining > newChildren.length; remaining--) {
+		let childToRemove = element.childNodes[remaining - 1];
+		element.removeChild(childToRemove);
+
+		if (unifiedOldChildren.length < remaining) {
+			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", element, ". This can lead to sideffects. Please check your code.");
+			continue;
+		} else {
+			let {props} = unifiedOldChildren[remaining - 1];
+
+			triggerLifecycle(childToRemove, props, 'removed');
+		}
 	}
 
 	// add new nodes
-	for(; i < unifiedChildren.length; i++) {
+	for(; i < newChildren.length; i++) {
 		let {tag, props, children, version} = unifiedChildren[i];
 		let newElement = createNode(tag, children);
+
 		element.appendChild(newElement);
 		diff(newElement, tag, props, children, version, [], -1);
+		triggerLifecycle(newElement, props, 'mounted');
 	}
 }
 
@@ -140,5 +177,41 @@ export function createNode(tag, children) {
 		return document.createTextNode(children[0]);
 	} else {
 		return document.createElement(tag);
+	}
+}
+
+function copyChildren(oldChildren) {
+	if (oldChildren === undefined) return [];
+
+	let newChildren = JSON.parse(JSON.stringify(oldChildren));
+	newChildren.forEach((child, index) => {
+		if (oldChildren[index].cycle) {
+			child.cycle = oldChildren[index].cycle;
+		}
+		
+		if (typeof oldChildren[index] === 'object') {
+			child.children = copyChildren(oldChildren[index].children);
+		}
+	});
+	return newChildren;
+}
+
+function triggerLifecycle(element, props, event) {
+	if(props && props.cycle && props.cycle[event]) {
+		props.cycle[event](element);
+	}
+}
+
+function nodeTypeDiffers(element, tag) {
+	return element.nodeName.toLowerCase() !== tag;
+}
+
+function isTextNode(element) {
+	return element instanceof window.Text
+}
+
+function updateTextNode(element, value) {
+	if (element.nodeValue !== value) {
+		element.nodeValue = value;
 	}
 }

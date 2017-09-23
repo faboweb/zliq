@@ -5,7 +5,6 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 * wrap hyperscript elements in reactive streams dependent on their children streams
 */
 export const h = (tag, props, ...children) => {
-	let deleted$ = stream(false);
 	let component;
 	let version = -1;
 
@@ -15,23 +14,24 @@ export const h = (tag, props, ...children) => {
 	if (typeof tag === 'function') {
 		return tag(
 			props,
-			mergedChildren$,
-			deleted$
+			mergedChildren$
 		);
 	}
 	// add detachers to props
 	if (props !== null) {
 		Object.keys(props).map((propName, index) => {
 			if (isStream(props[propName])) {
-				props[propName] = props[propName].until(deleted$);
+				props[propName] = props[propName];
 			}
 		});
 	}
+	mergedChildren$.map(flatten).map(() => console.log('Children update incoming', tag));
 	return {
 		vdom$: merge$([
-				wrapProps$(props, deleted$),
+				wrapProps$(props),
 				mergedChildren$.map(flatten)
 			]).map(([props, children]) => {
+				console.log('Update triggerd for', tag, props, children);
 				return {
 					tag,
 					props,
@@ -46,7 +46,8 @@ function mergeChildren$(children) {
 	if (!Array.isArray(children)) {
 		children = [children];
 	}
-	children = flatten(children);
+	children = flatten(children)
+	.filter(_ => _ !== null);
 	let childrenVdom$arr = children.map(child => {
 		if (isStream(child)) {
 			return child
@@ -63,7 +64,7 @@ function mergeChildren$(children) {
 * we make sure that all children streams are flat arrays to make processing uniform
 * output: stream([stream([])])
 */
-function getChildrenVdom$arr(childrenArr, deleted$) {
+function getChildrenVdom$arr(childrenArr) {
 	// flatten children arr
 	// needed to make react style hyperscript (children as arguments) working parallel to preact style hyperscript (children as array)
 	childrenArr = [].concat(...childrenArr);
@@ -77,8 +78,6 @@ function getChildrenVdom$arr(childrenArr, deleted$) {
 	});
 
 	return children$Arr
-		// unsubscribe on the child when deleted
-		.map(vdom$ => vdom$.until(deleted$))
 		// make sure children are arrays and not nest
 		.map(_ => makeArray(_)
 			.map(flatten))
@@ -141,16 +140,15 @@ export function flatten(array, mutable) {
 /*
 * Wrap props into one stream
 */
-function wrapProps$(props, deleted$) {
+function wrapProps$(props) {
 	if (props === null) return stream({});
 	if (isStream(props)) {
-		return props.until(deleted$);
+		return props;
 	}
 
 	let nestedStreams = extractNestedStreams(props);
 	let updateStreams = nestedStreams.map(function makeNestedStreamUpdateProps({parent, key, stream}) {
 		return stream
-		.until(deleted$)
 		.distinct()
 		// here we produce a sideeffect on the props object -> low GC
 		// to trigger the merge we also need to return sth (as undefined does not trigger listeners)
@@ -166,6 +164,9 @@ function wrapProps$(props, deleted$) {
 // returns [{parentObject, propertyName, stream}]
 function extractNestedStreams(obj) {
 	return flatten(Object.keys(obj).map(key => {
+		if (obj[key] === null) {
+			return [];
+		}
 		if (typeof obj[key] === 'object') {
 			return extractNestedStreams(obj[key]);
 		}

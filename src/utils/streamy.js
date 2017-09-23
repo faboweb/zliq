@@ -80,11 +80,27 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, function getChildStreamValue(value) { return fn(value).value; });
+	let result$;
+	let listener = function updateOuterStream(result) {
+		newStream(result);
+	};
+	function attachToResult$(mapFn, parentValue, listener) {
+		let result$ = mapFn(parentValue);
+		result$.listeners.push(listener);
+		return result$;
+	}
+	let newStream = fork$(parent$, function getChildStreamValue(value) {
+		result$ = attachToResult$(fn, value, listener);
+		return result$.value;
+	});
 	parent$.listeners.push(function flatMapValue(value) {
-		fn(value).map(function updateOuterStream(result) {
-			newStream(result);
-		});
+		// clean up listeners or they will stack on child streams
+		if (result$) {
+			removeItem(result$.listeners, listener);
+		}
+
+		result$ = attachToResult$(fn, value, listener);
+		newStream(result$.value);
 	});
 	return newStream;
 }
@@ -162,15 +178,9 @@ function until(parent$, stopEmitValues$) {
 		newStream(parent$.value);
 		stream.listeners.push(newStream);
 	}
-	let unsubscribeFrom = (stream) => {
-		var index = stream.listeners.indexOf(newStream);
-		if (index !== -1) {
-			stream.listeners.splice(index, 1);
-		}
-	};
 	stopEmitValues$.map(stopEmitValues => {
 		if(stopEmitValues) {
-			unsubscribeFrom(parent$);
+			removeItem(parent$.listeners, newStream);
 		} else {
 			subscribeTo(parent$);
 		}
@@ -199,22 +209,16 @@ function reduce(parent$, fn, startValue) {
 * the merge will only have a value if every stream for the merge has a value
 */
 export function merge$(potentialStreamsArr) {
-	let values = potentialStreamsArr.map(parent$ => parent$.IS_STREAM ? parent$.value : parent$);
-	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
-		if (potentialStream.IS_STREAM) {
-			streams.push({
-				stream: potentialStream,
-				index
-			})
-		}
-		return streams;
-	}, []);
+	let values = potentialStreamsArr.map(parent$ => parent$ && parent$.IS_STREAM ? parent$.value : parent$);
 	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
-		stream.listeners.push(function updateMergedStream(value) {
-			values[index] = value;
-			newStream(values.indexOf(undefined) === -1 ? values : undefined);
-		});
+
+	potentialStreamsArr.forEach((potentialStream, index) => {
+		if (potentialStream.IS_STREAM) {
+			potentialStream.listeners.push(function updateMergedStream(value) {
+				values[index] = value;
+				newStream(values.indexOf(undefined) === -1 ? values : undefined);
+			});
+		}
 	});
 	return newStream;
 }
@@ -222,3 +226,10 @@ export function merge$(potentialStreamsArr) {
 export function isStream(parent$) {
 	return parent$ != null && !!parent$.IS_STREAM;
 }
+
+function removeItem(arr, item) {
+	var index = arr.indexOf(item);
+	if (index !== -1) {
+		arr.splice(index, 1);
+	}
+};
