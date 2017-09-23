@@ -80,22 +80,27 @@ function map(parent$, fn) {
 * provides a new stream applying a transformation function to the value of a parent stream
 */
 function flatMap(parent$, fn) {
-	let newStream = fork$(parent$, function getChildStreamValue(value) {
-		return fn(value).value;
-	});
-	let child$;
+	let result$;
 	let listener = function updateOuterStream(result) {
 		newStream(result);
 	};
+	function attachToResult$(mapFn, parentValue, listener) {
+		let result$ = mapFn(parentValue);
+		result$.listeners.push(listener);
+		return result$;
+	}
+	let newStream = fork$(parent$, function getChildStreamValue(value) {
+		result$ = attachToResult$(fn, value, listener);
+		return result$.value;
+	});
 	parent$.listeners.push(function flatMapValue(value) {
 		// clean up listeners or they will stack on child streams
-		if (child$) {
-			removeItem(child$.listeners, listener);
+		if (result$) {
+			removeItem(result$.listeners, listener);
 		}
 
-		child$ = fn(value);
-		child$.listeners.push(listener);
-		newStream(child$.value);
+		result$ = attachToResult$(fn, value, listener);
+		newStream(result$.value);
 	});
 	return newStream;
 }
@@ -205,21 +210,15 @@ function reduce(parent$, fn, startValue) {
 */
 export function merge$(potentialStreamsArr) {
 	let values = potentialStreamsArr.map(parent$ => parent$ && parent$.IS_STREAM ? parent$.value : parent$);
-	let actualStreams = potentialStreamsArr.reduce((streams, potentialStream, index) => {
-		if (potentialStream.IS_STREAM) {
-			streams.push({
-				stream: potentialStream,
-				index
-			})
-		}
-		return streams;
-	}, []);
 	let newStream = stream(values.indexOf(undefined) === -1 ? values : undefined);
-	actualStreams.forEach(function triggerMergedStreamUpdate({stream, index}) {
-		stream.listeners.push(function updateMergedStream(value) {
-			values[index] = value;
-			newStream(values.indexOf(undefined) === -1 ? values : undefined);
-		});
+
+	potentialStreamsArr.forEach((potentialStream, index) => {
+		if (potentialStream.IS_STREAM) {
+			potentialStream.listeners.push(function updateMergedStream(value) {
+				values[index] = value;
+				newStream(values.indexOf(undefined) === -1 ? values : undefined);
+			});
+		}
 	});
 	return newStream;
 }
