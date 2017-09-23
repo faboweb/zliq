@@ -31,17 +31,20 @@ export function render({vdom$}, parentElement) {
 
 export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
 	// if the dom-tree hasn't changed, don't process it
-	if (newVersion === undefined && newVersion === oldVersion) {
-		return oldElement;
-	}
+	// !! does not work
+	// if (newVersion === oldVersion) {
+	// // if (newVersion === oldVersion) {
+	// 	return oldElement;
+	// }
 	let newElement = oldElement;
 
-	if (oldElement instanceof window.Text && tag === TEXT_NODE && oldElement.nodeValue !== newChildren[0]) {
-		oldElement.nodeValue = newChildren[0];
+	if (isTextNode(oldElement) && tag === TEXT_NODE ) {
+		updateTextNode(newElement, newChildren[0]);
 		return newElement;
 	}
 
-	if (oldElement.nodeName.toLowerCase() !== tag) {
+	// if the node types do not differ, we reuse the old node
+	if (nodeTypeDiffers(oldElement, tag)) {
 		newElement = createNode(tag, newChildren);
 		oldElement.parentElement.replaceChild(newElement, oldElement);
 		oldChildren = [];
@@ -49,7 +52,9 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	}
 
 	diffAttributes(newElement, props);
-	if (tag !== TEXT_NODE && !(newChildren.length === 0 && oldChildren.length === 0)) {
+
+	// text nodes have no real child-nodes, but have a string value as first child
+	if (tag !== TEXT_NODE) {
 		diffChildren(newElement, newChildren, oldChildren);
 	}
 	
@@ -125,6 +130,10 @@ function diffChildren(element, newChildren, oldChildren) {
 	let unifiedChildren = unifyChildren(newChildren);
 	let unifiedOldChildren = unifyChildren(oldChildren);
 
+	if (newChildren.length === 0 && oldChildren.length === 0) {
+		return;
+	}
+
 	let i = 0;
 	// diff existing nodes
 	for(; i < oldChildren.length && i < newChildren.length; i++) {
@@ -190,5 +199,19 @@ function copyChildren(oldChildren) {
 function triggerLifecycle(element, props, event) {
 	if(props && props.cycle && props.cycle[event]) {
 		props.cycle[event](element);
+	}
+}
+
+function nodeTypeDiffers(element, tag) {
+	return element.nodeName.toLowerCase() !== tag;
+}
+
+function isTextNode(element) {
+	return element instanceof window.Text
+}
+
+function updateTextNode(element, value) {
+	if (element.nodeValue !== value) {
+		element.nodeValue = value;
 	}
 }
