@@ -14,8 +14,8 @@ export function render({vdom$}, parentElement) {
 			diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
 
 			// signalise mount of root element on initial render
-			if (parentElement && version === 0 && props && props.cycle && props.cycle.mounted) {
-				props.cycle.mounted(oldElement);
+			if (parentElement && version === 0) {
+				triggerLifecycle(oldElement, props, 'mounted');
 			}
 			return {
 				element: oldElement,
@@ -53,12 +53,12 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 		diffChildren(newElement, newChildren, oldChildren);
 	}
 	
-	if (newVersion == 0 && props && props.cycle && props.cycle.created) {
-		props.cycle.created(newElement);
+	if (newVersion === 0) {
+		triggerLifecycle(newElement, props, 'created');
 	}
 
-	if (newVersion > 0 && props && props.cycle && props.cycle.updated) {
-		props.cycle.updated(newElement);
+	if (newVersion > 0) {
+		triggerLifecycle(newElement, props, 'updated');
 	}
 
 	return newElement;
@@ -133,9 +133,6 @@ function diffChildren(element, newChildren, oldChildren) {
 		let {tag, props, children, version} = unifiedChildren[i];
 
 		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
-		if(props && props.cycle && props.cycle.updated) {
-			props.cycle.updated(oldElement);
-		}
 	}
 	
 	// remove not needed nodes at the end
@@ -147,11 +144,9 @@ function diffChildren(element, newChildren, oldChildren) {
 			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", element, ". This can lead to sideffects. Please check your code.");
 			continue;
 		} else {
-			let {children: oldChildChildren, props} = unifiedOldChildren[remaining - 1];
-	
-			if(props && props.cycle && props.cycle.removed) {
-				props.cycle.removed(childToRemove);
-			}
+			let {props} = unifiedOldChildren[remaining - 1];
+
+			triggerLifecycle(childToRemove, props, 'removed');
 		}
 	}
 
@@ -162,9 +157,7 @@ function diffChildren(element, newChildren, oldChildren) {
 
 		element.appendChild(newElement);
 		diff(newElement, tag, props, children, version, [], -1);
-		if(props && props.cycle && props.cycle.mounted) {
-			props.cycle.mounted(newElement);
-		}
+		triggerLifecycle(newElement, props, 'mounted');
 	}
 }
 
@@ -192,4 +185,10 @@ function copyChildren(oldChildren) {
 		}
 	});
 	return newChildren;
+}
+
+function triggerLifecycle(element, props, event) {
+	if(props && props.cycle && props.cycle[event]) {
+		props.cycle[event](element);
+	}
 }
