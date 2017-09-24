@@ -1,4 +1,4 @@
-import { h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
+import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
 import { test } from './helpers/test-component';
 import assert from 'assert';
 
@@ -202,4 +202,60 @@ describe('Components', () => {
 			}
 		], done);
 	})
+
+	it('should increment versions up to the root', done => {
+		let content$ = stream('');
+		let app = <div>
+			<div>{content$}</div>
+		</div>;
+		test(app, [
+			(element, {version}) => {
+				expect(version).toBe(0);
+				content$('text');
+			},
+			(element, {version}) => {
+				expect(version).toBe(1);
+			}
+		], done);
+	});
+
+	it('should save id elements to reuse them', done => {
+		let content$ = stream('');
+		let app = <div>
+			<div id="test">{content$}</div>
+		</div>;
+		let i;
+		test(app, [
+			(_, {keyContainer}) => {
+				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
+				expect(keyContainer['test'].version).toBe(0);
+				content$('text');
+			},
+			(_, {keyContainer}) => {
+				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
+				expect(keyContainer['test'].version).toBe(1);
+			},
+		], done)
+	});
+	
+	it('should reuse id elements on rerenderings', done => {
+		let content$ = stream('');
+		let app = <div>
+			{content$}
+			<div id="test"></div>
+		</div>;
+		let i;
+		test(app, [
+			(element, {keyContainer}) => {
+				// manipulating the dom to prove update
+				element.replaceChild(document.createElement('div'), keyContainer['test'].element);
+				// manipulating the stored element
+				keyContainer['test'].element.setAttribute('id', 'updated');
+				content$('text');
+			},
+			(element, {keyContainer}) => {
+				expect(element.querySelector('#updated')).not.toBe(null);
+			},
+		], done)
+	});
 });
