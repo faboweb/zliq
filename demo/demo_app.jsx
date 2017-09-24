@@ -7,9 +7,6 @@ import { render, h, stream, merge$ } from '../src';
 // router
 import { initRouter, Router } from '../src';
 
-// stacktrace
-import { shrink_stacktrace } from '../src';
-
 // components
 import { Subheader } from './subheader.jsx';
 import { Infos } from './infos.jsx';
@@ -19,8 +16,6 @@ import { Playground } from './playground.jsx';
 
 //styles
 import './styles.scss';
-
-shrink_stacktrace();
 
 let router$ = initRouter();
 

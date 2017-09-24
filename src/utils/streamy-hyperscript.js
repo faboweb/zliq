@@ -25,13 +25,11 @@ export const h = (tag, props, ...children) => {
 			}
 		});
 	}
-	mergedChildren$.map(flatten).map(() => console.log('Children update incoming', tag));
 	return {
 		vdom$: merge$([
 				wrapProps$(props),
 				mergedChildren$.map(flatten)
 			]).map(([props, children]) => {
-				console.log('Update triggerd for', tag, props, children);
 				return {
 					tag,
 					props,
