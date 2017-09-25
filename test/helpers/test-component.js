@@ -1,7 +1,8 @@
 import {diff, createNode, render} from '../../src'
 
 export function test({vdom$}, schedule, done) {
-    return test$(render({vdom$}), schedule, done);
+    let container = document.createElement('div');
+    return test$(render({vdom$}, container, 0), schedule, done);
 }
 
 export function test$(stream, schedule, done = () => null) {

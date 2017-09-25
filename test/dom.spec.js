@@ -35,10 +35,12 @@ describe('Components', () => {
 		let clicks$ = stream(3);
 		let component = <DoubleClicks clicks$={clicks$} />;
 		test(component, [
-			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>'),
+			({element}) => {
+				assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>');
+				clicks$(6);
+			},
 			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
 		], done);
-		clicks$(6);
 	});
 
 	it('should react to attached events', done => {
@@ -112,6 +114,8 @@ describe('Components', () => {
 			({element}) => {
 				assert.equal(element.querySelectorAll('li').length, 3);
 				assert.equal(element.querySelectorAll('li')[2].innerHTML, '2');
+				let newArr = arr.slice(1);
+				list$(newArr);
 			},
 			({element}) => {
 				assert.equal(element.querySelectorAll('li').length, 2);
@@ -119,8 +123,6 @@ describe('Components', () => {
 			}
 		], done);
 
-		let newArr = arr.slice(1);
-		list$(newArr);
 	});
 
 	it('should remove attributes on null value', done => {
@@ -129,12 +131,12 @@ describe('Components', () => {
 		test(component, [
 			({element}) => {
 				expect(element.disabled).toBe(true);
+				value$(null);
 			},
 			({element}) => {
 				expect(element.disabled).toBe(undefined);
 			}
 		], done);
-		value$(null);
 	});
 
     xit('should cleanup component stream subscriptions', (done) => {
