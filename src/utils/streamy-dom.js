@@ -4,47 +4,60 @@ const TEXT_NODE = '#text';
 
 export function render({vdom$}, parentElement) {
 	return vdom$.reduce(
-		function renderUpdate({element:oldElement, version:oldVersion, children:oldChildren}, {tag, props, children, version}) {
-			if (oldElement === null) {
-				oldElement = createNode(tag, children);
-				if (parentElement) {
-					parentElement.appendChild(oldElement);
+		function renderUpdate({
+				element:oldElement,
+				version:oldVersion,
+				children:oldChildren,
+				keyContainer
+			}, {tag, props, children, version}) {
+				if (oldElement === null) {
+					oldElement = createNode(tag, children);
+					if (parentElement) {
+						parentElement.appendChild(oldElement);
+					}
 				}
-			}
-			diff(oldElement, tag, props, children, version, oldChildren, oldVersion);
+				diff(oldElement, tag, props, children, version, oldChildren, oldVersion, keyContainer);
 
-			// signalise mount of root element on initial render
-			if (parentElement && version === 0) {
-				triggerLifecycle(oldElement, props, 'mounted');
-			}
-			return {
-				element: oldElement,
-				version,
-				children: copyChildren(children)
-			}
+				// signalise mount of root element on initial render
+				if (parentElement && version === 0) {
+					triggerLifecycle(oldElement, props, 'mounted');
+				}
+				return {
+					element: oldElement,
+					version,
+					children: copyChildren(children),
+					keyContainer
+				}
 		}, {
 			element: null,
 			version: -1,
-			children: []
+			children: [],
+			keyContainer: {}
 		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion) {
-	// if the dom-tree hasn't changed, don't process it
-	// !! does not work
-	// if (newVersion === oldVersion) {
-	// // if (newVersion === oldVersion) {
-	// 	return oldElement;
-	// }
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, keyContainer) {
 	let newElement = oldElement;
+	let keyState;
+	// for keyed elements, we recall unchanged elements
+	if (props && props.id) {
+		keyState = keyContainer[props.id];
+	}
+	if (keyState && newVersion === keyState.version) {
+		if (oldElement !== keyState.element) {
+			oldElement.parentElement.replaceChild(keyState.element, oldElement);
+		}
+		return keyState.element;
+	}
 
 	if (isTextNode(oldElement) && tag === TEXT_NODE ) {
 		updateTextNode(newElement, newChildren[0]);
 		return newElement;
 	}
 
+	// we do not mutate foreign cached (id) elements as this will mutate the cache
 	// if the node types do not differ, we reuse the old node
-	if (nodeTypeDiffers(oldElement, tag)) {
+	if (shouldRecycleElement(oldElement, props, tag)) {
 		newElement = createNode(tag, newChildren);
 		oldElement.parentElement.replaceChild(newElement, oldElement);
 		oldChildren = [];
@@ -53,9 +66,13 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 
 	diffAttributes(newElement, props);
 
+	if (props && props.id) {
+		cacheElement(props.id, keyContainer, newVersion, newElement);
+	}
+
 	// text nodes have no real child-nodes, but have a string value as first child
 	if (tag !== TEXT_NODE) {
-		diffChildren(newElement, newChildren, oldChildren);
+		diffChildren(newElement, newChildren, oldChildren, keyContainer);
 	}
 	
 	if (newVersion === 0) {
@@ -125,7 +142,7 @@ function unifyChildren(children) {
 	})
 }
 
-function diffChildren(element, newChildren, oldChildren) {
+function diffChildren(element, newChildren, oldChildren, keyContainer) {
 	let oldChildNodes = element.childNodes;
 	let unifiedChildren = unifyChildren(newChildren);
 	let unifiedOldChildren = unifyChildren(oldChildren);
@@ -136,12 +153,12 @@ function diffChildren(element, newChildren, oldChildren) {
 
 	let i = 0;
 	// diff existing nodes
-	for(; i < oldChildren.length && i < newChildren.length; i++) {
+	for(; i < oldChildNodes.length && i < newChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
 
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion);
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, keyContainer);
 	}
 	
 	// remove not needed nodes at the end
@@ -165,7 +182,7 @@ function diffChildren(element, newChildren, oldChildren) {
 		let newElement = createNode(tag, children);
 
 		element.appendChild(newElement);
-		diff(newElement, tag, props, children, version, [], -1);
+		diff(newElement, tag, props, children, version, [], -1, keyContainer);
 		triggerLifecycle(newElement, props, 'mounted');
 	}
 }
@@ -213,5 +230,18 @@ function isTextNode(element) {
 function updateTextNode(element, value) {
 	if (element.nodeValue !== value) {
 		element.nodeValue = value;
+	}
+}
+
+function shouldRecycleElement(oldElement, props, tag) {
+	let isCached = oldElement.id !== "";
+	let isOwnCached = isCached && props && props.id === oldElement.id;
+	return (isCached && !isOwnCached) || nodeTypeDiffers(oldElement, tag);
+}
+
+function cacheElement(id, cache, version, element) {
+	cache[id] = {
+		version,
+		element
 	}
 }

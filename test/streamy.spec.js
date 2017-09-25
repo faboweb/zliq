@@ -64,4 +64,22 @@ describe('Streamy', () => {
             })
         });
     });
+
+    it('should emit aggregates on reduce', (done)=> {
+        let myStream = stream(1);
+        let agg$ = myStream.reduce((agg, cur) => {
+            return agg + cur;
+        }, 0);
+        agg$.reduce((iteration, x) => {
+            if (iteration === 0) {
+                expect(x).toBe(1);
+                setImmediate(() => myStream(2));
+            }
+            if (iteration === 1) {
+                expect(x).toBe(3);
+                done();
+            }
+            return iteration + 1;
+        }, 0);
+    })
 })
