@@ -37,25 +37,29 @@ export function render({vdom$}, parentElement) {
 }
 
 export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, keyContainer) {
+	let newElement = oldElement;
+	let keyState;
 	// for keyed elements, we recall unchanged elements
 	if (props && props.id) {
-		let keyState = keyContainer[props.id];
-		if (keyState && newVersion === keyState.version) {
-			if (oldElement !== keyState.element) {
-				oldElement.parentElement.replaceChild(keyState.element, oldElement);
-			}
-			return keyState.element;
-		}
+		keyState = keyContainer[props.id];
 	}
-	let newElement = oldElement;
+	if (keyState && newVersion === keyState.version) {
+		if (oldElement !== keyState.element) {
+			oldElement.parentElement.replaceChild(keyState.element, oldElement);
+		}
+		return keyState.element;
+	}
 
 	if (isTextNode(oldElement) && tag === TEXT_NODE ) {
 		updateTextNode(newElement, newChildren[0]);
 		return newElement;
 	}
 
+	// we do not mutate foreign cached (id) elements
 	// if the node types do not differ, we reuse the old node
-	if (nodeTypeDiffers(oldElement, tag)) {
+	let isCached = oldElement.id !== "";
+	let isOwnCached = isCached && props && props.id === oldElement.id;
+	if ((isCached && !isOwnCached) || nodeTypeDiffers(oldElement, tag)) {
 		newElement = createNode(tag, newChildren);
 		oldElement.parentElement.replaceChild(newElement, oldElement);
 		oldChildren = [];
@@ -155,7 +159,7 @@ function diffChildren(element, newChildren, oldChildren, keyContainer) {
 
 	let i = 0;
 	// diff existing nodes
-	for(; i < oldChildren.length && i < newChildren.length; i++) {
+	for(; i < oldChildNodes.length && i < newChildren.length; i++) {
 		let oldElement = oldChildNodes[i];
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
