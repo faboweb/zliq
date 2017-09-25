@@ -1,5 +1,5 @@
 import { initRouter, h } from '../src';
-import { test } from './helpers/test-component';
+import { testRender } from './helpers/test-component';
 
 describe('Router', ()=> {
 	it('should react to initial routing', (done) => {
@@ -33,7 +33,7 @@ describe('Router', ()=> {
 
 		let router$ = initRouter();
 
-		test(link, [
+		testRender(link, [
 			({element}) => element.click()
 		]);
 
@@ -44,16 +44,16 @@ describe('Router', ()=> {
 		});
 	});
 
-    it('should react to browser go back events', (done)=> {
+	it('should react to browser go back events', (done)=> {
 		let router$ = initRouter();
 
-        history.pushState({}, "", "/route?param=value");
-        history.back();
+		history.pushState({}, "", "/route?param=value");
+		history.back();
 
 		router$.map(({route, params}) => {
 			expect(route).toBe('/route');
 			expect(params.param).toBe('value');
 			done();
 		});
-    })
+	})
 })

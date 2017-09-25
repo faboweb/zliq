@@ -1,22 +1,22 @@
 import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
-import { test } from './helpers/test-component';
+import { testRender } from './helpers/test-component';
 import assert from 'assert';
 
 describe('Components', () => {
 	it('should show a component', done => {
-		test(<p>HELLO WORLD</p>, [
+		testRender(<p>HELLO WORLD</p>, [
 			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
 		], done);
 	});
 
 	it('should work with React style hyperscript', done => {
-		test(h('p', null, 'this', ' and ', 'that'), [
+		testRender(h('p', null, 'this', ' and ', 'that'), [
 			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
 		], done);
 	});
 
 	it('should work with Preact style hyperscript', done => {
-		test(h('p', null, ['this', ' and ', 'that']), [
+		testRender(h('p', null, ['this', ' and ', 'that']), [
 			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
 		], done);
 	});
@@ -26,7 +26,7 @@ describe('Components', () => {
 	it('should react to inputs', done => {
 		let clicks$ = stream(3);
 		let component = <DoubleClicks clicks$={clicks$} />;
-		test(component, [
+		testRender(component, [
 			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>')
 		], done);
 	});
@@ -34,7 +34,7 @@ describe('Components', () => {
 	it('CleverComponent should update on input stream update', done => {
 		let clicks$ = stream(3);
 		let component = <DoubleClicks clicks$={clicks$} />;
-		test(component, [
+		testRender(component, [
 			({element}) => {
 				assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>');
 				clicks$(6);
@@ -53,7 +53,7 @@ describe('Components', () => {
 		let clicks$ = stream(0);
 		// this component fires a action on the store when clicked
 		let component = <DumbComponent clicks$={clicks$} onclick={x => clicks$(x)} />;
-		test(component, [
+		testRender(component, [
 			// perform the actions on the element
 			({element}) => {
 				element.querySelector('button').click();
@@ -110,7 +110,7 @@ describe('Components', () => {
 			{ listElems$ }
 		</ul>;
 
-		test(component, [
+		testRender(component, [
 			({element}) => {
 				assert.equal(element.querySelectorAll('li').length, 3);
 				assert.equal(element.querySelectorAll('li')[2].innerHTML, '2');
@@ -128,7 +128,7 @@ describe('Components', () => {
 	it('should remove attributes on null value', done => {
 		let value$ = stream(true);
 		let component = <div disabled={value$}></div>;
-		test(component, [
+		testRender(component, [
 			({element}) => {
 				expect(element.disabled).toBe(true);
 				value$(null);
@@ -194,7 +194,7 @@ describe('Components', () => {
 			}
 		</div>;
 
-		test(app, [
+		testRender(app, [
 			() => trigger$(false),
 			() => trigger$(true),
 			() => {
@@ -210,7 +210,7 @@ describe('Components', () => {
 		let app = <div>
 			<div>{content$}</div>
 		</div>;
-		test(app, [
+		testRender(app, [
 			({element, version}) => {
 				expect(version).toBe(0);
 				content$('text');
@@ -227,7 +227,7 @@ describe('Components', () => {
 			<div id="test">{content$}</div>
 		</div>;
 		let i;
-		test(app, [
+		testRender(app, [
 			({keyContainer}) => {
 				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
 				expect(keyContainer['test'].version).toBe(0);
@@ -246,7 +246,7 @@ describe('Components', () => {
 			{content$}
 			<div id="test"></div>
 		</div>;
-		test(app, [
+		testRender(app, [
 			({element, keyContainer}) => {
 				// manipulating the dom to prove update
 				element.replaceChild(document.createElement('div'), keyContainer['test'].element);
