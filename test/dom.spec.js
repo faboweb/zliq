@@ -246,7 +246,6 @@ describe('Components', () => {
 			{content$}
 			<div id="test"></div>
 		</div>;
-		let i;
 		test(app, [
 			({element, keyContainer}) => {
 				// manipulating the dom to prove update
@@ -259,5 +258,26 @@ describe('Components', () => {
 				expect(element.querySelector('#updated')).not.toBe(null);
 			},
 		], done)
+	});
+	it('should debounce renderings', done => {
+		let content$ = stream('');
+		let app = <div>
+			{content$}
+		</div>;
+		const myMock = jest.fn();
+		render(app, document.createElement('div'), 50)
+		.map(myMock);
+		setTimeout(() => {
+			expect(myMock.mock.calls.length).toBe(2);
+			// two updates signaled in between
+			expect(myMock.mock.calls[1][0].version).toBe(2);
+			done();
+		}, 150);
+		setTimeout(() => {
+			content$('text');
+			setTimeout(() => {
+				content$('text2');
+			}, 30);
+		}, 60);
 	});
 });

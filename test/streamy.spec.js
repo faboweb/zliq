@@ -89,7 +89,10 @@ describe('Streamy', () => {
         let debounced$ = myStream.debounce(50);
         debounced$.map(myMock);
         test$(debounced$, [
-            x => expect(x).toBe(2)
+            x => {
+                expect(x).toBe(2);
+                expect(myMock.mock.calls.length).toBe(1);
+            }
         ], done);
         myStream(2);
     })

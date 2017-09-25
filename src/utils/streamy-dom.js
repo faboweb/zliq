@@ -2,7 +2,7 @@ import {isStream} from './streamy';
 
 const TEXT_NODE = '#text';
 
-export function render({vdom$}, parentElement, debounce = 50) {
+export function render({vdom$}, parentElement, debounce = 10) {
 	return vdom$.debounce(debounce).reduce(
 		function renderUpdate({
 				element:oldElement,
