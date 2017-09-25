@@ -57,135 +57,7 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	return newElement;
 }
 
-function diffAttributes(element, props) {
-	if (props !== undefined) {
-		Object.getOwnPropertyNames(props).map(function applyPropertyToElement(attribute) {
-			applyAttribute(element, attribute, props[attribute])
-		});
-		cleanupAttributes(element, props);
-	}
-}
 
-function applyAttribute(element, attribute, value) {
-	if (attribute === 'class' || attribute === 'className') {
-		element.className = value;
-	// we leave the possibility to define styles as strings
-	// but we allow styles to be defined as an object
-	} else if (attribute === 'style' && typeof value !== "string" ) {
-		Object.assign(element.style, value);
-	// other propertys are just added as is to the DOM
-	} else {
-		// also remove attributes on null to allow better handling of streams
-		// streams don't emit on undefined
-		if (value === null) {
-			element[attribute] = undefined;
-		} else {
-			// element.setAttribute(attribute, value);
-			element[attribute] = value;
-		}
-	}
-}
-
-// remove attributes that are not in props anymore
-function cleanupAttributes(element, props) {
-	if (element.props !== undefined) {
-		for(let attribute in element.props) {
-			if (props[attribute] === undefined) {
-				element.removeAttribute(attribute);
-			}
-		}
-	}
-}
-
-/*
-* jsx has children mixed as vdom-elements and numbers or strings
-* to consistently treat these children similar in the code we transform those numbers and strings
-* into vdom-elements with the tag #text that have one child with their value
-*/
-function unifyChildren(children) {
-	return children.map(child => {
-		// if there is no tag we assume it's a number or a string
-		if (!isStream(child) && child.tag === undefined) {
-			return {
-				tag: TEXT_NODE,
-				children: [child],
-				version: 0
-			}
-		} else {
-			return child;
-		}
-	})
-}
-
-function diffChildren(element, newChildren, oldChildren, cacheContainer) {
-	if (newChildren.length === 0 && oldChildren.length === 0) {
-		return;
-	}
-
-	let oldChildNodes = element.childNodes;
-	let unifiedNewChildren = unifyChildren(newChildren);
-	let unifiedOldChildren = unifyChildren(oldChildren);
-
-	updateExistingNodes(element, unifiedNewChildren, unifiedOldChildren, cacheContainer);
-	removeNotNeededNodes(element, unifiedNewChildren, oldChildren);
-	addNewNodes(element, unifiedNewChildren, cacheContainer);
-}
-
-// create text_nodes from numbers or strings
-// create domNodes from regular vdom descriptions
-export function createNode(tag, children) {
-	if (tag === TEXT_NODE) {
-		return document.createTextNode(children[0]);
-	} else {
-		return document.createElement(tag);
-	}
-}
-
-// to not mutate the representation of our children from the last iteration we clone them
-// we copy the cycle functions for each element, as JSON parse/stringify does not work for functions
-function copyChildren(oldChildren) {
-	if (oldChildren === undefined) return [];
-
-	let newChildren = JSON.parse(JSON.stringify(oldChildren));
-	newChildren.forEach((child, index) => {
-		let oldChild = oldChildren[index];
-		if (oldChild.props && oldChild.props.cycle) {
-			child.cycle = oldChild.props.cycle;
-		}
-		
-		if (typeof oldChildren[index] === 'object') {
-			child.children = copyChildren(oldChild.children);
-		}
-	});
-	return newChildren;
-}
-
-// shorthand to call a cycle event for an element if existing
-function triggerLifecycle(element, props, event) {
-	if(props && props.cycle && props.cycle[event]) {
-		props.cycle[event](element);
-	}
-}
-
-function nodeTypeDiffers(element, tag) {
-	return element.nodeName.toLowerCase() !== tag;
-}
-
-function isTextNode(element) {
-	return element instanceof window.Text
-}
-
-function updateTextNode(element, value) {
-	if (element.nodeValue !== value) {
-		element.nodeValue = value;
-	}
-}
-
-// we want to recycle elements to save time on creating and inserting nodes into the dom
-// we don't want to manipulate elements that go into the cache, because they would mutate in the cache as well
-function shouldRecycleElement(oldElement, props, tag) {
-	return oldElement.id === "" && nodeTypeDiffers(oldElement, tag);
-}
 
 function diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldChildren, cacheContainer) {
 	let id = props.id;
@@ -278,4 +150,137 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
 		triggerLifecycle(newElement, props, 'mounted');
 	}
+}
+
+function diffAttributes(element, props) {
+	if (props !== undefined) {
+		Object.getOwnPropertyNames(props).map(function applyPropertyToElement(attribute) {
+			applyAttribute(element, attribute, props[attribute])
+		});
+		cleanupAttributes(element, props);
+	}
+}
+
+function applyAttribute(element, attribute, value) {
+	if (attribute === 'class' || attribute === 'className') {
+		element.className = value;
+	// we leave the possibility to define styles as strings
+	// but we allow styles to be defined as an object
+	} else if (attribute === 'style' && typeof value !== "string" ) {
+		Object.assign(element.style, value);
+	// other propertys are just added as is to the DOM
+	} else {
+		// also remove attributes on null to allow better handling of streams
+		// streams don't emit on undefined
+		if (value === null) {
+			element[attribute] = undefined;
+		} else {
+			// element.setAttribute(attribute, value);
+			element[attribute] = value;
+		}
+	}
+}
+
+// remove attributes that are not in props anymore
+function cleanupAttributes(element, props) {
+	if (element.props !== undefined) {
+		for(let attribute in element.props) {
+			if (props[attribute] === undefined) {
+				element.removeAttribute(attribute);
+			}
+		}
+	}
+}
+
+function diffChildren(element, newChildren, oldChildren, cacheContainer) {
+	if (newChildren.length === 0 && oldChildren.length === 0) {
+		return;
+	}
+
+	let oldChildNodes = element.childNodes;
+	let unifiedNewChildren = unifyChildren(newChildren);
+	let unifiedOldChildren = unifyChildren(oldChildren);
+
+	updateExistingNodes(element, unifiedNewChildren, unifiedOldChildren, cacheContainer);
+	removeNotNeededNodes(element, unifiedNewChildren, oldChildren);
+	addNewNodes(element, unifiedNewChildren, cacheContainer);
+}
+
+
+/* HELPERS */
+
+/*
+* jsx has children mixed as vdom-elements and numbers or strings
+* to consistently treat these children similar in the code we transform those numbers and strings
+* into vdom-elements with the tag #text that have one child with their value
+*/
+function unifyChildren(children) {
+	return children.map(child => {
+		// if there is no tag we assume it's a number or a string
+		if (!isStream(child) && child.tag === undefined) {
+			return {
+				tag: TEXT_NODE,
+				children: [child],
+				version: 0
+			}
+		} else {
+			return child;
+		}
+	})
+}
+
+// create text_nodes from numbers or strings
+// create domNodes from regular vdom descriptions
+export function createNode(tag, children) {
+	if (tag === TEXT_NODE) {
+		return document.createTextNode(children[0]);
+	} else {
+		return document.createElement(tag);
+	}
+}
+
+// to not mutate the representation of our children from the last iteration we clone them
+// we copy the cycle functions for each element, as JSON parse/stringify does not work for functions
+function copyChildren(oldChildren) {
+	if (oldChildren === undefined) return [];
+
+	let newChildren = JSON.parse(JSON.stringify(oldChildren));
+	newChildren.forEach((child, index) => {
+		let oldChild = oldChildren[index];
+		if (oldChild.props && oldChild.props.cycle) {
+			child.cycle = oldChild.props.cycle;
+		}
+		
+		if (typeof oldChildren[index] === 'object') {
+			child.children = copyChildren(oldChild.children);
+		}
+	});
+	return newChildren;
+}
+
+// shorthand to call a cycle event for an element if existing
+function triggerLifecycle(element, props, event) {
+	if(props && props.cycle && props.cycle[event]) {
+		props.cycle[event](element);
+	}
+}
+
+function nodeTypeDiffers(element, tag) {
+	return element.nodeName.toLowerCase() !== tag;
+}
+
+function isTextNode(element) {
+	return element instanceof window.Text
+}
+
+function updateTextNode(element, value) {
+	if (element.nodeValue !== value) {
+		element.nodeValue = value;
+	}
+}
+
+// we want to recycle elements to save time on creating and inserting nodes into the dom
+// we don't want to manipulate elements that go into the cache, because they would mutate in the cache as well
+function shouldRecycleElement(oldElement, props, tag) {
+	return oldElement.id === "" && nodeTypeDiffers(oldElement, tag);
 }
