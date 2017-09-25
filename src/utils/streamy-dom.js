@@ -36,43 +36,14 @@ export function render({vdom$}, parentElement) {
 		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, keyContainer) {
+export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer) {
 	let newElement = oldElement;
-	let keyState;
+	let isCaching = props && props.id;
 	// for keyed elements, we recall unchanged elements
-	if (props && props.id) {
-		keyState = keyContainer[props.id];
-	}
-	if (keyState && newVersion === keyState.version) {
-		if (oldElement !== keyState.element) {
-			oldElement.parentElement.replaceChild(keyState.element, oldElement);
-		}
-		return keyState.element;
-	}
-
-	if (isTextNode(oldElement) && tag === TEXT_NODE ) {
-		updateTextNode(newElement, newChildren[0]);
-		return newElement;
-	}
-
-	// we do not mutate foreign cached (id) elements as this will mutate the cache
-	// if the node types do not differ, we reuse the old node
-	if (shouldRecycleElement(oldElement, props, tag)) {
-		newElement = createNode(tag, newChildren);
-		oldElement.parentElement.replaceChild(newElement, oldElement);
-		oldChildren = [];
-		oldVersion = -1;
-	}
-
-	diffAttributes(newElement, props);
-
-	if (props && props.id) {
-		cacheElement(props.id, keyContainer, newVersion, newElement);
-	}
-
-	// text nodes have no real child-nodes, but have a string value as first child
-	if (tag !== TEXT_NODE) {
-		diffChildren(newElement, newChildren, oldChildren, keyContainer);
+	if (isCaching) {
+		newElement = diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldChildren, cacheContainer);
+	} else {
+		newElement = diffElement(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer);
 	}
 	
 	if (newVersion === 0) {
@@ -133,8 +104,7 @@ function unifyChildren(children) {
 			return {
 				tag: TEXT_NODE,
 				children: [child],
-				version: 0,
-				cycle: child.cycle || {}
+				version: 0
 			}
 		} else {
 			return child;
@@ -142,7 +112,7 @@ function unifyChildren(children) {
 	})
 }
 
-function diffChildren(element, newChildren, oldChildren, keyContainer) {
+function diffChildren(element, newChildren, oldChildren, cacheContainer) {
 	let oldChildNodes = element.childNodes;
 	let unifiedChildren = unifyChildren(newChildren);
 	let unifiedOldChildren = unifyChildren(oldChildren);
@@ -158,23 +128,10 @@ function diffChildren(element, newChildren, oldChildren, keyContainer) {
 		let {version: oldVersion, children: oldChildChildren} = unifiedOldChildren[i];
 		let {tag, props, children, version} = unifiedChildren[i];
 
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, keyContainer);
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, cacheContainer);
 	}
 	
-	// remove not needed nodes at the end
-	for(let remaining = element.childNodes.length; remaining > newChildren.length; remaining--) {
-		let childToRemove = element.childNodes[remaining - 1];
-		element.removeChild(childToRemove);
-
-		if (unifiedOldChildren.length < remaining) {
-			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", element, ". This can lead to sideffects. Please check your code.");
-			continue;
-		} else {
-			let {props} = unifiedOldChildren[remaining - 1];
-
-			triggerLifecycle(childToRemove, props, 'removed');
-		}
-	}
+	removeNotNeededNodes(element, newChildren, oldChildren);
 
 	// add new nodes
 	for(; i < newChildren.length; i++) {
@@ -182,7 +139,7 @@ function diffChildren(element, newChildren, oldChildren, keyContainer) {
 		let newElement = createNode(tag, children);
 
 		element.appendChild(newElement);
-		diff(newElement, tag, props, children, version, [], -1, keyContainer);
+		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
 		triggerLifecycle(newElement, props, 'mounted');
 	}
 }
@@ -202,12 +159,13 @@ function copyChildren(oldChildren) {
 
 	let newChildren = JSON.parse(JSON.stringify(oldChildren));
 	newChildren.forEach((child, index) => {
-		if (oldChildren[index].cycle) {
-			child.cycle = oldChildren[index].cycle;
+		let oldChild = oldChildren[index];
+		if (oldChild.props && oldChild.props.cycle) {
+			child.cycle = oldChild.props.cycle;
 		}
 		
 		if (typeof oldChildren[index] === 'object') {
-			child.children = copyChildren(oldChildren[index].children);
+			child.children = copyChildren(oldChild.children);
 		}
 	});
 	return newChildren;
@@ -234,14 +192,86 @@ function updateTextNode(element, value) {
 }
 
 function shouldRecycleElement(oldElement, props, tag) {
-	let isCached = oldElement.id !== "";
-	let isOwnCached = isCached && props && props.id === oldElement.id;
-	return (isCached && !isOwnCached) || nodeTypeDiffers(oldElement, tag);
+	return oldElement.id === "" && nodeTypeDiffers(oldElement, tag);
 }
 
-function cacheElement(id, cache, version, element) {
-	cache[id] = {
-		version,
-		element
+function diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldChildren, cacheContainer) {
+	let id = props.id;
+
+	// if there is no cache, create one
+	if (cacheContainer[id] === undefined) {
+		cacheContainer[id] = {
+			element: document.createElement(tag)
+		}
+	}
+
+	let elementCache = cacheContainer[id];
+
+	// ignore update if version equals cache
+	if (newVersion !== elementCache.version) {
+		diffAttributes(elementCache.element, props);
+		diffChildren(elementCache.element, newChildren, oldChildren, cacheContainer);
+		
+		elementCache.version = newVersion;
+	}
+
+	// elements are updated in place, so only insert cached element, if it's not already there
+	if (oldElement !== elementCache.element) {
+		oldElement.parentElement.replaceChild(elementCache.element, oldElement);
+	}
+
+	return elementCache.element;
+}
+
+function diffElement(element, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer) {
+	if (isTextNode(element) && tag === TEXT_NODE ) {
+		updateTextNode(element, newChildren[0]);
+		return element;
+	}
+
+	// if the node types do not differ, we reuse the old node
+	// we reuse the existing node to save time rerendering it
+	// we do not reuse/mutate cached (id) elements as this will mutate the cache
+	if (shouldRecycleElement(element, props, tag)) {
+		let newElement = createNode(tag, newChildren);
+		element.parentElement.replaceChild(newElement, element);
+		element = newElement;
+		// there are no children anymore on the newly created node
+		oldChildren = [];
+	}
+
+	diffAttributes(element, props);
+
+	// text nodes have no real child-nodes, but have a string value as first child
+	if (tag !== TEXT_NODE) {
+		diffChildren(element, newChildren, oldChildren, cacheContainer);
+	}
+}
+
+function removeNotNeededNodes(element, newChildren, oldChildren) {
+	// remove not needed nodes at the end
+	for(let remaining = element.childNodes.length; remaining > newChildren.length; remaining--) {
+		let childToRemove = element.childNodes[remaining - 1];
+		element.removeChild(childToRemove);
+
+		if (oldChildren.length < remaining) {
+			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", element, ". This can lead to sideffects. Please check your code.");
+			continue;
+		} else {
+			let {props} = oldChildren[remaining - 1];
+
+			triggerLifecycle(childToRemove, props, 'removed');
+		}
+	}
+}
+
+function updateExistingNodes(element, newChildren, oldChildren) {
+	let nodes = element.childNodes;
+	for(let i = 0; i < oldChildNodes.length && i < newChildren.length; i++) {
+		let oldElement = nodes[i];
+		let {version: oldVersion, children: oldChildChildren} = oldChildren[i];
+		let {tag, props, children, version} = newChildren[i];
+
+		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, keyContainer);
 	}
 }
