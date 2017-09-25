@@ -28,6 +28,7 @@ export const stream = function(init_value) {
 	s.until = (stopEmit$) => until(s, stopEmit$);
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
+	s.debounce = (timer) => debounce(s, timer);
 
 	return s;
 };
@@ -194,12 +195,35 @@ function until(parent$, stopEmitValues$) {
 * reads like the array reduce function
 */
 function reduce(parent$, fn, startValue) {
-	let aggregate = parent$.value !== undefined ? fn(startValue, parent$.value) : undefined;
-	let newStream = stream(aggregate);
-	parent$.listeners.push(function reduceValue(value) {
+	let aggregate = startValue;
+	let newStream = stream();
+	function reduceValue(value) {
 		aggregate = fn(aggregate, parent$.value);
 		newStream(aggregate);
-	});
+	}
+	if (parent$.value !== undefined) {
+		reduceValue(parent$.value);
+	};
+	parent$.listeners.push(reduceValue);
+	return newStream;
+}
+
+function debounce(parent$, timer) {
+	let curTimer;
+	function debounceValue(value) {
+		if (curTimer) {
+			window.clearTimeout(curTimer);
+		}
+		curTimer = setTimeout(() => {
+			newStream(value);
+			curTimer = null;
+		}, timer);
+	}
+	let newStream = stream();
+	if (parent$.value !== undefined) {
+		debounceValue(parent$.value);
+	}
+	parent$.listeners.push(debounceValue);
 	return newStream;
 }
 

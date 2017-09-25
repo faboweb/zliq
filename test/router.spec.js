@@ -34,8 +34,8 @@ describe('Router', ()=> {
 		let router$ = initRouter();
 
 		test(link, [
-			element => element.click()
-		], ()=>{});
+			({element}) => element.click()
+		]);
 
 		router$.map(({route, params}) => {
 			expect(route).toBe('/route');
