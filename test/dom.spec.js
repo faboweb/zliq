@@ -236,7 +236,7 @@ describe('Components', () => {
 			({keyContainer}) => {
 				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
 				expect(keyContainer['test'].version).toBe(1);
-			},
+			}
 		], done)
 	});
 	
@@ -256,7 +256,7 @@ describe('Components', () => {
 			},
 			({element, keyContainer}) => {
 				expect(element.querySelector('#updated')).not.toBe(null);
-			},
+			}
 		], done)
 	});
 	it('should debounce renderings', done => {
