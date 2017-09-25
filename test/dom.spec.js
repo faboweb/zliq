@@ -5,19 +5,19 @@ import assert from 'assert';
 describe('Components', () => {
 	it('should show a component', done => {
 		test(<p>HELLO WORLD</p>, [
-			element => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
+			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
 		], done);
 	});
 
 	it('should work with React style hyperscript', done => {
 		test(h('p', null, 'this', ' and ', 'that'), [
-			element => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
 		], done);
 	});
 
 	it('should work with Preact style hyperscript', done => {
 		test(h('p', null, ['this', ' and ', 'that']), [
-			element => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
 		], done);
 	});
 
@@ -27,7 +27,7 @@ describe('Components', () => {
 		let clicks$ = stream(3);
 		let component = <DoubleClicks clicks$={clicks$} />;
 		test(component, [
-			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>')
+			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>')
 		], done);
 	});
 
@@ -35,8 +35,8 @@ describe('Components', () => {
 		let clicks$ = stream(3);
 		let component = <DoubleClicks clicks$={clicks$} />;
 		test(component, [
-			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>'),
-			element => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
+			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 6</p>'),
+			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
 		], done);
 		clicks$(6);
 	});
@@ -53,7 +53,7 @@ describe('Components', () => {
 		let component = <DumbComponent clicks$={clicks$} onclick={x => clicks$(x)} />;
 		test(component, [
 			// perform the actions on the element
-			element => {
+			({element}) => {
 				element.querySelector('button').click();
 				assert.equal(clicks$(), 1);
 			}
@@ -109,11 +109,11 @@ describe('Components', () => {
 		</ul>;
 
 		test(component, [
-			element => {
+			({element}) => {
 				assert.equal(element.querySelectorAll('li').length, 3);
 				assert.equal(element.querySelectorAll('li')[2].innerHTML, '2');
 			},
-			element => {
+			({element}) => {
 				assert.equal(element.querySelectorAll('li').length, 2);
 				assert.equal(element.querySelectorAll('li')[1].innerHTML, '2');
 			}
@@ -127,10 +127,10 @@ describe('Components', () => {
 		let value$ = stream(true);
 		let component = <div disabled={value$}></div>;
 		test(component, [
-			element => {
+			({element}) => {
 				expect(element.disabled).toBe(true);
 			},
-			element => {
+			({element}) => {
 				expect(element.disabled).toBe(undefined);
 			}
 		], done);
@@ -209,11 +209,11 @@ describe('Components', () => {
 			<div>{content$}</div>
 		</div>;
 		test(app, [
-			(element, {version}) => {
+			({element, version}) => {
 				expect(version).toBe(0);
 				content$('text');
 			},
-			(element, {version}) => {
+			({element, version}) => {
 				expect(version).toBe(1);
 			}
 		], done);
@@ -226,12 +226,12 @@ describe('Components', () => {
 		</div>;
 		let i;
 		test(app, [
-			(_, {keyContainer}) => {
+			({keyContainer}) => {
 				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
 				expect(keyContainer['test'].version).toBe(0);
 				content$('text');
 			},
-			(_, {keyContainer}) => {
+			({keyContainer}) => {
 				expect(keyContainer['test'].element.outerHTML).toMatchSnapshot();
 				expect(keyContainer['test'].version).toBe(1);
 			},
@@ -246,14 +246,14 @@ describe('Components', () => {
 		</div>;
 		let i;
 		test(app, [
-			(element, {keyContainer}) => {
+			({element, keyContainer}) => {
 				// manipulating the dom to prove update
 				element.replaceChild(document.createElement('div'), keyContainer['test'].element);
 				// manipulating the stored element
 				keyContainer['test'].element.setAttribute('id', 'updated');
 				content$('text');
 			},
-			(element, {keyContainer}) => {
+			({element, keyContainer}) => {
 				expect(element.querySelector('#updated')).not.toBe(null);
 			},
 		], done)
