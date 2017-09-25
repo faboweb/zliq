@@ -1,4 +1,5 @@
 import { h, stream, merge$, if$, REMOVED } from '../src';
+import { test$ } from './helpers/test-component.js';
 
 describe('Streamy', () => {
     it('should trigger listeners on initial value', (done)=> {
@@ -66,20 +67,33 @@ describe('Streamy', () => {
     });
 
     it('should emit aggregates on reduce', (done)=> {
-        let myStream = stream(1);
+        let myStream = stream();
         let agg$ = myStream.reduce((agg, cur) => {
             return agg + cur;
         }, 0);
-        agg$.reduce((iteration, x) => {
-            if (iteration === 0) {
+        test$(agg$, [
+            x => {
                 expect(x).toBe(1);
                 setImmediate(() => myStream(2));
-            }
-            if (iteration === 1) {
+            },
+            x => {
                 expect(x).toBe(3);
-                done();
             }
-            return iteration + 1;
-        }, 0);
+        ], done)
+        myStream(1);
+    })
+
+    it('should debounce values', (done)=> {
+        let myStream = stream(1);
+        const myMock = jest.fn();
+        let debounced$ = myStream.debounce(50);
+        debounced$.map(myMock);
+        test$(debounced$, [
+            x => {
+                expect(x).toBe(2);
+                expect(myMock.mock.calls.length).toBe(1);
+            }
+        ], done);
+        myStream(2);
     })
 })
