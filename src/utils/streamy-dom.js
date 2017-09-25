@@ -55,11 +55,9 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 		return newElement;
 	}
 
-	// we do not mutate foreign cached (id) elements
+	// we do not mutate foreign cached (id) elements as this will mutate the cache
 	// if the node types do not differ, we reuse the old node
-	let isCached = oldElement.id !== "";
-	let isOwnCached = isCached && props && props.id === oldElement.id;
-	if ((isCached && !isOwnCached) || nodeTypeDiffers(oldElement, tag)) {
+	if (shouldRecycleElement(oldElement, props, tag)) {
 		newElement = createNode(tag, newChildren);
 		oldElement.parentElement.replaceChild(newElement, oldElement);
 		oldChildren = [];
@@ -68,12 +66,8 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 
 	diffAttributes(newElement, props);
 
-	// save keyed elements
 	if (props && props.id) {
-		keyContainer[props.id] = {
-			version: newVersion,
-			element: newElement
-		}
+		cacheElement(props.id, keyContainer, newVersion, newElement);
 	}
 
 	// text nodes have no real child-nodes, but have a string value as first child
@@ -236,5 +230,18 @@ function isTextNode(element) {
 function updateTextNode(element, value) {
 	if (element.nodeValue !== value) {
 		element.nodeValue = value;
+	}
+}
+
+function shouldRecycleElement(oldElement, props, tag) {
+	let isCached = oldElement.id !== "";
+	let isOwnCached = isCached && props && props.id === oldElement.id;
+	return (isCached && !isOwnCached) || nodeTypeDiffers(oldElement, tag);
+}
+
+function cacheElement(id, cache, version, element) {
+	cache[id] = {
+		version,
+		element
 	}
 }
