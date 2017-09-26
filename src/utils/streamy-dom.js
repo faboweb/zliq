@@ -22,6 +22,7 @@ export function render(vdom$, parentElement, debounce = 10) {
 				if (parentElement && version === 0) {
 					triggerLifecycle(oldElement, props, 'mounted');
 				}
+
 				return {
 					element: newElement,
 					version,
@@ -119,6 +120,8 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	if (tag !== TEXT_NODE) {
 		diffChildren(element, newChildren, oldChildren, cacheContainer);
 	}
+
+	return element;
 }
 
 // this removes nodes at the end of the children, that are not needed anymore in the current state for recycling
