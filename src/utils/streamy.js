@@ -214,7 +214,7 @@ function debounce(parent$, timer) {
 		if (curTimer) {
 			window.clearTimeout(curTimer);
 		}
-		curTimer = setTimeout(() => {
+		curTimer = setTimeout(function updateChildStream() {
 			newStream(value);
 			curTimer = null;
 		}, timer);

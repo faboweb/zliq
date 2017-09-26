@@ -25,21 +25,19 @@ export const h = (tag, props, ...children) => {
 			}
 		});
 	}
-	return {
-		vdom$: merge$([
-				wrapProps$(props),
-				mergedChildren$.map(flatten)
-			]).map(([props, children]) => {
-				return {
-					tag,
-					props,
-					children,
-					version: ++version
-			}})
-	};
+	return merge$([
+		wrapProps$(props),
+		mergedChildren$.map(flatten)
+	]).map(([props, children]) => {
+		return {
+			tag,
+			props,
+			children,
+			version: ++version
+	}});
 };
 
-// input has format [stream | {vdom$}]
+// input has format [stream]
 function mergeChildren$(children) {
 	if (!Array.isArray(children)) {
 		children = [children];
@@ -51,7 +49,7 @@ function mergeChildren$(children) {
 			return child
 			.flatMap(mergeChildren$);
 		}
-		return child.vdom$ || child;
+		return child;
 	})
 
 	return merge$(childrenVdom$arr);
@@ -68,11 +66,11 @@ function getChildrenVdom$arr(childrenArr) {
 	childrenArr = [].concat(...childrenArr);
 	// only handle vdom for now
 	let children$Arr = childrenArr.map(component => {
-		// if there is no vdom$ it is a string or number
-		if (component.vdom$ === undefined) {
+		// if there is no stream it is a string or number
+		if (!isStream(component)) {
 			return stream(component);
 		}
-		return component.vdom$
+		return component
 	});
 
 	return children$Arr
