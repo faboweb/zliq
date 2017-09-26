@@ -16,14 +16,14 @@ export function render(vdom$, parentElement, debounce = 10) {
 						parentElement.appendChild(oldElement);
 					}
 				}
-				diff(oldElement, tag, props, children, version, oldChildren, oldVersion, keyContainer);
+				let newElement = diff(oldElement, tag, props, children, version, oldChildren, oldVersion, keyContainer);
 
 				// signalise mount of root element on initial render
 				if (parentElement && version === 0) {
 					triggerLifecycle(oldElement, props, 'mounted');
 				}
 				return {
-					element: oldElement,
+					element: newElement,
 					version,
 					children: copyChildren(children),
 					keyContainer
@@ -41,7 +41,7 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	let isCaching = props && props.id;
 	// for keyed elements, we recall unchanged elements
 	if (isCaching) {
-		newElement = diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldChildren, cacheContainer);
+		newElement = diffCachedElement(oldElement, tag, props, newChildren, newVersion, cacheContainer);
 	} else {
 		newElement = diffElement(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer);
 	}
@@ -59,13 +59,18 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 
 
 
-function diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldChildren, cacheContainer) {
+function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cacheContainer) {
 	let id = props.id;
 
 	// if there is no cache, create one
 	if (cacheContainer[id] === undefined) {
 		cacheContainer[id] = {
-			element: document.createElement(tag)
+			element: document.createElement(tag),
+			vdom: {
+				tag,
+				props: {},
+				children: []
+			}
 		}
 	}
 
@@ -74,14 +79,17 @@ function diffCachedElement(oldElement, tag, props, newChildren, newVersion, oldC
 	// ignore update if version equals cache
 	if (newVersion !== elementCache.version) {
 		diffAttributes(elementCache.element, props);
-		diffChildren(elementCache.element, newChildren, oldChildren, cacheContainer);
+		diffChildren(elementCache.element, newChildren, elementCache.vdom.children, cacheContainer);
 		
 		elementCache.version = newVersion;
+		elementCache.vdom.props = props;
+		elementCache.vdom.children = newChildren;
 	}
 
 	// elements are updated in place, so only insert cached element if it's not already there
 	if (oldElement !== elementCache.element) {
 		oldElement.parentElement.replaceChild(elementCache.element, oldElement);
+		triggerLifecycle(elementCache.element, props, 'mounted');
 	}
 
 	return elementCache.element;
@@ -148,7 +156,10 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 
 		parentElement.appendChild(newElement);
 		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
-		triggerLifecycle(newElement, props, 'mounted');
+
+		if (props && props.cycle && props.cycle.mounted) {
+			console.error('The \'mounted\' lifecycle event is only called on elements with id. As elements are updated in place, it is hard to define when a normal element is mounted.');
+		}
 	}
 }
 
