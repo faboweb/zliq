@@ -109,13 +109,13 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	// if the node types do not differ, we reuse the old node
 	// we reuse the existing node to save time rerendering it
 	// we do not reuse/mutate cached (id) elements as this will mutate the cache
-	if (shouldRecycleElement(element, props, tag) === false) {
+	// if (shouldRecycleElement(element, props, tag) === false) {
 		let newElement = createNode(tag, newChildren);
 		element.parentElement.replaceChild(newElement, element);
 		element = newElement;
 		// there are no children anymore on the newly created node
 		oldChildren = [];
-	}
+	// }
 
 	diffAttributes(element, props);
 
@@ -168,11 +168,8 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 		let {tag, props, children, version} = newChildren[i];
 		let newElement = createNode(tag, children);
 
-		try {
-			parentElement.appendChild(newElement);
-		} catch (e) {
-			console.error(e);
-		}
+		parentElement.appendChild(newElement);
+
 		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
 
 		if (props && props.cycle && props.cycle.mounted) {
