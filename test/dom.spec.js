@@ -62,42 +62,6 @@ describe('Components', () => {
 		], done);
 	});
 
-	xit('should render a list of changes in an animationframe', done => {
-		var arr = [];
-		var length = 20;
-		for (let i = 0; i < length; i++) {
-			arr.push({ name: i });
-		}
-		let listElems = arr.map(x => <li>{x.name}</li>);
-		let listElem = <ul>
-			{ listElems }
-		</ul>;
-		// list items are not rendered yet as they are bundled into one animation frame
-		assert.equal(listElem.querySelectorAll('li').length, 0);
-		// we wait for the updates on the parent to have happened
-		listElem.addEventListener(CHILDREN_CHANGED, () => {
-			assert.equal(listElem.querySelectorAll('li').length, length);
-			done();
-		});
-	});
-
-	xit('should send added lifecycle events', (done)=> {
-		var container;
-		let switch$ = stream(false);
-		let Child = ()=>{
-			let elem = <div class="child"></div>;
-			elem.addEventListener(ADDED, ()=>{
-				assert.equal(container.querySelectorAll('.child').length, 1);
-				done();
-			});
-			return elem;
-		};
-		container = <div class="parent">
-			{switch$.map(x=>x?<Child />:null)}
-		</div>;
-		setTimeout(()=>switch$(true),1);
-	})
-
 	it('should update lists correctly', done => {
 		var arr = [];
 		var length = 3;
@@ -139,43 +103,7 @@ describe('Components', () => {
 		], done);
 	});
 
-    xit('should cleanup component stream subscriptions', (done) => {
-        const myMock = jest.fn();
-        let my$ = stream('HALLO');
-        let trigger$ = stream(true);
-        let Elem = ({some$}, children, deleted$) => {
-            let another$ = some$.map(myMock);
-			deleted$.map((deleted) => {
-				if (deleted) {
-					expect(my$.listeners.length).toBe(0);
-					done();
-				}
-			})
-            return <div />
-        }
-        let elem = <Elem some$={my$} />;
-        let app = <div>
-            {if$(trigger$, elem)}
-        </div>;
-        expect(my$.listeners.length).toBe(1);
-        trigger$(false);
-    })
-
-	xit('should evaluate streams on dom attachment', () => {
-        const myMock = jest.fn();
-		let control$ = stream(false);
-        let trigger$ = stream(true);
-        let my$ = stream('HALLO').until(trigger$);
-        let app = <div>
-            {if$(control$, my$)}
-        </div>;
-        expect(app.outerHTML).toBe('<div></div>');
-        control$(true);
-        expect(app.outerHTML).toBe('<div></div>');
-        trigger$(false);
-        expect(app.outerHTML).toBe('<div>HALLO</div>');
-	})
-
+	// TODO
 	xit('should trigger lifecycle events on nested components', done => {
 		const mountedMock = jest.fn();
 		const createdMock = jest.fn();
@@ -259,6 +187,31 @@ describe('Components', () => {
 			}
 		], done)
 	});
+
+	// TODO prove
+	// it('should not recycle id elements', done => {
+	// 	let toggle$ = stream(true);
+	// 	let content$ = stream('');
+	// 	let app = <div>
+	// 		{
+	// 			if$(toggle$, 'content', <div id="test"><p>{content$}</p></div>)
+	// 		}
+	// 	</div>;
+	// 	testRender(app, [
+	// 		() => toggle$(false),
+	// 		({element}) => {
+	// 			expect(element.querySelector('#test')).not.toBe(null);
+	// 			toggle$(true);
+	// 			content$('test');
+	// 			toggle$(false);
+	// 		},
+	// 		({element}) => {
+	// 			expect(element.querySelector('#test')).toBe(null);
+	// 		}
+	// 	], done)
+
+	// })
+
 	it('should debounce renderings', done => {
 		let content$ = stream('');
 		let app = <div>
