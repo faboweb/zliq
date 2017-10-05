@@ -109,13 +109,13 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	// if the node types do not differ, we reuse the old node
 	// we reuse the existing node to save time rerendering it
 	// we do not reuse/mutate cached (id) elements as this will mutate the cache
-	// if (shouldRecycleElement(element, props, tag) === false) {
+	if (shouldRecycleElement(element, props, tag) === false) {
 		let newElement = createNode(tag, newChildren);
 		element.parentElement.replaceChild(newElement, element);
 		element = newElement;
 		// there are no children anymore on the newly created node
 		oldChildren = [];
-	// }
+	}
 
 	diffAttributes(element, props);
 
@@ -189,7 +189,7 @@ function diffAttributes(element, props) {
 
 function applyAttribute(element, attribute, value) {
 	if (attribute === 'class' || attribute === 'className') {
-		element.className = value;
+		element.className = value || '';
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
 	} else if (attribute === 'style' && typeof value !== "string" ) {
@@ -308,5 +308,7 @@ function updateTextNode(element, value) {
 // we want to recycle elements to save time on creating and inserting nodes into the dom
 // we don't want to manipulate elements that go into the cache, because they would mutate in the cache as well
 function shouldRecycleElement(oldElement, props, tag) {
-	return !isTextNode(oldElement) && oldElement.id === "" && !nodeTypeDiffers(oldElement, tag);
+	return !isTextNode(oldElement)
+		&& oldElement.id === ""
+		&& !nodeTypeDiffers(oldElement, tag);
 }

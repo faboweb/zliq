@@ -25,8 +25,11 @@ export const promise$ = (promise) => {
 
 // provide easy switched on boolean streams
 // example use case: <button onclick={()=>open$(!open$())}>{if$(open$, 'Close', 'Open')}</button>
-export function if$(stream, onTrue, onFalse) {
-    return stream.map(x=>x?(onTrue||null):(onFalse||null));
+export function if$(boolean$, onTrue, onFalse) {
+	if (boolean$ === undefined || typeof boolean$ === 'boolean') {
+		return stream(boolean$ ? (onTrue||null) : (onFalse||null));
+	}
+    return boolean$.map(x=>x?(onTrue||null):(onFalse||null));
 }
 
 // join a mixed array of strings and streams of strings

@@ -10,20 +10,13 @@ export const h = (tag, props, ...children) => {
 
 	let mergedChildren$ = mergeChildren$(flatten(children));
 	// jsx usually resolves known tags as strings and unknown tags as functions
-	// if it is a sub component, resolve that component
+	// if it is a function it is treated as a componen and will resolve it
+	// props are not automatically resolved
 	if (typeof tag === 'function') {
 		return tag(
-			props,
+			props || {},
 			mergedChildren$
 		);
-	}
-	// add detachers to props
-	if (props !== null) {
-		Object.keys(props).map((propName, index) => {
-			if (isStream(props[propName])) {
-				props[propName] = props[propName];
-			}
-		});
 	}
 	return merge$([
 		wrapProps$(props),

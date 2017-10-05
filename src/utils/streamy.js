@@ -166,11 +166,14 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
 */
 function patch(parent$, partialChange) {
-	if (parent$.value == null) {
-		parent$(partialChange);
-		return;
-	}
-	return parent$(Object.assign({}, parent$.value, partialChange));
+	setImmediate(() => {
+		if (parent$.value == null) {
+			parent$(partialChange);
+			return;
+		}
+		
+		parent$(Object.assign({}, parent$.value, partialChange));
+	})
 }
 
 function until(parent$, stopEmitValues$) {
