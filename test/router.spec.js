@@ -1,31 +1,29 @@
 import { initRouter, h } from '../src';
-import { testRender } from './helpers/test-component';
+import { testRender, test$ } from './helpers/test-component';
+
+let location = {pathname: '/route', search: '?param=value', hash: ''};
 
 describe('Router', ()=> {
 	it('should react to initial routing', (done) => {
-		Object.defineProperty(location, 'pathname', {
-			value: '/route',
-			configurable: true
-		});
-
-		let router$ = initRouter();
-		router$.map(({route, params}) => {
-			expect(route).toBe('/route');
-			done();
-		})
+		let router$ = initRouter(location);
+		
+		test$(router$, [
+			() => {}, // TODO should not be
+			({route, params}) => {
+				expect(route).toBe('/route');
+			}
+		], done)
 	});
 
 	it('should react to initial query parameters', (done) => {
-		Object.defineProperty(location, 'search', {
-			value: '?param=value',
-			configurable: true
-		});
+		let router$ = initRouter(location);
 
-		let router$ = initRouter();
-		router$.map(({route, params}) => {
-			expect(params.param).toBe('value');
-			done();
-		})
+		test$(router$, [
+			() => {},
+			({route, params}) => {
+				expect(params.param).toBe('value');
+			}
+		], done);
 	});
 
 	it('should react to clicks on internal links', (done) => {
@@ -37,14 +35,16 @@ describe('Router', ()=> {
 			({element}) => element.click()
 		]);
 
-		router$.map(({route, params}) => {
-			expect(route).toBe('/route');
-			expect(params.param).toBe('value');
-			done();
-		});
+		test$(router$, [
+			({route, params}) => {
+				expect(route).toBe('/route');
+				expect(params.param).toBe('value');
+			}
+		], done);
 	});
 
-	it('should react to browser go back events', (done)=> {
+	// jsdom fails here
+	xit('should react to browser go back events', (done)=> {
 		let router$ = initRouter();
 
 		history.pushState({}, "", "/route?param=value");

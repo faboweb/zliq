@@ -32,14 +32,6 @@ function interceptLinks(routerState$) {
 
     // listen for link click events at the document level
     document.addEventListener('click', interceptClickEvent);
-
-    // react to initial routing info
-    if (location.pathname !== '/' || location.search !== "") {
-        // construct initial routing link
-        let href = location.pathname + location.search + location.hash;
-        let {route, query} = parseLink(location.pathname + location.search + location.hash);
-        dispatchRouteChange(routerState$, route, query);
-    }
 }
 
 
@@ -106,7 +98,8 @@ export function Router({router$, route}, children$) {
     });
 }
 
-export function initRouter() {
+// provide location for testing purposes
+export function initRouter(location = window.location) {
     let routerState$ = stream({
         route: '',
         params: {},
@@ -114,6 +107,14 @@ export function initRouter() {
     });
 
     interceptLinks(routerState$);
+    
+    // react to initial routing info
+    if (location.pathname !== '/' || location.search !== "") {
+        // construct initial routing link
+        let href = location.pathname + location.search + location.hash;
+        let {route, query} = parseLink(location.pathname + location.search + location.hash);
+        dispatchRouteChange(routerState$, route, query);
+    }
 
     return routerState$;
 }
