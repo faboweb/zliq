@@ -106,7 +106,7 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	// if the node types do not differ, we reuse the old node
 	// we reuse the existing node to save time rerendering it
 	// we do not reuse/mutate cached (id) elements as this will mutate the cache
-	if (shouldRecycleElement(element, props, tag)) {
+	if (!shouldRecycleElement(element, props, tag)) {
 		let newElement = createNode(tag, newChildren);
 		element.parentElement.replaceChild(newElement, element);
 		element = newElement;

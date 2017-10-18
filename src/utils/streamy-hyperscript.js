@@ -13,7 +13,7 @@ export const h = (tag, props, ...children) => {
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
 		return tag(
-			props,
+			props || {},
 			mergedChildren$
 		);
 	}

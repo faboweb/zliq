@@ -162,18 +162,18 @@ describe('Components', () => {
     })
 
 	xit('should evaluate streams on dom attachment', () => {
-        const myMock = jest.fn();
+		const myMock = jest.fn();
 		let control$ = stream(false);
-        let trigger$ = stream(true);
-        let my$ = stream('HALLO').until(trigger$);
-        let app = <div>
-            {if$(control$, my$)}
-        </div>;
-        expect(app.outerHTML).toBe('<div></div>');
-        control$(true);
-        expect(app.outerHTML).toBe('<div></div>');
-        trigger$(false);
-        expect(app.outerHTML).toBe('<div>HALLO</div>');
+		let trigger$ = stream(true);
+		let my$ = stream('HALLO').until(trigger$);
+		let app = <div>
+				{if$(control$, my$)}
+		</div>;
+		expect(app.outerHTML).toBe('<div></div>');
+		control$(true);
+		expect(app.outerHTML).toBe('<div></div>');
+		trigger$(false);
+		expect(app.outerHTML).toBe('<div>HALLO</div>');
 	})
 
 	xit('should trigger lifecycle events on nested components', done => {
@@ -280,4 +280,33 @@ describe('Components', () => {
 			}, 30);
 		}, 60);
 	});
+
+	it('should replace idd elements again', done => {
+		let trigger$ = stream(false);
+		let app = <div>
+			<img />
+			{
+				if$(trigger$,
+					<i id="x"></i>,
+					<div>
+						<div></div>
+					</div>
+				)
+			}
+		</div>;
+
+		testRender(app, [
+			({element}) => {
+				expect(element.querySelector('#x')).toBeNull()
+				trigger$(true)
+			},
+			({element}) => {
+				expect(element.querySelector('#x')).not.toBeNull()
+				trigger$(false)
+			},
+			({element}) => {
+				expect(element.querySelector('#x')).toBeNull()
+			}
+		], done)
+	})
 });
