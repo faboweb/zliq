@@ -46,14 +46,6 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 	} else {
 		newElement = diffElement(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer);
 	}
-	
-	if (newVersion === 0) {
-		triggerLifecycle(newElement, props, 'created');
-	}
-
-	if (newVersion > 0) {
-		triggerLifecycle(newElement, props, 'updated');
-	}
 
 	return newElement;
 }
@@ -62,6 +54,8 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 
 function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cacheContainer) {
 	let id = props.id;
+	let gotCreated = false;
+	let gotUpdated = false;
 
 	// if there is no cache, create one
 	if (cacheContainer[id] === undefined) {
@@ -73,6 +67,7 @@ function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cach
 				children: []
 			}
 		}
+		gotCreated = true;
 	}
 
 	let elementCache = cacheContainer[id];
@@ -85,6 +80,14 @@ function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cach
 		elementCache.version = newVersion;
 		elementCache.vdom.props = props;
 		elementCache.vdom.children = newChildren;
+
+		gotUpdated = true;
+	}
+
+	if (gotCreated) {
+		triggerLifecycle(elementCache.element, props, 'created');
+	} else if (gotUpdated) {
+		triggerLifecycle(elementCache.element, props, 'updated');
 	}
 
 	// elements are updated in place, so only insert cached element if it's not already there
@@ -106,7 +109,7 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	// if the node types do not differ, we reuse the old node
 	// we reuse the existing node to save time rerendering it
 	// we do not reuse/mutate cached (id) elements as this will mutate the cache
-	if (shouldRecycleElement(element, props, tag)) {
+	if (shouldRecycleElement(element, props, tag) === false) {
 		let newElement = createNode(tag, newChildren);
 		element.parentElement.replaceChild(newElement, element);
 		element = newElement;
@@ -119,6 +122,14 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 	// text nodes have no real child-nodes, but have a string value as first child
 	if (tag !== TEXT_NODE) {
 		diffChildren(element, newChildren, oldChildren, cacheContainer);
+	}
+	
+	if (newVersion === 0) {
+		triggerLifecycle(element, props, 'created');
+	}
+
+	if (newVersion > 0) {
+		triggerLifecycle(element, props, 'updated');
 	}
 
 	return element;
@@ -158,6 +169,7 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 		let newElement = createNode(tag, children);
 
 		parentElement.appendChild(newElement);
+
 		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
 
 		if (props && props.cycle && props.cycle.mounted) {
@@ -177,7 +189,7 @@ function diffAttributes(element, props) {
 
 function applyAttribute(element, attribute, value) {
 	if (attribute === 'class' || attribute === 'className') {
-		element.className = value;
+		element.className = value || '';
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
 	} else if (attribute === 'style' && typeof value !== "string" ) {
@@ -296,5 +308,7 @@ function updateTextNode(element, value) {
 // we want to recycle elements to save time on creating and inserting nodes into the dom
 // we don't want to manipulate elements that go into the cache, because they would mutate in the cache as well
 function shouldRecycleElement(oldElement, props, tag) {
-	return oldElement.id === "" && nodeTypeDiffers(oldElement, tag);
+	return !isTextNode(oldElement)
+		&& oldElement.id === ""
+		&& !nodeTypeDiffers(oldElement, tag);
 }

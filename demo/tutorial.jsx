@@ -308,38 +308,6 @@ export const Tutorial = () =>
             `}
         </Markup>
 
-        <Subheader title="Routing" subtitle="To allow deeplinks and browser history" id="routing" />
-
-        <p>ZLIQ currently has a basic router. The router prevents page reloading for local links and gives you a stream for the current routing information:</p>
-
-        <Markup>
-            {`
-            |import { initRouter } from '../src';
-            |let router$ = initRouter();
-            `}
-        </Markup>
-
-        <p>The router element is the counterpart in the Hyperscript. It registers a provided route in the global router so we can decide on routes where we need them, in the view:</p>
-
-        <Markup>
-            {`
-            |import { Router } from '../src';
-            |let routes = [
-            |    <Router router$={router$} route={'/'}>
-            |        <a href='/place?foo=bar'>Go to place bar</a>
-            |    </Router>,
-            |    <Router router$={router$} route={'/place'}>
-            |        You are at place {router$.$('params.foo')}.
-            |        <a href='/'>Go home</a>
-            |    </Router>
-            |];
-            `}
-        </Markup>
-
-        <p>The router is currently not allowing for some kind of child-routes.</p>
-
-        <p>Test the router on this page: <a href="/subpage?foo=bar">Go to Subpage</a></p>
-
         {/* <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
 
         <p>ZLIQ dispatches lifecycle events `CHILDREN_CHANGED`, `ADDED`, `REMOVED` and `UPDATED` on the element. This way you can perform actions like initialization jQuery plugins on the element.</p>
