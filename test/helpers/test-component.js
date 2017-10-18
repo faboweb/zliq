@@ -23,7 +23,11 @@ function testSchedule(schedule, iteration, value, done) {
     // here the iterations are made asynchronous to prevent this
     setTimeout(function() {
         try {
-            schedule[iteration](value);
+            if (typeof schedule[iteration] === 'function') {
+                schedule[iteration](value)
+            } else {
+                expect(schedule[iteration]).toBe(value)
+            }
         } catch (error) {
             done.fail(error);
         }

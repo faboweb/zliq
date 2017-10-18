@@ -85,6 +85,11 @@ describe('Helpers', () => {
                     call++;
                 })
         })
+        it('should also allow undefined and boolean as input', ()=> {
+            expect(if$(null, true, false).value).toBe(false)
+            expect(if$(true, true, false).value).toBe(true)
+            expect(if$({x:1}, true, false).value).toBe(true)
+        })
     });
 
     describe('join$', () => {
