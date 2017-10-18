@@ -188,30 +188,6 @@ describe('Components', () => {
 		], done)
 	});
 
-	// TODO prove
-	// it('should not recycle id elements', done => {
-	// 	let toggle$ = stream(true);
-	// 	let content$ = stream('');
-	// 	let app = <div>
-	// 		{
-	// 			if$(toggle$, 'content', <div id="test"><p>{content$}</p></div>)
-	// 		}
-	// 	</div>;
-	// 	testRender(app, [
-	// 		() => toggle$(false),
-	// 		({element}) => {
-	// 			expect(element.querySelector('#test')).not.toBe(null);
-	// 			toggle$(true);
-	// 			content$('test');
-	// 			toggle$(false);
-	// 		},
-	// 		({element}) => {
-	// 			expect(element.querySelector('#test')).toBe(null);
-	// 		}
-	// 	], done)
-
-	// })
-
 	it('should debounce renderings', done => {
 		let content$ = stream('');
 		let app = <div>
@@ -233,4 +209,33 @@ describe('Components', () => {
 			}, 30);
 		}, 60);
 	});
+	
+	it('should replace idd elements again', done => {
+		let trigger$ = stream(false);
+		let app = <div>
+			<img />
+			{
+				if$(trigger$,
+					<i id="x"></i>,
+					<div>
+						<div></div>
+					</div>
+				)
+			}
+		</div>;
+
+		testRender(app, [
+			({element}) => {
+				expect(element.querySelector('#x')).toBeNull()
+				trigger$(true)
+			},
+			({element}) => {
+				expect(element.querySelector('#x')).not.toBeNull()
+				trigger$(false)
+			},
+			({element}) => {
+				expect(element.querySelector('#x')).toBeNull()
+			}
+		], done)
+	})
 });

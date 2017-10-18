@@ -12,10 +12,6 @@ export function test$(stream, schedule, done) {
         }
 
         testSchedule(schedule, iteration, value, done);
-        
-        if (schedule.length === iteration + 1 && done) {
-            done();
-        }
 
         return iteration + 1;
     }, 0);
@@ -30,6 +26,10 @@ function testSchedule(schedule, iteration, value, done) {
             schedule[iteration](value);
         } catch (error) {
             done.fail(error);
+        }
+        
+        if (schedule.length === iteration + 1 && done) {
+            done();
         }
     })
 }
