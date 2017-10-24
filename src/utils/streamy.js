@@ -120,18 +120,27 @@ function filter(parent$, fn) {
 	return newStream;
 }
 
+
+/*
+* recursivly return the nested property of an object defined by an array of selectors
+* parent: {foo: {bar:1}}, selectors: ['foo','bar'] returns 1
+*/
+function select(parent, selectors) {
+	if (parent === null || parent === undefined) {
+		return null
+	}
+	if (selectors.length === 0) {
+		return parent
+	}
+	let selector = selectors[0]
+	return select(parent[selector], selectors.splice(1, selectors.length - 1));
+}
 /*
 * provides a new stream that has a selected sub property of the object value of the parent stream
 * the selector has the format [{propertyName}.]*
 */
 function deepSelect(parent$, selector) {
 	let selectors = selector.split('.');
-
-	function select(parent, selectors) {
-		return selectors.reduce((input, selector) => {
-			return input[selector];
-		}, parent);
-	}
 
 	let newStream = fork$(parent$, (value) => select(value, selectors));
 	parent$.listeners.push(function deepSelectValue(newValue) {
@@ -140,11 +149,11 @@ function deepSelect(parent$, selector) {
 	return newStream;
 };
 
-function query(parent$, selectorArr) {
-	if(!Array.isArray(selectorArr)) {
-		return deepSelect(parent$, selectorArr);
+function query(parent$, selectorsArr) {
+	if(!Array.isArray(selectorsArr)) {
+		return parent$.map(value => select(value, selectorsArr.split('.')))
 	}
-	return merge$(selectorArr.map(selector => deepSelect(parent$, selector)));
+	return parent$.map(value => selectorsArr.map(selectors => select(value, selectors.split('.'))))
 }
 
 // TODO: maybe refactor with filter
@@ -166,27 +175,32 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
 */
 function patch(parent$, partialChange) {
-	setImmediate(() => {
-		if (parent$.value == null) {
-			parent$(partialChange);
-			return;
-		}
-		
-		parent$(Object.assign({}, parent$.value, partialChange));
+	return new Promise((resolve) => {
+		setImmediate(() => {
+			if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
+				parent$(partialChange);
+			} else {
+				parent$(Object.assign({}, parent$.value, partialChange));
+			}
+			resolve(parent$);
+		})
 	})
 }
 
 function until(parent$, stopEmitValues$) {
-	let newStream = stream(stopEmitValues$.value ? undefined : parent$.value);
-	let subscribeTo = (stream) => {
-		newStream(parent$.value);
-		stream.listeners.push(newStream);
+	let newStream = stream();
+	let subscribeTo = (stream, listener) => {
+		listener(parent$.value);
+		stream.listeners.push(listener);
+	}
+	if (stopEmitValues$.value === undefined) {
+		subscribeTo(parent$, newStream)
 	}
 	stopEmitValues$.map(stopEmitValues => {
 		if(stopEmitValues) {
 			removeItem(parent$.listeners, newStream);
 		} else {
-			subscribeTo(parent$);
+			subscribeTo(parent$, newStream);
 		}
 	});
 	return newStream;

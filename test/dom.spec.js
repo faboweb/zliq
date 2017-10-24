@@ -1,23 +1,36 @@
 import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
-import { testRender } from './helpers/test-component';
+import { testRender, test$ } from './helpers/test-component';
 import assert from 'assert';
 
 describe('Components', () => {
 	it('should show a component', done => {
 		testRender(<p>HELLO WORLD</p>, [
-			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
 		], done);
 	});
 
 	it('should work with React style hyperscript', done => {
 		testRender(h('p', null, 'this', ' and ', 'that'), [
-			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
 		], done);
 	});
 
 	it('should work with Preact style hyperscript', done => {
 		testRender(h('p', null, ['this', ' and ', 'that']), [
-			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
+		], done);
+	});
+
+	it('should render into a parentElement provided', done => {
+		let container = document.createElement('div')
+		test$(render(<p>HELLO WORLD</p>, container), [
+			({element}) => expect(container.innerHTML).toEqual('<p>HELLO WORLD</p>')
+		], done);
+	});
+
+	it('should render without a parentElement provided', done => {
+		test$(render(<p>HELLO WORLD</p>, null), [
+			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
 		], done);
 	});
 
@@ -41,6 +54,18 @@ describe('Components', () => {
 			},
 			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
 		], done);
+	});
+
+	it('should update elements with textnodes', done => {
+		let trigger$ = stream()
+		testRender(<p>{if$(trigger$, <div></div>, 'HELLO WORLD')}</p>, [
+			({element}) => expect(element.outerHTML).toEqual('<p><div></div></p>'),
+			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
+		], done);
+		trigger$(true)
+		setTimeout(() => {
+			trigger$(false)
+		}, 10)
 	});
 
 	it('should set the class', done => {
@@ -68,6 +93,11 @@ describe('Components', () => {
 			({element}) => {
 				expect(element.style.width).toBe('');
 				expect(element.style.height).toBe('200px');
+				style$(null)
+			},
+			({element}) => {
+				expect(element.style.width).toBe('');
+				expect(element.style.height).toBe('');
 			}
 		], done)
 	})

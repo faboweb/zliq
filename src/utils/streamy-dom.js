@@ -16,7 +16,12 @@ export function render(vdom$, parentElement, debounce = 10) {
 						parentElement.appendChild(oldElement);
 					}
 				}
-				let newElement = diff(oldElement, tag, props, children, version, oldChildren, oldVersion, keyContainer);
+				let newElement = diff(
+					oldElement,
+					{tag, props, children, version},
+					{children:oldChildren, version:oldVersion},
+					keyContainer
+				);
 
 				// signalise mount of root element on initial render
 				if (parentElement && version === 0) {
@@ -37,14 +42,18 @@ export function render(vdom$, parentElement, debounce = 10) {
 		})
 }
 
-export function diff(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer) {
+export function diff(oldElement,
+		newChild,
+		oldChild,
+		cacheContainer
+) {
 	let newElement = oldElement;
-	let isCaching = props && props.id;
+	let isCaching = newChild.props && newChild.props.id;
 	// for keyed elements, we recall unchanged elements
 	if (isCaching) {
-		newElement = diffCachedElement(oldElement, tag, props, newChildren, newVersion, cacheContainer);
+		newElement = diffCachedElement(oldElement, newChild, oldChild, cacheContainer);
 	} else {
-		newElement = diffElement(oldElement, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer);
+		newElement = diffElement(oldElement, newChild, oldChild, cacheContainer);
 	}
 
 	return newElement;
@@ -52,7 +61,7 @@ export function diff(oldElement, tag, props, newChildren, newVersion, oldChildre
 
 
 
-function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cacheContainer) {
+function diffCachedElement(oldElement, {tag, props, children, version}, {props:oldProps}, cacheContainer) {
 	let id = props.id;
 	let gotCreated = false;
 	let gotUpdated = false;
@@ -73,13 +82,13 @@ function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cach
 	let elementCache = cacheContainer[id];
 
 	// ignore update if version equals cache
-	if (newVersion !== elementCache.version) {
-		diffAttributes(elementCache.element, props);
-		diffChildren(elementCache.element, newChildren, elementCache.vdom.children, cacheContainer);
+	if (version !== elementCache.version) {
+		diffAttributes(elementCache.element, props, oldProps);
+		diffChildren(elementCache.element, children, elementCache.vdom.children, cacheContainer);
 		
-		elementCache.version = newVersion;
+		elementCache.version = version;
 		elementCache.vdom.props = props;
-		elementCache.vdom.children = newChildren;
+		elementCache.vdom.children = children;
 
 		gotUpdated = true;
 	}
@@ -99,7 +108,11 @@ function diffCachedElement(oldElement, tag, props, newChildren, newVersion, cach
 	return elementCache.element;
 }
 
-function diffElement(element, tag, props, newChildren, newVersion, oldChildren, oldVersion, cacheContainer) {
+function diffElement(element,
+	{tag, props, children:newChildren, version:newVersion},
+	{props:oldProps, children:oldChildren, version:oldVersion},
+	cacheContainer
+) {
 	// text nodes behave differently then normal dom elements
 	if (isTextNode(element) && tag === TEXT_NODE ) {
 		updateTextNode(element, newChildren[0]);
@@ -117,7 +130,7 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 		oldChildren = [];
 	}
 
-	diffAttributes(element, props);
+	diffAttributes(element, props, oldProps);
 
 	// text nodes have no real child-nodes, but have a string value as first child
 	if (tag !== TEXT_NODE) {
@@ -137,17 +150,16 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 
 // this removes nodes at the end of the children, that are not needed anymore in the current state for recycling
 function removeNotNeededNodes(parentElements, newChildren, oldChildren) {
-	let remaining = parentElements.childNodes.length; 
-  if (oldChildren.length !== remaining) { 
-    console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code."); 
-  } 
- 
-  for(; remaining > newChildren.length; remaining--) { 
-    let childToRemove = parentElements.childNodes[remaining - 1]; 
+	let remaining = parentElements.childNodes.length;
+	if (oldChildren.length !== remaining) {
+		console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code.");
+	}
+
+	for(; remaining > newChildren.length; remaining--) {
+		let childToRemove = parentElements.childNodes[remaining - 1];
 		parentElements.removeChild(childToRemove);
 
 		if (oldChildren.length < remaining) {
-			console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code.");
 			continue;
 		} else {
 			let {props} = oldChildren[remaining - 1];
@@ -160,11 +172,7 @@ function removeNotNeededNodes(parentElements, newChildren, oldChildren) {
 function updateExistingNodes(parentElement, newChildren, oldChildren, cacheContainer) {
 	let nodes = parentElement.childNodes;
 	for(let i = 0; i < nodes.length && i < newChildren.length; i++) {
-		let oldElement = nodes[i];
-		let {version: oldVersion, children: oldChildChildren} = oldChildren[i];
-		let {tag, props, children, version} = newChildren[i];
-
-		diff(oldElement, tag, props, children, version, oldChildChildren, oldVersion, cacheContainer);
+		diff(nodes[i], newChildren[i], oldChildren[i], cacheContainer);
 	}
 }
 
@@ -175,7 +183,7 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 
 		parentElement.appendChild(newElement);
 
-		diff(newElement, tag, props, children, version, [], -1, cacheContainer);
+		diff(newElement, newChildren[i], {}, cacheContainer);
 
 		if (props && props.cycle && props.cycle.mounted) {
 			console.error('The \'mounted\' lifecycle event is only called on elements with id. As elements are updated in place, it is hard to define when a normal element is mounted.');
@@ -183,12 +191,16 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 	}
 }
 
-function diffAttributes(element, props) {
+function diffAttributes(element, props, oldProps = {}) {
 	if (props !== undefined) {
 		Object.keys(props).map(function applyPropertyToElement(attribute) {
 			applyAttribute(element, attribute, props[attribute])
 		});
-		cleanupAttributes(element, props);
+		Object.keys(oldProps).map(function removeNotNeededAttributes(oldAttribute) {
+			if (props[oldAttribute] === undefined) {
+				element.removeAttribute(oldAttribute);
+			}
+		});
 	}
 }
 
@@ -198,8 +210,8 @@ function applyAttribute(element, attribute, value) {
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
 	} else if (attribute === 'style' && typeof value !== "string" ) {
-		const cssText = Object.keys(value).map(key => key + ':' + value[key] + ';').join(' '); 
-		element.style.cssText = cssText; 
+		const cssText = value ? Object.keys(value).map(key => key + ':' + value[key] + ';').join(' ') : '';
+		element.style.cssText = cssText;
 	// other propertys are just added as is to the DOM
 	} else {
 		// also remove attributes on null to allow better handling of streams
@@ -213,18 +225,7 @@ function applyAttribute(element, attribute, value) {
 	}
 }
 
-// remove attributes that are not in props anymore
-function cleanupAttributes(element, props) {
-	if (element.props !== undefined) {
-		for(let attribute in element.props) {
-			if (props[attribute] === undefined) {
-				element.removeAttribute(attribute);
-			}
-		}
-	}
-}
-
-function diffChildren(element, newChildren, oldChildren, cacheContainer) {
+function diffChildren(element, newChildren, oldChildren = [], cacheContainer) {
 	if (newChildren.length === 0 && oldChildren.length === 0) {
 		return;
 	}
@@ -274,8 +275,6 @@ export function createNode(tag, children) {
 // to not mutate the representation of our children from the last iteration we clone them
 // we copy the cycle functions for each element, as JSON parse/stringify does not work for functions
 function copyChildren(oldChildren) {
-	if (oldChildren === undefined) return [];
-
 	let newChildren = JSON.parse(JSON.stringify(oldChildren));
 	newChildren.forEach((child, index) => {
 		let oldChild = oldChildren[index];
