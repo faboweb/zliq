@@ -43,6 +43,35 @@ describe('Components', () => {
 		], done);
 	});
 
+	it('should set the class', done => {
+		let class$ = stream('x')
+		let app = <div class={class$} />
+		testRender(app, [
+			({element}) => {
+				expect(element.classList).toContain('x');
+				class$(null)
+			},
+			({element}) => {
+				expect(element.classList).not.toContain('x');
+			}
+		], done)
+	})
+
+	it('should set style in different ways', done => {
+		let style$ = stream('width: 100px;')
+		let app = <div style={style$} />
+		testRender(app, [
+			({element}) => {
+				expect(element.style.width).toBe('100px');
+				style$({height: '200px'})
+			},
+			({element}) => {
+				expect(element.style.width).toBe('');
+				expect(element.style.height).toBe('200px');
+			}
+		], done)
+	})
+
 	it('should react to attached events', done => {
 		// input streams are scoped to be able to remove the listener if the element gets removed
 		// this means you can not manipulate the stream from the inside to the outside but need to use a callback function
@@ -99,6 +128,26 @@ describe('Components', () => {
 			},
 			({element}) => {
 				expect(element.disabled).toBe(undefined);
+			}
+		], done);
+	});
+
+	it('should remove attributes on updates if not available anymore', done => {
+		let trigger$ = stream(true);
+		let app = <div>
+			{
+				if$(trigger$,
+					<img src="img_girl.jpg" width="500" height="600" />,
+					<img src="img_girl.jpg" height="600" />)
+			}
+		</div>;
+		testRender(app, [
+			({element}) => {
+				expect(element.querySelector('img').getAttribute('width')).toBe("500");
+				trigger$(false);
+			},
+			({element}) => {
+				expect(element.querySelector('img').getAttribute('width')).toBe(null);
 			}
 		], done);
 	});
@@ -236,6 +285,32 @@ describe('Components', () => {
 			({element}) => {
 				expect(element.querySelector('#x')).toBeNull()
 			}
+		], done)
+	})
+
+	it('should print a warning if the child nodes have been removed/added outside of zliq', done => {
+		let trigger$ = stream(false)
+		let app = <div>
+			<div id="remove" />
+			<div id="stays" />
+			{
+				if$(trigger$,
+					<div id="added" />)
+			}
+		</div>
+		global.console = {warn: jest.fn()}
+
+		testRender(app, [
+			({element}) => {
+				element.querySelector('#remove').remove()
+				trigger$(true)
+			},
+			({element}) => {
+				expect(global.console.warn).toHaveBeenCalled()
+				element.appendChild(document.createElement('div'))
+				trigger$(false)
+			},
+			() => {}
 		], done)
 	})
 });
