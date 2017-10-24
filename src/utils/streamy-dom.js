@@ -137,12 +137,17 @@ function diffElement(element, tag, props, newChildren, newVersion, oldChildren, 
 
 // this removes nodes at the end of the children, that are not needed anymore in the current state for recycling
 function removeNotNeededNodes(parentElements, newChildren, oldChildren) {
-	for(let remaining = parentElements.childNodes.length; remaining > newChildren.length; remaining--) {
-		let childToRemove = parentElements.childNodes[remaining - 1];
+	let remaining = parentElements.childNodes.length; 
+  if (oldChildren.length !== remaining) { 
+    console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code."); 
+  } 
+ 
+  for(; remaining > newChildren.length; remaining--) { 
+    let childToRemove = parentElements.childNodes[remaining - 1]; 
 		parentElements.removeChild(childToRemove);
 
 		if (oldChildren.length < remaining) {
-			console.log("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code.");
+			console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code.");
 			continue;
 		} else {
 			let {props} = oldChildren[remaining - 1];
@@ -180,7 +185,7 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 
 function diffAttributes(element, props) {
 	if (props !== undefined) {
-		Object.getOwnPropertyNames(props).map(function applyPropertyToElement(attribute) {
+		Object.keys(props).map(function applyPropertyToElement(attribute) {
 			applyAttribute(element, attribute, props[attribute])
 		});
 		cleanupAttributes(element, props);
@@ -193,7 +198,8 @@ function applyAttribute(element, attribute, value) {
 	// we leave the possibility to define styles as strings
 	// but we allow styles to be defined as an object
 	} else if (attribute === 'style' && typeof value !== "string" ) {
-		Object.assign(element.style, value);
+		const cssText = Object.keys(value).map(key => key + ':' + value[key] + ';').join(' '); 
+		element.style.cssText = cssText; 
 	// other propertys are just added as is to the DOM
 	} else {
 		// also remove attributes on null to allow better handling of streams
