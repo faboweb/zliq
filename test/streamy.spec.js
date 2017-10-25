@@ -28,6 +28,7 @@ describe('Streamy', () => {
         // myStream.distinct().map(myMock);
         myStream.reduce(myMock, null);
         merge$([myStream]).map(myMock);
+        merge$([myStream, stream()]).map(myMock);
 
         expect(myMock.mock.calls.length).toBe(0);
         myStream.map(() => {
@@ -40,16 +41,62 @@ describe('Streamy', () => {
     it('shouldnt trigger listeners for negative .until triggers', () => {
         const myMock = jest.fn();
         let myStream = stream('HALLO');
-        let myTrigger = stream(false);
+        let myTrigger = stream();
         myStream.until(myTrigger).map(myMock);
         expect(myStream.listeners.length).toBe(1);
         expect(myMock.mock.calls.length).toBe(1);
         myTrigger(true);
         expect(myStream.listeners.length).toBe(0);
-        expect(myMock.mock.calls.length).toBe(1);
         myStream('WORLD');
         expect(myMock.mock.calls.length).toBe(1);
+        myTrigger(false);
+        expect(myStream.listeners.length).toBe(1);
+        expect(myMock.mock.calls.length).toBe(2);
+        myStream('BYE');
+        expect(myMock.mock.calls.length).toBe(3);
+
+        myTrigger = stream(true);
+        myStream = stream('HALLO')
+        let newMock = jest.fn()
+        myStream.until(myTrigger).map(newMock);
+        expect(myStream.listeners.length).toBe(0);
+        expect(newMock.mock.calls.length).toBe(0);
     })
+
+    it('should trigger the flatMap on child update', (done) => {
+        let myStream = stream('HALLO');
+        let secondStream = stream('MARK');
+        let flatMap$ = myStream.flatMap(x => {
+            return secondStream.map(y => x + ' YOU ' + y)
+        })
+        test$(flatMap$, [
+            'HALLO YOU MARK',
+            'BYE YOU MARK',
+            'BYE YOU FABO',
+        ], done)
+        myStream('BYE')
+        secondStream('FABO')
+    })
+
+    it('should trigger only on distinct values', done => {
+        let myStream = stream('HALLO');
+        test$(myStream.distinct(), [
+            'HALLO',
+            'HOMEY'
+        ], done);
+        myStream('HALLO')('HOMEY')
+    })
+
+    it('should filter the stream', done => {
+        let myStream = stream('HALLO');
+        test$(myStream.filter(x => x.startsWith('H')), [
+            'HALLO',
+            'HOMEY'
+        ], done);
+        myStream('BYE')('HOMEY')
+    })
+
+    it('should ')
 
     describe('is-operator', () => {
         it('should emit true if value is matched', (done)=> {
@@ -64,6 +111,33 @@ describe('Streamy', () => {
                 done();
             })
         });
+    });
+
+    it('should patch an object', (done)=> {
+        let myStream = stream();
+        test$(myStream, [{foo: {bar: 123}}, {foo: {bar: 345}}, null, {x:1}], done);
+        myStream.patch({foo: {bar: 123}})
+        .then(s => s.patch({foo: {bar: 345}}))
+        .then(s => s.patch(null))
+        .then(s => s.patch({x:1}))
+    });
+
+    it('should deep query an object', (done)=> {
+        let myStream = stream();
+        test$(myStream.$('foo.bar'), [123, null, null], done);
+        myStream({foo:{bar:123}})(null)({})
+    });
+
+    it('should query several propertys', (done)=> {
+        let myStream = stream();
+        test$(myStream.$(['foo.bar', 'foo.to', 'foo']), [
+            [123, 456, {bar:123, to:456}],
+            [null,null,null],
+            [null,null,null]
+        ], done);
+        myStream.patch({foo:{bar:123, to:456}})
+        .then(s => s.patch(null))
+        .then(s => s.patch({}))
     });
 
     it('should emit aggregates on reduce', (done)=> {
@@ -84,16 +158,14 @@ describe('Streamy', () => {
     })
 
     it('should debounce values', (done)=> {
-        let myStream = stream(1);
+        let myStream = stream();
         const myMock = jest.fn();
         let debounced$ = myStream.debounce(50);
-        debounced$.map(myMock);
         test$(debounced$, [
-            x => {
-                expect(x).toBe(2);
-                expect(myMock.mock.calls.length).toBe(1);
-            }
+            1
         ], done);
+        myStream(3);
         myStream(2);
+        myStream(1);
     })
 })

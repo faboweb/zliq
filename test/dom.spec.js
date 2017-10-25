@@ -1,23 +1,36 @@
 import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
-import { testRender } from './helpers/test-component';
+import { testRender, test$ } from './helpers/test-component';
 import assert from 'assert';
 
 describe('Components', () => {
 	it('should show a component', done => {
 		testRender(<p>HELLO WORLD</p>, [
-			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
 		], done);
 	});
 
 	it('should work with React style hyperscript', done => {
 		testRender(h('p', null, 'this', ' and ', 'that'), [
-			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
 		], done);
 	});
 
 	it('should work with Preact style hyperscript', done => {
 		testRender(h('p', null, ['this', ' and ', 'that']), [
-			({element}) => assert.equal(element.outerHTML, '<p>this and that</p>')
+			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
+		], done);
+	});
+
+	it('should render into a parentElement provided', done => {
+		let container = document.createElement('div')
+		test$(render(<p>HELLO WORLD</p>, container), [
+			({element}) => expect(container.innerHTML).toEqual('<p>HELLO WORLD</p>')
+		], done);
+	});
+
+	it('should render without a parentElement provided', done => {
+		test$(render(<p>HELLO WORLD</p>, null), [
+			({element}) => assert.equal(element.outerHTML, '<p>HELLO WORLD</p>')
 		], done);
 	});
 
@@ -42,6 +55,52 @@ describe('Components', () => {
 			({element}) => assert.equal(element.outerHTML, '<p>Clicks times 2: 12</p>')
 		], done);
 	});
+
+	it('should update elements with textnodes', done => {
+		let trigger$ = stream()
+		testRender(<p>{if$(trigger$, <div></div>, 'HELLO WORLD')}</p>, [
+			({element}) => expect(element.outerHTML).toEqual('<p><div></div></p>'),
+			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
+		], done);
+		trigger$(true)
+		setTimeout(() => {
+			trigger$(false)
+		}, 10)
+	});
+
+	it('should set the class', done => {
+		let class$ = stream('x')
+		let app = <div class={class$} />
+		testRender(app, [
+			({element}) => {
+				expect(element.classList).toContain('x');
+				class$(null)
+			},
+			({element}) => {
+				expect(element.classList).not.toContain('x');
+			}
+		], done)
+	})
+
+	it('should set style in different ways', done => {
+		let style$ = stream('width: 100px;')
+		let app = <div style={style$} />
+		testRender(app, [
+			({element}) => {
+				expect(element.style.width).toBe('100px');
+				style$({height: '200px'})
+			},
+			({element}) => {
+				expect(element.style.width).toBe('');
+				expect(element.style.height).toBe('200px');
+				style$(null)
+			},
+			({element}) => {
+				expect(element.style.width).toBe('');
+				expect(element.style.height).toBe('');
+			}
+		], done)
+	})
 
 	it('should react to attached events', done => {
 		// input streams are scoped to be able to remove the listener if the element gets removed
@@ -99,6 +158,26 @@ describe('Components', () => {
 			},
 			({element}) => {
 				expect(element.disabled).toBe(undefined);
+			}
+		], done);
+	});
+
+	it('should remove attributes on updates if not available anymore', done => {
+		let trigger$ = stream(true);
+		let app = <div>
+			{
+				if$(trigger$,
+					<img src="img_girl.jpg" width="500" height="600" />,
+					<img src="img_girl.jpg" height="600" />)
+			}
+		</div>;
+		testRender(app, [
+			({element}) => {
+				expect(element.querySelector('img').getAttribute('width')).toBe("500");
+				trigger$(false);
+			},
+			({element}) => {
+				expect(element.querySelector('img').getAttribute('width')).toBe(null);
 			}
 		], done);
 	});
@@ -236,6 +315,32 @@ describe('Components', () => {
 			({element}) => {
 				expect(element.querySelector('#x')).toBeNull()
 			}
+		], done)
+	})
+
+	it('should print a warning if the child nodes have been removed/added outside of zliq', done => {
+		let trigger$ = stream(false)
+		let app = <div>
+			<div id="remove" />
+			<div id="stays" />
+			{
+				if$(trigger$,
+					<div id="added" />)
+			}
+		</div>
+		global.console = {warn: jest.fn()}
+
+		testRender(app, [
+			({element}) => {
+				element.querySelector('#remove').remove()
+				trigger$(true)
+			},
+			({element}) => {
+				expect(global.console.warn).toHaveBeenCalled()
+				element.appendChild(document.createElement('div'))
+				trigger$(false)
+			},
+			() => {}
 		], done)
 	})
 });

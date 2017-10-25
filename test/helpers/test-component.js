@@ -8,7 +8,7 @@ export function testRender(vdom$, schedule, done) {
 export function test$(stream, schedule, done) {
     return stream.reduce(function(iteration, value) {
         if (schedule[iteration] === undefined) {
-            throw new Error('Unexpected Update!');
+            done.fail('Unexpected Update!');
         }
 
         testSchedule(schedule, iteration, value, done);
@@ -23,7 +23,11 @@ function testSchedule(schedule, iteration, value, done) {
     // here the iterations are made asynchronous to prevent this
     setTimeout(function() {
         try {
-            schedule[iteration](value);
+            if (typeof schedule[iteration] === 'function') {
+                schedule[iteration](value)
+            } else {
+                expect(value).toEqual(schedule[iteration])
+            }
         } catch (error) {
             done.fail(error);
         }
