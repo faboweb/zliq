@@ -7,7 +7,7 @@ module.exports = {
         path: path.resolve(__dirname, 'lib'),
         filename: 'zliq.js',
         library: 'zliq',
-        libraryTarget: 'umd'
+        libraryTarget: 'commonjs2'
     },
     module: {
         rules: [{
@@ -16,5 +16,5 @@ module.exports = {
                 loader: 'babel-loader'
             }]
         }]
-    },
+    }
 }

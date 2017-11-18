@@ -1,1 +1,1 @@
-export * from './lib/zliq';
+module.exports = require('./lib/zliq')

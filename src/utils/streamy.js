@@ -46,7 +46,7 @@ function valuesChanged(oldValue, newValue) {
 function update(parent$, newValue) {
 	parent$.value = newValue;
 	notifyListeners(parent$.listeners, newValue);
-};
+}
 
 /*
 * provide a new value to all listeners registered for a stream
@@ -147,7 +147,7 @@ function deepSelect(parent$, selector) {
 		newStream(select(newValue, selectors));
 	});
 	return newStream;
-};
+}
 
 function query(parent$, selectorsArr) {
 	if(!Array.isArray(selectorsArr)) {
@@ -176,14 +176,14 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 */
 function patch(parent$, partialChange) {
 	return new Promise((resolve) => {
-		setImmediate(() => {
-			if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
-				parent$(partialChange);
-			} else {
-				parent$(Object.assign({}, parent$.value, partialChange));
-			}
-			resolve(parent$);
-		})
+		if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
+			parent$(partialChange);
+		} else {
+			parent$(Object.assign({}, parent$.value, partialChange));
+		}
+		resolve(parent$);
+		// setImmediate(() => {
+		// })
 	})
 }
 
@@ -220,7 +220,7 @@ function reduce(parent$, fn, startValue) {
 	}
 	if (parent$.value !== undefined) {
 		reduceValue(parent$.value);
-	};
+	}
 	parent$.listeners.push(reduceValue);
 	return newStream;
 }
@@ -273,4 +273,4 @@ function removeItem(arr, item) {
 	if (index !== -1) {
 		arr.splice(index, 1);
 	}
-};
+}
