@@ -29,6 +29,7 @@ export const stream = function(init_value) {
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
 	s.debounce = (timer) => debounce(s, timer);
+	s.log = () => log(s);
 
 	return s;
 };
@@ -75,6 +76,10 @@ function map(parent$, fn) {
 		newStream(fn(value));
 	});
 	return newStream;
+}
+
+function log (parent$) { 
+	map(parent$, value => console.log('Stream:', value))
 }
 
 /*
