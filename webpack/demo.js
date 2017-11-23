@@ -1,7 +1,7 @@
 var path = require('path');
 
-module.exports = {
-    devtool: '#inline-source-map',
+module.exports = { 
+    devtool: '#eval-source-map', 
     entry: './demo/demo_app.jsx',
     output: {
         path: path.resolve(__dirname, '../demo'),
@@ -19,6 +19,7 @@ module.exports = {
             }]
         },{
             test: /\.(js|jsx)$/,
+            exclude: /(node_modules)/,
             use: [{
                 loader: 'babel-loader',
                 query: {

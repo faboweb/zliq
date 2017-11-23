@@ -14,6 +14,15 @@ import { Playground } from './playground.jsx';
 //styles
 import './styles.scss';
 
+//plugins
+import { shrinkStacktrace } from 'zliq-stacktrace';
+window.onerror = (error) => {
+	shrinkStacktrace()(error);
+}
+
+import { Router, initRouter } from 'zliq-router';
+let router$ = initRouter();
+
 // main render function for the application
 // render provided hyperscript into a parent element
 // zliq passes around HTMLElement elements so you can decide what to do with them
@@ -31,7 +40,7 @@ let app = <div>
 				<p>Still ZLIQ doesn't try to be the next React or Angular! ZLIQ has a decent render speed even up to several hundred simultaneous updates but it's not as fast as <a href="(https://preactjs.com/">Preact</a>. And it on purpose does not solve every problem you will ever have. ZLIQ is a tool to help you create the solution that fits your need.</p>
 			</div>
 		</div>
-		<Tutorial/>
+		<Tutorial router$={router$}/>
 		<Playground />
 	</div>
 </div>;

@@ -1,9 +1,10 @@
 import { h } from '../src';
+import {Router} from 'zliq-router';
 import {Subheader} from './subheader.jsx';
 import {Markup} from './utils.jsx';
 import './tutorial.scss';
 
-export const Tutorial = () =>
+export const Tutorial = ({router$}) =>
     <div class="section tutorial">
         <Subheader title="Writing Components" subtitle="Hello World here we come" id="tutorial"/>
 
@@ -100,12 +101,12 @@ export const Tutorial = () =>
             |console.log(newStream()); // 6
             |
             |// the map function is the easy way to manipulate or interact with values of the stream
-            |newStream.map(value => console.log(value));
-            |// 6
-            |newStream(7);
-            |// 7
+            |newStream.map(value => console.log(value)); // 6
             |
-            |// the format of the steam as a function makes it easy to pipe events into streams
+            |// a stream update returns the stream, so you can chain updats easy
+            |newStream(7)(8)(9); // 7 8 9
+            |
+            |// the format of the steam as a function makes it also easy to pipe events into streams
             |element.attachEventListener(newStream);
             |// or pipe streams into streams
             |newStream.map(otherStream);
@@ -125,7 +126,7 @@ export const Tutorial = () =>
             |    }
             |});
             |console.log(newStream.$('propA')()); // 1
-            |console.log(newStream.$(['propA', 'propB.propBA')()); // [1,2]
+            |console.log(newStream.$(['propA', 'propB.propBA'])()); // [1,2]
             `}
         </Markup>
 
@@ -308,6 +309,31 @@ export const Tutorial = () =>
             `}
         </Markup>
 
+        <Subheader title="Routing" subtitle="Put your state where your URL is" id="routing" />
+
+        <p>ZLIQ provides a small router as a package 'zliq-router' to be installed via npm. It plugs very natural into native links. 
+            It provides you with the routing as a stream so you can use it as an input to your view. 
+            It also provides a component to switch on certain routes. Check it out on <a href="http://github.com/faboweb/zliq-router">GitHub</a></p>
+
+        <Markup>
+            {`
+            |import {Router, initRouter}
+            |
+            |initRouter()
+            |
+            |let app = <div>
+            |    <a href="/cars">Go the cats</a>
+            |    <a href="/">Go away from cats</a>
+            |    <Router route="/" router$={router$}>
+            |        No Cats here. :-(
+            |    </Router>
+            |    <Router route="/cats" router$={router$}>
+            |        Miau! Miau!
+            |    </Router>
+            |</div>
+            `}
+        </Markup>
+
         {/* <Subheader title="Lifecycle" subtitle="To cleanup your s*** after your done" id="lifecycle" />
 
         <p>ZLIQ dispatches lifecycle events `CHILDREN_CHANGED`, `ADDED`, `REMOVED` and `UPDATED` on the element. This way you can perform actions like initialization jQuery plugins on the element.</p>
@@ -351,16 +377,31 @@ export const Tutorial = () =>
 
         <Markup>
             {`
-            |import {test} from 'zliq';
-            |import {Highlight} from './highlight.js';
+            |import {h, stream, testRender} from 'zliq';
             |
             |let text$ = stream('Hello World!!!');
-            |test(<p>{text$}></p>, [
+            |testRender(<p>{text$}></p>, [
             |    // on each update of an element, we can test it
-            |    element => assert.equal(element.outerHTML, '<p>Hello World!!!</p>'),
-            |    element => assert.equal(element.outerHTML, '<p>Bye World!!!</p>'),
+            |    ({element}) => assert.equal(element.outerHTML, '<p>Hello World!!!</p>'),
+            |    ({element}) => assert.equal(element.outerHTML, '<p>Bye World!!!</p>'),
             |]);
             |text$('Bye World!!!');
+            `}
+        </Markup>
+
+        <p>For streams it is even easier, as you only need to provide the sequence of values!</p>
+
+        <Markup>
+            {`
+            |import {stream, test$} from 'zliq';
+            |
+            |let value$ = stream({value: 1});
+            |test$(value$, [
+            |    {value: 1},
+            |    2,
+            |    false
+            |]);
+            |value$(2)(false);
             `}
         </Markup>
 
