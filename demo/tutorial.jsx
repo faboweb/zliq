@@ -4,7 +4,7 @@ import {Subheader} from './subheader.jsx';
 import {Markup} from './utils.jsx';
 import './tutorial.scss';
 
-export const Tutorial = ({router$}) =>
+export const Tutorial = ({router$}, children, globals) =>
     <div class="section tutorial">
         <Subheader title="Writing Components" subtitle="Hello World here we come" id="tutorial"/>
 

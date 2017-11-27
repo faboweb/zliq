@@ -8,7 +8,7 @@ export const Header = () => {
     let headerHidden$ = stream(false);
     let header = <div
             class={headerHidden$.map(hidden => "row big-header highlight-background " + (hidden ? 'hidden' : ''))}
-            onclick={(e) => e.target.tagName != "A" && scrollUp()}
+            onclick={(e) => e.target.tagName !== "A" && scrollUp()}
         >
             <div class="container">
                 <div class="row">

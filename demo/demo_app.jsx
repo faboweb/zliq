@@ -19,8 +19,8 @@ import { shrinkStacktrace } from 'zliq-stacktrace';
 let errorHandler = shrinkStacktrace(
 	/(src\/utils|bootstrap|null:null:null|bundle\.js)/
 )
-window.onerror = (messageOrEvent, source, lineno, colno, error) =>
-	errorHandler(error)
+// window.onerror = (messageOrEvent, source, lineno, colno, error) =>
+// 	errorHandler(error)
 
 import { Router, initRouter } from 'zliq-router';
 let router$ = initRouter();
@@ -46,4 +46,9 @@ let app = <div>
 		<Playground />
 	</div>
 </div>;
-render(app, document.querySelector('#app'));
+render(app, document.querySelector('#app'), {
+	config: {
+		value: 'abc',
+		url: 'www'
+	}
+});
