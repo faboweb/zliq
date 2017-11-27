@@ -273,7 +273,7 @@ describe('Components', () => {
 			{content$}
 		</div>;
 		const myMock = jest.fn();
-		render(app, document.createElement('div'), 50)
+		render(app, document.createElement('div'), {}, 50)
 		.map(myMock);
 		setTimeout(() => {
 			expect(myMock.mock.calls.length).toBe(2);

@@ -5,29 +5,36 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 * wrap hyperscript elements in reactive streams dependent on their children streams
 */
 export const h = (tag, props, ...children) => {
-	let component;
-	let version = -1;
+	let elementConstructor = (globals) => {
+		let component;
+		let version = -1;
 
-	let mergedChildren$ = mergeChildren$(flatten(children));
-	// jsx usually resolves known tags as strings and unknown tags as functions
-	// if it is a function it is treated as a componen and will resolve it
-	// props are not automatically resolved
-	if (typeof tag === 'function') {
-		return tag(
-			props || {},
-			mergedChildren$
-		);
+		let constructedChildren = resolveChildren(children, globals)
+		let mergedChildren$ = mergeChildren$(constructedChildren);
+		// jsx usually resolves known tags as strings and unknown tags as functions
+		// if it is a function it is treated as a componen and will resolve it
+		// props are not automatically resolved
+		if (typeof tag === 'function') {
+			return tag(
+				props || {},
+				mergedChildren$,
+				globals
+			)(globals);
+		}
+		return merge$([
+			wrapProps$(props),
+			mergedChildren$.map(flatten)
+		]).map(([props, children]) => {
+			return {
+				tag,
+				props,
+				children,
+				version: ++version
+		}});
 	}
-	return merge$([
-		wrapProps$(props),
-		mergedChildren$.map(flatten)
-	]).map(([props, children]) => {
-		return {
-			tag,
-			props,
-			children,
-			version: ++version
-	}});
+	elementConstructor.IS_ELEMENT_CONSTRUCTOR = true
+
+	return elementConstructor
 };
 
 /*
@@ -119,4 +126,29 @@ function extractNestedStreams(obj) {
 		}
 		return [];
 	}))
+}
+
+function resolveChildren (children, globals) {
+	if (!Array.isArray(children)) {
+		children = [].concat(children)
+	}
+	let resolvedChilden = children.map(child => {
+		if (Array.isArray(child)) {
+			return resolveChildren(child, globals)
+		}
+		return resolveChild(child, globals)
+	})
+	return flatten(resolvedChilden)
+}
+
+function resolveChild(child, globals) {
+	if (typeof child !== 'function') {
+		return child
+	}
+	if (child.IS_ELEMENT_CONSTRUCTOR) {
+		return child(globals)
+	}
+	if (isStream(child)) {
+		return child.map(x => resolveChildren(x, globals))
+	}
 }
