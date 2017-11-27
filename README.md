@@ -87,9 +87,10 @@ let app = h('div', null, [
 ## Dive in
 Checkout the [Git Page](https://faboweb.github.io/zliq/) as a live example of a ZLIQ app (the code lives under `./demo`). There you will also find a tutorial and more detailed descriptions on ZLIQs parts.
 
-## Roadmap
-
- You want to know where ZLIQ is heading? Checkout the [issues](https://github.com/faboweb/zliq/issues).
+## Plugins
+There are some plugins available to enhance the zliq experience:
+- [ZLIQ-Router](https://github.com/fabweb/zliq-router): A simple stream based router
+- [ZLIQ-Stacktrace](https://github.com/fabweb/zliq-stacktrace): A wrapper around [Sourcemapped-Stacktrace](https://github.com/novocaine/sourcemapped-stacktrace) to prune the stacktrace to only the necessary
 
 ## Contributors
 
