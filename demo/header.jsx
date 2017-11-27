@@ -4,7 +4,6 @@ import './header.scss';
 export const Header = () => {
     let scroll$ = stream();
     window.addEventListener('scroll', scroll$);
-    // throw new Error('Error'); 
 
     let headerHidden$ = stream(false);
     let header = <div

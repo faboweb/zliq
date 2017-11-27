@@ -319,10 +319,11 @@ export const Tutorial = ({router$}) =>
             {`
             |import {Router, initRouter}
             |
-            |initRouter()
+            |let router$ = initRouter()
+            |router$.map(console.log) // {route: '/', params: {}, routes: [...]}
             |
             |let app = <div>
-            |    <a href="/cars">Go the cats</a>
+            |    <a href="/cats">Go the cats</a>
             |    <a href="/">Go away from cats</a>
             |    <Router route="/" router$={router$}>
             |        No Cats here. :-(

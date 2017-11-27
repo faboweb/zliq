@@ -16,9 +16,11 @@ import './styles.scss';
 
 //plugins
 import { shrinkStacktrace } from 'zliq-stacktrace';
-window.onerror = (error) => {
-	shrinkStacktrace()(error);
-}
+let errorHandler = shrinkStacktrace(
+	/(src\/utils|bootstrap|null:null:null|bundle\.js)/
+)
+window.onerror = (messageOrEvent, source, lineno, colno, error) =>
+	errorHandler(error)
 
 import { Router, initRouter } from 'zliq-router';
 let router$ = initRouter();

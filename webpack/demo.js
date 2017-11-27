@@ -1,7 +1,7 @@
 var path = require('path');
 
 module.exports = { 
-    devtool: '#eval-source-map', 
+    devtool: 'source-map', 
     entry: './demo/demo_app.jsx',
     output: {
         path: path.resolve(__dirname, '../demo'),
