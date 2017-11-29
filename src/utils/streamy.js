@@ -78,9 +78,13 @@ function map(parent$, fn) {
 	return newStream;
 }
 
-function log (parent$) { 
-	map(parent$, value => console.log('Stream:', value))
-}
+/* 
+* helper function to debug, calls console.log on every value returnin the parent stream 
+*/ 
+function log (parent$) {  
+  map(parent$, value => console.log('Stream:', value)) 
+  return parent$ 
+} 
 
 /*
 * provides a new stream applying a transformation function to the value of a parent stream
