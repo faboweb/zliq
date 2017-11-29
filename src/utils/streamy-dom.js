@@ -60,8 +60,6 @@ export function diff(oldElement,
 	return newElement;
 }
 
-
-
 function diffCachedElement(oldElement, {tag, props, children, version}, {props:oldProps}, cacheContainer) {
 	let id = props.id;
 	let gotCreated = false;

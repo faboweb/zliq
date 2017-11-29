@@ -3,6 +3,7 @@ import {createElement, REMOVED, ADDED} from './streamy-dom';
 
 /*
 * wrap hyperscript elements in reactive streams dependent on their children streams
+* the hyperscript function returns a constructor so we can pass down globals from the renderer to the components
 */
 export const h = (tag, props, ...children) => {
 	let elementConstructor = (globals) => {
