@@ -14,8 +14,14 @@ export function testRender(
     if (options.attach) {
         document.body.appendChild(container)
     }
-    return test$(render(vdom$, container, options.globals, options.
-        debounce), schedule, done);
+    // enable to just define the expected html in the render schedule
+    schedule = schedule.map(fn => {
+        if (typeof fn === 'string') {
+            return ({element}) => expect(element.outerHTML).toBe(fn)
+        }
+        return fn
+    })
+    return test$(render(vdom$, container, options.globals, options.debounce), schedule, done);
 }
 
 export function test$(stream, schedule, done) {
