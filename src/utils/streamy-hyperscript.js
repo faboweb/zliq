@@ -129,6 +129,10 @@ function extractNestedStreams(obj) {
 	}))
 }
 
+/*
+* children can be nested arrays, nested streams and element contstructors
+* this function unifies them into the format [string|number|vdom|stream<string|number|vdom>]
+*/
 function resolveChildren (children, globals) {
 	if (!Array.isArray(children)) {
 		children = [].concat(children)
@@ -142,6 +146,10 @@ function resolveChildren (children, globals) {
 	return flatten(resolvedChilden)
 }
 
+/*
+* resolve the element constructor, also for elements nested in streams
+* returns the format string|number|vdom|stream<string|number|vdom>
+*/
 function resolveChild(child, globals) {
 	if (typeof child !== 'function') {
 		return child
