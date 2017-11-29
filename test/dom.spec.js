@@ -1,24 +1,38 @@
-import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED } from '../src';
+import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED, isStream } from '../src';
 import { testRender, test$ } from './helpers/test-component';
 import assert from 'assert';
 
 describe('Components', () => {
 	it('should show a component', done => {
 		testRender(<p>HELLO WORLD</p>, [
-			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
+			'<p>HELLO WORLD</p>'
 		], done);
 	});
 
 	it('should work with React style hyperscript', done => {
 		testRender(h('p', null, 'this', ' and ', 'that'), [
-			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
+			'<p>this and that</p>'
 		], done);
 	});
 
 	it('should work with Preact style hyperscript', done => {
 		testRender(h('p', null, ['this', ' and ', 'that']), [
-			({element}) => expect(element.outerHTML).toEqual('<p>this and that</p>')
+			'<p>this and that</p>'
 		], done);
+	});
+	
+	it('should return a constructor function', () => {
+		let constructor = <p>HELLO WORLD</p>;
+		expect(typeof constructor).toBe('function')
+	});
+	
+	it('should return a virtualdom stream when constructed', () => {
+		let constructor = <p>HELLO WORLD</p>;
+		let vdom$ = constructor({});
+		expect(isStream(vdom$)).toBe(true)
+		expect(vdom$.value.tag).toBe('p')
+		expect(vdom$.value.props).toEqual({})
+		expect(vdom$.value.children).toEqual(['HELLO WORLD'])
 	});
 
 	it('should render into a parentElement provided', done => {
@@ -56,11 +70,26 @@ describe('Components', () => {
 		], done);
 	});
 
+	it('Components should have access to the provided globals', done => {
+		const ShowGlobals = (props, children, globals) => {
+			return <p>{globals.value}</p>
+		}
+		let clicks$ = stream(3);
+		let component = <div><ShowGlobals /></div>;
+		testRender(component, [
+			'<div><p>GLOBAL TEXT</p></div>'
+		], done, {
+			globals: {
+				value: 'GLOBAL TEXT'
+			}
+		});
+	});
+
 	it('should update elements with textnodes', done => {
 		let trigger$ = stream()
 		testRender(<p>{if$(trigger$, <div></div>, 'HELLO WORLD')}</p>, [
-			({element}) => expect(element.outerHTML).toEqual('<p><div></div></p>'),
-			({element}) => expect(element.outerHTML).toEqual('<p>HELLO WORLD</p>')
+			'<p><div></div></p>',
+			'<p>HELLO WORLD</p>'
 		], done);
 		trigger$(true)
 		setTimeout(() => {
@@ -273,7 +302,7 @@ describe('Components', () => {
 			{content$}
 		</div>;
 		const myMock = jest.fn();
-		render(app, document.createElement('div'), 50)
+		render(app, document.createElement('div'), {}, 50)
 		.map(myMock);
 		setTimeout(() => {
 			expect(myMock.mock.calls.length).toBe(2);

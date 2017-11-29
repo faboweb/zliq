@@ -2,7 +2,8 @@ import {isStream} from './streamy';
 
 const TEXT_NODE = '#text';
 
-export function render(vdom$, parentElement, debounce = 10) {
+export function render(vdom, parentElement, globals = {}, debounce = 10) {
+	let vdom$ = vdom(globals)
 	return vdom$.debounce(debounce).reduce(
 		function renderUpdate({
 				element:oldElement,
@@ -58,8 +59,6 @@ export function diff(oldElement,
 
 	return newElement;
 }
-
-
 
 function diffCachedElement(oldElement, {tag, props, children, version}, {props:oldProps}, cacheContainer) {
 	let id = props.id;

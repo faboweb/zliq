@@ -22,7 +22,7 @@
 [![Watch on GitHub][github-watch-badge]][github-watch]
 [![Star on GitHub][github-star-badge]][github-star]
 
-ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~630 May 2017).
+ZLIQ is the intent to create an easy to understand, easy to use web framework. It is based on reactive-streams and reactive-dom-rendering. ZLIQ has few lines of code (~580 November 2017).
 
 ## [Website](https://faboweb.github.io/zliq/)
 

@@ -96,7 +96,16 @@ describe('Streamy', () => {
         myStream('BYE')('HOMEY')
     })
 
-    it('should ')
+    it('should log the stream', done => {
+        console.log = jest.fn()
+        let myStream = stream('HALLO');
+        test$(myStream.log(), [
+            x => {
+                expect(x).toBe('HALLO')
+                expect(console.log).toHaveBeenCalledWith('Stream:', 'HALLO')
+            }
+        ], done);
+    })
 
     describe('is-operator', () => {
         it('should emit true if value is matched', (done)=> {

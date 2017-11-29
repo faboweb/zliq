@@ -1,11 +1,27 @@
 import {diff, createNode, render} from '../../src'
 
-export function testRender(vdom$, schedule, done, attach = false) {
+export function testRender(
+    vdom$,
+    schedule,
+    done,
+    options = {
+        attach: false,
+        debounce: 0,
+        globals: {}
+    }
+) {
     let container = document.createElement('div');
-    if (attach) {
+    if (options.attach) {
         document.body.appendChild(container)
     }
-    return test$(render(vdom$, container, 0), schedule, done);
+    // enable to just define the expected html in the render schedule
+    schedule = schedule.map(fn => {
+        if (typeof fn === 'string') {
+            return ({element}) => expect(element.outerHTML).toBe(fn)
+        }
+        return fn
+    })
+    return test$(render(vdom$, container, options.globals, options.debounce), schedule, done);
 }
 
 export function test$(stream, schedule, done) {
