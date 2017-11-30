@@ -89,8 +89,8 @@ Checkout the [Git Page](https://faboweb.github.io/zliq/) as a live example of a 
 
 ## Plugins
 There are some plugins available to enhance the zliq experience:
-- [ZLIQ-Router](https://github.com/fabweb/zliq-router): A simple stream based router
-- [ZLIQ-Stacktrace](https://github.com/fabweb/zliq-stacktrace): A wrapper around [Sourcemapped-Stacktrace](https://github.com/novocaine/sourcemapped-stacktrace) to prune the stacktrace to only the necessary
+- [ZLIQ-Router](https://github.com/faboweb/zliq-router): A simple stream based router
+- [ZLIQ-Stacktrace](https://github.com/faboweb/zliq-stacktrace): A wrapper around [Sourcemapped-Stacktrace](https://github.com/novocaine/sourcemapped-stacktrace) to prune the stacktrace to only the necessary
 
 ## Contributors
 
