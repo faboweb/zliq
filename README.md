@@ -46,12 +46,12 @@ $ npm install --save zliq
 
 Then create your app component and add it to the DOM:
 ```js
-import {h} from 'zliq';
+import {h, render} from 'zliq';
 
 let app = <div>
         <span>Hello World</span>
     </div>;
-document.querySelector('#app').appendChild(app);
+render(app, document.querySelector('#app');
 ```
 
 ZLIQ includes streams similar to [flyd](https://github.com/paldepind/flyd) to make state easy to handle:
@@ -72,7 +72,7 @@ let app = <div>
     // interact with state
     <button onclick={increment(state$)}>Click + 1</button>
 </div>;
-document.querySelector('#app').appendChild(app);
+render(app, document.querySelector('#app');
 ```
 
 Make sure your stack converts [JSX](https://facebook.github.io/jsx/) to [Hyperscript](https://github.com/hyperhype/hyperscript) syntax. In the ZLIQ project this is achieved with [Babel](https://babeljs.io) and the [transform-h-jsx](https://github.com/jchook/babel-plugin-transform-h-jsx) plugin used in [webpack](https://webpack.js.org/). Alternative you can use [Babel in the browser](https://babeljs.io/docs/setup/#installation), like I did in the [ZLIQ playground](http://jsfiddle.net/faboweb/hvbee8m9).
