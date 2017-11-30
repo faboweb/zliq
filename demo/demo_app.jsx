@@ -19,6 +19,8 @@ import { shrinkStacktrace } from 'zliq-stacktrace';
 let errorHandler = shrinkStacktrace(
 	/(src\/utils|bootstrap|null:null:null|bundle\.js)/
 )
+// We can add the error handler whereever we catch an error
+// Here we explicitly want the errors in ZLIQ for testing purposes
 // window.onerror = (messageOrEvent, source, lineno, colno, error) =>
 // 	errorHandler(error)
 
