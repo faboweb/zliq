@@ -56,7 +56,7 @@ render(app, document.querySelector('#app');
 
 ZLIQ includes streams similar to [flyd](https://github.com/paldepind/flyd) to make state easy to handle:
 ```js
-import {h} from 'zliq';
+import {h, render} from 'zliq';
 
 // define a stream of state
 let state$ = stream({ clicks: 0 });
