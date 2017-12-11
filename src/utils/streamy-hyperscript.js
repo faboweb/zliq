@@ -118,12 +118,18 @@ function extractNestedStreams(obj) {
 		// if (typeof obj[key] === 'object') {
 		// 	return extractNestedStreams(obj[key]);
 		// }
-		if (obj[key] && isStream(obj[key])) {
+		if (obj[key] === null || obj[key] === undefined) {
+			return []
+		}
+		if (isStream(obj[key])) {
 			return [{
 				parent: obj,
 				key,
 				stream: obj[key]
 			}];
+		}
+		if (typeof obj[key] === 'object') {
+			return extractNestedStreams(obj[key])
 		}
 		return [];
 	}))

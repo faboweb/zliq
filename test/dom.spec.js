@@ -111,6 +111,23 @@ describe('Components', () => {
 		], done)
 	})
 
+	it('should resolve nested streams in props', done => {
+		let trigger$ = stream(false)
+		let style = {
+			display: if$(trigger$, 'block', 'none')
+		}
+		let app = <div>
+			<div style={style} />
+		</div>
+		testRender(app, [
+			'<div><div style="display: none;"></div></div>',
+			'<div><div style="display: block;"></div></div>'
+		], done)
+		setTimeout(() => {
+			trigger$(true)
+		}, 10)
+	})
+
 	it('should set style in different ways', done => {
 		let style$ = stream('width: 100px;')
 		let app = <div style={style$} />
