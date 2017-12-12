@@ -184,16 +184,12 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
 */
 function patch(parent$, partialChange) {
-	return new Promise((resolve) => {
-		if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
-			parent$(partialChange);
-		} else {
-			parent$(Object.assign({}, parent$.value, partialChange));
-		}
-		resolve(parent$);
-		// setImmediate(() => {
-		// })
-	})
+	if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
+		parent$(partialChange);
+	} else {
+		parent$(Object.assign({}, parent$.value, partialChange));
+	}
+	return parent$
 }
 
 function until(parent$, stopEmitValues$) {

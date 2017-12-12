@@ -126,9 +126,9 @@ describe('Streamy', () => {
         let myStream = stream();
         test$(myStream, [{foo: {bar: 123}}, {foo: {bar: 345}}, null, {x:1}], done);
         myStream.patch({foo: {bar: 123}})
-        .then(s => s.patch({foo: {bar: 345}}))
-        .then(s => s.patch(null))
-        .then(s => s.patch({x:1}))
+        ({foo: {bar: 345}})
+        (null)
+        ({x:1})
     });
 
     it('should deep query an object', (done)=> {
@@ -145,8 +145,8 @@ describe('Streamy', () => {
             [null,null,null]
         ], done);
         myStream.patch({foo:{bar:123, to:456}})
-        .then(s => s.patch(null))
-        .then(s => s.patch({}))
+        (null)
+        ({})
     });
 
     it('should emit aggregates on reduce', (done)=> {

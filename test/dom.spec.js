@@ -1,4 +1,4 @@
-import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED, isStream } from '../src';
+import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED, isStream, join$ } from '../src';
 import { testRender, test$ } from './helpers/test-component';
 import assert from 'assert';
 
@@ -162,7 +162,7 @@ describe('Components', () => {
 			// perform the actions on the element
 			({element}) => {
 				element.querySelector('button').click();
-				assert.equal(clicks$(), 1);
+				expect(clicks$()).toBe(1);
 			}
 		], done);
 	});
@@ -388,5 +388,28 @@ describe('Components', () => {
 			},
 			() => {}
 		], done)
+	})
+
+	it('should resolve in streams nested elements with streams', done => {
+		let trigger$ = stream(false)
+		let trigger2$ = stream(false)
+		let app = <div>
+			{
+				if$(trigger$,
+					<div class={join$(if$(trigger2$, 'bold'))} />
+				)
+			}
+		</div>
+		testRender(app, [
+			'<div></div>',
+			'<div><div class=""></div></div>',
+			'<div><div class="bold"></div></div>'
+		], done)
+		setTimeout(() => {
+			trigger$(true)
+			setTimeout(() => {
+				trigger2$(true)
+			}, 10)
+		}, 10)
 	})
 });
