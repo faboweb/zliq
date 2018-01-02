@@ -112,6 +112,7 @@ function diffElement(element,
 	{props:oldProps, children:oldChildren, version:oldVersion},
 	cacheContainer
 ) {
+
 	// text nodes behave differently then normal dom elements
 	if (isTextNode(element) && tag === TEXT_NODE ) {
 		updateTextNode(element, newChildren[0]);
@@ -131,12 +132,17 @@ function diffElement(element,
 
 	diffAttributes(element, props, oldProps);
 
+	// sometimes you might want to skip updates to children on renderer elements i.e. if externals handle this component
+	let isolated = props && props.isolated !== undefined
+
+	let initialRender = oldChildren === undefined
+
 	// text nodes have no real child-nodes, but have a string value as first child
-	if (tag !== TEXT_NODE) {
+	if (tag !== TEXT_NODE && !(isolated && !initialRender)) {
 		diffChildren(element, newChildren, oldChildren, cacheContainer);
 	}
 	
-	if (newVersion === 0) {
+	if (initialRender) {
 		triggerLifecycle(element, props, 'created');
 	}
 

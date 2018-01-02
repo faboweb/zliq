@@ -415,6 +415,21 @@ export const Tutorial = ({router$}, children, globals) =>
             `}
         </Markup>
 
+        <p>In rare cases you want to prevent ZLIQ from updating renderer children. For example if yome external plugin handles a renderer element. To do so you just add the `isolated` attribute to the element.</p>
+
+        <Markup>
+            {`
+            |let state$ = stream({ clicks: 0 });
+            |let app = <div isolated>
+            |  Clicks: {state$.$('clicks')}
+            |</div>
+            |render(app).map(({element}) => element.outerHTML).log()
+            |// <div>Clicks: 0</div>
+            |// <div>Clicks: 0</div>
+            |state$.patch({clicks: 1})
+            `}
+        </Markup>
+
         {/* <p>ZLIQ batches changes that exceed a certain threshold together. This batch then is the rendered in a browser <a href="https://developer.mozilla.org/de/docs/Web/API/window/requestAnimationFrame">animationframe</a>. Those changes are not immediately applied to the returned element. In those cases we can wait for a ZLIQ generated `CHILDREN_CHANGED` event. </p>
 
         <Markup>
