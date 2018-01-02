@@ -29,7 +29,7 @@ export const stream = function(init_value) {
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
 	s.debounce = (timer) => debounce(s, timer);
-	s.log = () => log(s);
+	s.log = (prefix = 'Stream:') => log(s, prefix);
 
 	return s;
 };
@@ -81,8 +81,8 @@ function map(parent$, fn) {
 /* 
 * helper function to debug, calls console.log on every value returnin the parent stream 
 */ 
-function log (parent$) {  
-  map(parent$, value => console.log('Stream:', value)) 
+function log (parent$, prefix) {  
+  map(parent$, value => console.log(prefix, value)) 
   return parent$ 
 } 
 
@@ -184,12 +184,14 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
 */
 function patch(parent$, partialChange) {
-	if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
-		parent$(partialChange);
-	} else {
-		parent$(Object.assign({}, parent$.value, partialChange));
-	}
-	return parent$
+	return new Promise((resolve) => {
+		if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
+			parent$(partialChange);
+		} else {
+			parent$(Object.assign({}, parent$.value, partialChange));
+		}
+		resolve(parent$);
+	})
 }
 
 function until(parent$, stopEmitValues$) {
