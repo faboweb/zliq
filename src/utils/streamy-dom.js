@@ -112,6 +112,7 @@ function diffElement(element,
 	{props:oldProps, children:oldChildren, version:oldVersion},
 	cacheContainer
 ) {
+	let initialRender = oldVersion === -1
 
 	// text nodes behave differently then normal dom elements
 	if (isTextNode(element) && tag === TEXT_NODE ) {
@@ -135,10 +136,9 @@ function diffElement(element,
 	// sometimes you might want to skip updates to children on renderer elements i.e. if externals handle this component
 	let isolated = props && props.isolated !== undefined
 
-	let initialRender = oldChildren === undefined
-
-	// text nodes have no real child-nodes, but have a string value as first child
-	if (tag !== TEXT_NODE && !(isolated && !initialRender)) {
+	// text nodes we don't want to handle children like with other elements
+	// and for isolated components we want to skip all updates after the first render
+	if (tag !== TEXT_NODE && (!isolated || initialRender)) {
 		diffChildren(element, newChildren, oldChildren, cacheContainer);
 	}
 	
@@ -157,7 +157,7 @@ function diffElement(element,
 function removeNotNeededNodes(parentElements, newChildren, oldChildren) {
 	let remaining = parentElements.childNodes.length;
 	if (oldChildren.length !== remaining) {
-		console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Please check your code.");
+		console.warn("ZLIQ: Something other then ZLIQ has manipulated the children of the element", parentElements, ". This can lead to sideffects. Consider using the 'isolated' attribute for this element to prevent updates.");
 	}
 
 	for(; remaining > newChildren.length; remaining--) {
@@ -167,9 +167,9 @@ function removeNotNeededNodes(parentElements, newChildren, oldChildren) {
 		if (oldChildren.length < remaining) {
 			continue;
 		} else {
-			let {props} = oldChildren[remaining - 1];
+			let {cycle} = oldChildren[remaining - 1];
 
-			triggerLifecycle(childToRemove, props, 'removed');
+			triggerLifecycle(childToRemove, {cycle}, 'removed');
 		}
 	}
 }
@@ -190,7 +190,7 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 
 		diff(newElement, newChildren[i], {}, cacheContainer);
 
-		if (props && props.cycle && props.cycle.mounted) {
+		if (props && props.cycle && props.cycle.mounted && !props.id) {
 			console.error('The \'mounted\' lifecycle event is only called on elements with id. As elements are updated in place, it is hard to define when a normal element is mounted.');
 		}
 	}
@@ -295,9 +295,9 @@ function copyChildren(oldChildren) {
 }
 
 // shorthand to call a cycle event for an element if existing
-function triggerLifecycle(element, props, event) {
-	if(props && props.cycle && props.cycle[event]) {
-		props.cycle[event](element);
+function triggerLifecycle(element, {cycle} = {}, event) {
+	if(cycle && cycle[event]) {
+		cycle[event](element);
 	}
 }
 

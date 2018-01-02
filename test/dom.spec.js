@@ -1,6 +1,7 @@
 import { render, h, stream, if$, merge$, initRouter, CHILDREN_CHANGED, ADDED, REMOVED, UPDATED, isStream, join$ } from '../src';
 import { testRender, test$ } from './helpers/test-component';
 import assert from 'assert';
+import { setTimeout } from 'timers';
 
 describe('Components', () => {
 	it('should show a component', done => {
@@ -228,8 +229,8 @@ describe('Components', () => {
 		], done);
 	});
 
-	// TODO
-	xit('should trigger lifecycle events on nested components', done => {
+
+	it('should trigger lifecycle events on nested components', done => {
 		const mountedMock = jest.fn();
 		const createdMock = jest.fn();
 		const removedMock = jest.fn();
@@ -239,7 +240,7 @@ describe('Components', () => {
 			created: createdMock,
 			removed: removedMock
 		}
-		const component = <div cycle={cycle} />;
+		const component = <div id="test" cycle={cycle} />;
 
 		let app = <div>
 			{
@@ -252,10 +253,26 @@ describe('Components', () => {
 			() => trigger$(true),
 			() => {
 				expect(mountedMock.mock.calls.length).toBe(2);
-				expect(createdMock.mock.calls.length).toBe(2);
+				expect(createdMock.mock.calls.length).toBe(1);
 				expect(removedMock.mock.calls.length).toBe(1);
 			}
 		], done);
+	})
+
+	it('should isolate children from updates', done => {
+		let trigger$ = stream(true)
+		let app = <div isolated>
+		{
+			if$(trigger$, 'HALLO WORLD', 'BYE WORLD')
+		}
+		</div>;
+		testRender(app, [
+			'<div>HALLO WORLD</div>',
+			'<div>HALLO WORLD</div>'
+		], done)
+		setTimeout(() => {
+			trigger$(false)
+		}, 50)
 	})
 
 	it('should increment versions up to the root', done => {
