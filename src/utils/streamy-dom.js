@@ -112,7 +112,7 @@ function diffElement(element,
 	{props:oldProps, children:oldChildren, version:oldVersion},
 	cacheContainer
 ) {
-	let initialRender = oldVersion === -1
+	let initialRender = oldVersion === -1 || oldVersion === undefined
 
 	// text nodes behave differently then normal dom elements
 	if (isTextNode(element) && tag === TEXT_NODE ) {
