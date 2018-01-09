@@ -1210,7 +1210,7 @@ var Playground = exports.Playground = function Playground() {return (
         (0, _src.h)('div', { 'class': 'section' }, [
             (0, _src.h)(_subheader.Subheader, { title: 'Experiment', subtitle: 'Fork and get your hands dirty' }, []),
             (0, _src.h)('div', { isolated: true }, [
-                (0, _src.h)('script', { async: true, src: '//jsfiddle.net/hvbee8m9/9/embed/js,result/' }, [])])]));};
+                (0, _src.h)('script', { async: true, src: '//jsfiddle.net/hvbee8m9/10/embed/js,result/' }, [])])]));};
 
 /***/ }),
 /* 13 */
