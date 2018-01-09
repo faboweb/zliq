@@ -1014,7 +1014,7 @@ createNode = createNode;var _streamy = __webpack_require__(4);var TEXT_NODE = '#
 	if (isCaching) {newElement = diffCachedElement(oldElement, newChild, oldChild, cacheContainer);} else {newElement = diffElement(oldElement, newChild, oldChild, cacheContainer);}return newElement;}function diffCachedElement(oldElement, _ref3, _ref4, cacheContainer) {var tag = _ref3.tag,props = _ref3.props,children = _ref3.children,version = _ref3.version;var oldProps = _ref4.props;var id = props.id;var gotCreated = false;var gotUpdated = false; // if there is no cache, create one
 	if (cacheContainer[id] === undefined) {cacheContainer[id] = { element: document.createElement(tag), vdom: { tag: tag, props: {}, children: [] } };gotCreated = true;}var elementCache = cacheContainer[id]; // ignore update if version equals cache
 	if (version !== elementCache.version) {diffAttributes(elementCache.element, props, oldProps);diffChildren(elementCache.element, children, elementCache.vdom.children, cacheContainer);elementCache.version = version;elementCache.vdom.props = props;elementCache.vdom.children = children;gotUpdated = true;}if (gotCreated) {triggerLifecycle(elementCache.element, props, 'created');} else if (gotUpdated) {triggerLifecycle(elementCache.element, props, 'updated');} // elements are updated in place, so only insert cached element if it's not already there
-	if (oldElement !== elementCache.element) {oldElement.parentElement.replaceChild(elementCache.element, oldElement);triggerLifecycle(elementCache.element, props, 'mounted');}return elementCache.element;}function diffElement(element, _ref5, _ref6, cacheContainer) {var tag = _ref5.tag,props = _ref5.props,newChildren = _ref5.children,newVersion = _ref5.version;var oldProps = _ref6.props,oldChildren = _ref6.children,oldVersion = _ref6.version;var initialRender = oldVersion === -1; // text nodes behave differently then normal dom elements
+	if (oldElement !== elementCache.element) {oldElement.parentElement.replaceChild(elementCache.element, oldElement);triggerLifecycle(elementCache.element, props, 'mounted');}return elementCache.element;}function diffElement(element, _ref5, _ref6, cacheContainer) {var tag = _ref5.tag,props = _ref5.props,newChildren = _ref5.children,newVersion = _ref5.version;var oldProps = _ref6.props,oldChildren = _ref6.children,oldVersion = _ref6.version;var initialRender = oldVersion === -1 || oldVersion === undefined; // text nodes behave differently then normal dom elements
 	if (isTextNode(element) && tag === TEXT_NODE) {updateTextNode(element, newChildren[0]);return element;} // if the node types do not differ, we reuse the old node
 	// we reuse the existing node to save time rerendering it
 	// we do not reuse/mutate cached (id) elements as this will mutate the cache
@@ -1210,7 +1210,7 @@ var Playground = exports.Playground = function Playground() {return (
         (0, _src.h)('div', { 'class': 'section' }, [
             (0, _src.h)(_subheader.Subheader, { title: 'Experiment', subtitle: 'Fork and get your hands dirty' }, []),
             (0, _src.h)('div', { isolated: true }, [
-                (0, _src.h)('script', { async: true, src: '//jsfiddle.net/hvbee8m9/8/embed/js,result/' }, [])])]));};
+                (0, _src.h)('script', { async: true, src: '//jsfiddle.net/hvbee8m9/9/embed/js,result/' }, [])])]));};
 
 /***/ }),
 /* 13 */
