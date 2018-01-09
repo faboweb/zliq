@@ -1125,14 +1125,14 @@ var Header = exports.Header = function Header() {
             (0, _src.h)('h3', { 'class': 'center highlight-less' }, ['The web-framework-force you want your Padawan to learn.'])]),
 
         (0, _src.h)('div', { 'class': 'link-list center' }, [
-            (0, _src.h)('a', { href: '/#motivation' }, ['Motivation']),
-            (0, _src.h)('a', { href: '/#tutorial' }, ['Tutorial']),
-            (0, _src.h)('a', { href: '/#streams' }, ['Streams']),
-            (0, _src.h)('a', { href: '/#state' }, ['State']),
-            (0, _src.h)('a', { href: '/#helpers' }, ['Helpers']),
-            (0, _src.h)('a', { href: '/#routing' }, ['Routing']),
-            (0, _src.h)('a', { href: '/#lifecycle' }, ['Lifecycle']),
-            (0, _src.h)('a', { href: '/#testing' }, ['Testing'])])]);
+            (0, _src.h)('a', { href: '#motivation' }, ['Motivation']),
+            (0, _src.h)('a', { href: '#tutorial' }, ['Tutorial']),
+            (0, _src.h)('a', { href: '#streams' }, ['Streams']),
+            (0, _src.h)('a', { href: '#state' }, ['State']),
+            (0, _src.h)('a', { href: '#helpers' }, ['Helpers']),
+            (0, _src.h)('a', { href: '#routing' }, ['Routing']),
+            (0, _src.h)('a', { href: '#lifecycle' }, ['Lifecycle']),
+            (0, _src.h)('a', { href: '#testing' }, ['Testing'])])]);
 
 
 
