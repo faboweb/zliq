@@ -24,7 +24,8 @@ export const stream = function (init_value) {
 	s.filter = (fn) => filter(s, fn);
 	s.deepSelect = (fn) => deepSelect(s, fn);
 	s.distinct = (fn) => distinct(s, fn);
-	s.$ = (selectorArr) => query(s, selectorArr);
+	s.query = (selectorArr) => query(s, selectorArr);
+	s.$ = (selectorArr) => query(s, selectorArr).distinct();
 	s.until = (stopEmit$) => until(s, stopEmit$);
 	s.patch = (partialChange) => patch(s, partialChange);
 	s.reduce = (fn, startValue) => reduce(s, fn, startValue);
