@@ -5,8 +5,8 @@ import deepEqual from 'deep-equal';
 * constructor returns a stream
 * get the current value of stream like: stream.value
 */
-export const stream = function(init_value) {
-	let s = function(value) {
+export const stream = function (init_value) {
+	let s = function (value) {
 		if (value === undefined) {
 			return s.value;
 		}
@@ -80,11 +80,11 @@ function map(parent$, fn) {
 
 /* 
 * helper function to debug, calls console.log on every value returnin the parent stream 
-*/ 
-function log (parent$, prefix) {  
-  map(parent$, value => console.log(prefix, value)) 
-  return parent$ 
-} 
+*/
+function log(parent$, prefix) {
+	map(parent$, value => console.log(prefix, value))
+	return parent$
+}
 
 /*
 * provides a new stream applying a transformation function to the value of a parent stream
@@ -159,7 +159,7 @@ function deepSelect(parent$, selector) {
 }
 
 function query(parent$, selectorsArr) {
-	if(!Array.isArray(selectorsArr)) {
+	if (!Array.isArray(selectorsArr)) {
 		return parent$.map(value => select(value, selectorsArr.split('.')))
 	}
 	return parent$.map(value => selectorsArr.map(selectors => select(value, selectors.split('.'))))
@@ -184,12 +184,14 @@ function distinct(parent$, fn = (a, b) => valuesChanged(a, b)) {
 * i.e. {name: 'Fabian', lastname: 'Weber} patched with {name: 'Fabo'} produces {name: 'Fabo', lastname: 'Weber}
 */
 function patch(parent$, partialChange) {
-  if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') { 
-    parent$(partialChange); 
-  } else { 
-    parent$(Object.assign({}, parent$.value, partialChange)); 
-  } 
-  return parent$ 
+	setImmediate(() => {
+		if (partialChange === null || typeof partialChange !== 'object' || typeof parent$.value !== 'object') {
+			parent$(partialChange);
+		} else {
+			parent$(Object.assign({}, parent$.value, partialChange));
+		}
+	})
+	return parent$
 }
 
 function until(parent$, stopEmitValues$) {
@@ -202,7 +204,7 @@ function until(parent$, stopEmitValues$) {
 		subscribeTo(parent$, newStream)
 	}
 	stopEmitValues$.map(stopEmitValues => {
-		if(stopEmitValues) {
+		if (stopEmitValues) {
 			removeItem(parent$.listeners, newStream);
 		} else {
 			subscribeTo(parent$, newStream);

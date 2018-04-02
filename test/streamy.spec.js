@@ -2,9 +2,9 @@ import { h, stream, merge$, if$, REMOVED } from '../src';
 import { test$ } from './helpers/test-component.js';
 
 describe('Streamy', () => {
-    it('should trigger listeners on initial value', (done)=> {
+    it('should trigger listeners on initial value', (done) => {
         const myMock = jest.fn();
-        let myStream = stream({test: 1});
+        let myStream = stream({ test: 1 });
         myStream.map(myMock);
         myStream.flatMap((value) => stream(value).map(myMock));
         myStream.filter(myMock);
@@ -18,7 +18,7 @@ describe('Streamy', () => {
         });
     })
 
-    it('shouldnt trigger listeners on undefined', (done)=> {
+    it('shouldnt trigger listeners on undefined', (done) => {
         const myMock = jest.fn();
         let myStream = stream();
         myStream.map(myMock);
@@ -35,7 +35,7 @@ describe('Streamy', () => {
             expect(myMock.mock.calls.length).toBe(6);
             done()
         });
-        myStream({test: 1});
+        myStream({ test: 1 });
     })
 
     it('shouldnt trigger listeners for negative .until triggers', () => {
@@ -72,7 +72,7 @@ describe('Streamy', () => {
         test$(flatMap$, [
             'HALLO YOU MARK',
             'BYE YOU MARK',
-            'BYE YOU FABO',
+            'BYE YOU FABO'
         ], done)
         myStream('BYE')
         secondStream('FABO')
@@ -108,13 +108,13 @@ describe('Streamy', () => {
     })
 
     describe('is-operator', () => {
-        it('should emit true if value is matched', (done)=> {
+        it('should emit true if value is matched', (done) => {
             stream('foo').is('foo').map(x => {
                 expect(x).toBe(true);
                 done();
             })
         });
-        it('should emit false if value is not matched', (done)=> {
+        it('should emit false if value is not matched', (done) => {
             stream('foo').is('bar').map(x => {
                 expect(x).toBe(false);
                 done();
@@ -122,34 +122,36 @@ describe('Streamy', () => {
         });
     });
 
-    it('should patch an object', (done)=> {
+    it('should patch an object', (done) => {
         let myStream = stream();
-        test$(myStream, [{foo: {bar: 123}}, {foo: {bar: 345}}, null, {x:1}], done);
-        myStream.patch({foo: {bar: 123}})
-        ({foo: {bar: 345}})
-        (null)
-        ({x:1})
+        test$(myStream, [{ foo: { bar: 123 } }, { foo: { bar: 345 } }, null, { x: 1 }], done);
+        myStream
+            .patch({ foo: { bar: 123 } })
+            .patch({ foo: { bar: 345 } })
+            .patch(null)
+            .patch({ x: 1 })
     });
 
-    it('should deep query an object', (done)=> {
+    it('should deep query an object', (done) => {
         let myStream = stream();
         test$(myStream.$('foo.bar'), [123, null, null], done);
-        myStream({foo:{bar:123}})(null)({})
+        myStream({ foo: { bar: 123 } })(null)({})
     });
 
-    it('should query several propertys', (done)=> {
+    it('should query several propertys', (done) => {
         let myStream = stream();
         test$(myStream.$(['foo.bar', 'foo.to', 'foo']), [
-            [123, 456, {bar:123, to:456}],
-            [null,null,null],
-            [null,null,null]
+            [123, 456, { bar: 123, to: 456 }],
+            [null, null, null],
+            [null, null, null]
         ], done);
-        myStream.patch({foo:{bar:123, to:456}})
-        (null)
-        ({})
+        myStream
+            .patch({ foo: { bar: 123, to: 456 } })
+            .patch(null)
+            .patch({})
     });
 
-    it('should emit aggregates on reduce', (done)=> {
+    it('should emit aggregates on reduce', (done) => {
         let myStream = stream();
         let agg$ = myStream.reduce((agg, cur) => {
             return agg + cur;
@@ -166,7 +168,7 @@ describe('Streamy', () => {
         myStream(1);
     })
 
-    it('should debounce values', (done)=> {
+    it('should debounce values', (done) => {
         let myStream = stream();
         const myMock = jest.fn();
         let debounced$ = myStream.debounce(50);

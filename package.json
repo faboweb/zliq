@@ -1,6 +1,6 @@
 {
   "name": "zliq",
-  "version": "1.6.9",
+  "version": "1.6.10",
   "description": "slim and quick framework in low loc",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
     "prepublishOnly": "npm test && rimraf lib/** && npm run build:lib",
-    "ghpages": "npm run build:demo && git subtree push --prefix demo origin gh-pages"
+    "ghpages": "npm run build:demo && (git add bundle* & git commit -m 'updated gh-pages') & git subtree push --prefix demo origin gh-pages"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
