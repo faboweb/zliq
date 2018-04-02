@@ -134,13 +134,13 @@ describe('Streamy', () => {
 
     it('should deep query an object', (done) => {
         let myStream = stream();
-        test$(myStream.$('foo.bar'), [123, null, null], done);
+        test$(myStream.query('foo.bar'), [123, null, null], done);
         myStream({ foo: { bar: 123 } })(null)({})
     });
 
     it('should query several propertys', (done) => {
         let myStream = stream();
-        test$(myStream.$(['foo.bar', 'foo.to', 'foo']), [
+        test$(myStream.query(['foo.bar', 'foo.to', 'foo']), [
             [123, 456, { bar: 123, to: 456 }],
             [null, null, null],
             [null, null, null]
@@ -149,6 +149,12 @@ describe('Streamy', () => {
             .patch({ foo: { bar: 123, to: 456 } })
             .patch(null)
             .patch({})
+    });
+
+    it('should notify on new values', (done) => {
+        let myStream = stream();
+        test$(myStream.$('foo.bar'), [123, null, 'abc'], done);
+        myStream({ foo: { bar: 123 } })(null)({})({ foo: { bar: 'abc' } })
     });
 
     it('should emit aggregates on reduce', (done) => {
