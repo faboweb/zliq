@@ -1,34 +1,34 @@
 body {
-    margin-bottom: 4rem;
+  margin-bottom: 4rem;
 }
 
 .anchor {
-    visibility: hidden;
-    position: relative;
-    top: -8rem;
+  visibility: hidden;
+  position: relative;
+  top: -8rem;
 }
 
 .highlight {
-    color: #07684F !important;
+  color: #07684f !important;
 }
 .highlight-less {
-    color: #188C71 !important;
+  color: #188c71 !important;
 }
 .highlight-background {
-    background-color: #FBD9BC !important;
+  background-color: #fbd9bc !important;
 }
 
 .caption {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 pre {
-    padding-top: 2rem !important;
-    background-color: initial !important;
-    border-color: #FBD9BC;
+  padding-top: 2rem !important;
+  background-color: initial !important;
+  border-color: #fbd9bc;
 
-    &:before {
-        background: #FBD9BC !important;
-        color: #07684F !important;
-    }
+  &:before {
+    background: #fbd9bc !important;
+    color: #07684f !important;
+  }
 }

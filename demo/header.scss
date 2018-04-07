@@ -1,81 +1,84 @@
-.big-header, img, h3 {
-    transition: all 0.5s;
+.big-header,
+img,
+h3 {
+  transition: all 0.5s;
 }
 
 .big-header {
-    padding-top: 2rem;
-    cursor: pointer;
+  padding-top: 2rem;
+  cursor: pointer;
 
+  h1 {
+    font-family: "Rubik Mono One", sans-serif;
+    font-size: 10rem;
+  }
+
+  img {
+    height: 17rem;
+  }
+
+  @media all and (max-width: 569px) {
     h1 {
-        font-family: 'Rubik Mono One', sans-serif;
-        font-size: 10rem;
+      font-size: 6rem;
     }
-
     img {
-        height: 17rem;
+      height: 10rem;
     }
-
-    @media all and (max-width: 569px) {
-        h1 {
-            font-size: 6rem;
-        }
-        img {
-            height: 10rem;
-        }
-        h3 {
-            font-size: 1.8rem;
-        }
+    h3 {
+      font-size: 1.8rem;
     }
+  }
 }
 
 .link-list {
-    padding-top: 2rem;
-    padding-bottom: 1rem;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
 
-    a {
-        color: #188C71;
-        padding: 0 1rem;
-        line-height: 2rem;
-        font-weight: bold;
-        display: inline-block;
-    }   
+  a {
+    color: #188c71;
+    padding: 0 1rem;
+    line-height: 2rem;
+    font-weight: bold;
+    display: inline-block;
+  }
 
-    @media all and (max-width: 569px) {
-        display: none;
-    }
+  @media all and (max-width: 569px) {
+    display: none;
+  }
 }
 
 .hidden {
-    position: fixed;
-    z-index: 100;
-    padding: 0;
-    width: 100%;
+  position: fixed;
+  z-index: 100;
+  padding: 0;
+  width: 100%;
 
-    * {
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-    h3, img {
-        height: 0;
-        overflow: hidden;
-    }
+  * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  h3,
+  img {
+    height: 0;
+    overflow: hidden;
+  }
 
-    + .container {
-        padding-top: 37rem;
+  + .container {
+    padding-top: 37rem;
 
-        @media all and (max-width: 569px) {
-            padding-top: 30rem;
-        }
+    @media all and (max-width: 569px) {
+      padding-top: 30rem;
     }
+  }
 
-    &.big-header {
-        h1 {
-            font-size: 4rem;
-        }
+  &.big-header {
+    h1 {
+      font-size: 4rem;
     }
+  }
 
-    .link-list {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-    }
+  .link-list {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
