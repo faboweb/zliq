@@ -185,7 +185,7 @@ describe("Components", () => {
     testRender(app, ["<div><p>Hello World</p></div>"], done);
   });
 
-  it.only("should allow returning arrays of subcomponents from components", done => {
+  it("should allow returning arrays of subcomponents from components", done => {
     let Component = () => [<p>Hello</p>, <p>World</p>];
     let app = (
       <div>
@@ -193,6 +193,24 @@ describe("Components", () => {
       </div>
     );
     testRender(app, ["<div><p>Hello</p><p>World</p></div>"], done);
+  });
+
+  it.only("should allow simple components that just receive resolved props", done => {
+    let Component = () => (props, children, globals) => (
+      <div>
+        {props.hello} {globals.bye}
+      </div>
+    );
+    let app = (
+      <div>
+        <Component hello="world" />
+      </div>
+    );
+    testRender(app, ["<div><div>world cu</div></div>"], done, {
+      globals: {
+        bye: "cu"
+      }
+    });
   });
 
   it("should set style in different ways", done => {
