@@ -316,6 +316,21 @@ export const Tutorial = ({ router$ }, children, globals) => (
     </Markup>
 
     <p>
+      As developers are lazy and don't want to repet code like `state$.$(...)`
+      in the code the whole time, there is also a simpler way. You just return a
+      function that will be executed with the resolved attributes:
+    </p>
+
+    <Markup>
+      {`
+            |let state$ = stream({ clicks: 0 });
+            |let Component = () => ({clicks}) => <div>
+            |  Clicks: {clicks}
+            |</div>;
+            `}
+    </Markup>
+
+    <p>
       For a centralized state like in <a href="http://redux.js.org/">Redux</a>{" "}
       define a state for the application and then pass it on to each component.
     </p>
