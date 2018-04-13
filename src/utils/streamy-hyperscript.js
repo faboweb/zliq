@@ -18,7 +18,10 @@ export const h = (tag, props, ...children) => {
     // props are not automatically resolved
     if (typeof tag === "function") {
       let output = tag(props || {}, mergedChildren$, globals);
-      return resolveChild(output);
+      return (Array.isArray(output) ? resolveChildren : resolveChild)(
+        output,
+        globals
+      );
     }
     return merge$([resolve$(props), mergedChildren$.map(flatten)]).map(
       ([props, children]) => {

@@ -185,6 +185,16 @@ describe("Components", () => {
     testRender(app, ["<div><p>Hello World</p></div>"], done);
   });
 
+  it.only("should allow returning arrays of subcomponents from components", done => {
+    let Component = () => [<p>Hello</p>, <p>World</p>];
+    let app = (
+      <div>
+        <Component />
+      </div>
+    );
+    testRender(app, ["<div><p>Hello</p><p>World</p></div>"], done);
+  });
+
   it("should set style in different ways", done => {
     let style$ = stream("width: 100px;");
     let app = <div style={style$} />;
