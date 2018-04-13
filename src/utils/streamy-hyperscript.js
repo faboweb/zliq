@@ -19,21 +19,14 @@ export const h = (tag, props, ...children) => {
     if (typeof tag === "function") {
       let output = tag(props || {}, mergedChildren$, globals);
 
-      // allow simple component that receive resolved streams
-      if (
-        typeof output === "function" &&
-        !output.IS_ELEMENT_CONSTRUCTOR &&
-        !isStream(output)
-      ) {
-        return merge$([resolve$(props), mergedChildren$.map(flatten)])
-          .map(([props, children]) => output(props, children, globals))
-          .map(resolveChildren);
+      if (output.IS_ELEMENT_CONSTRUCTOR || isStream(output)) {
+        return resolveChild(output, globals);
       }
 
-      return (Array.isArray(output) ? resolveChildren : resolveChild)(
-        output,
-        globals
-      );
+      // allow simple component that receive resolved streams
+      return merge$([resolve$(props), mergedChildren$.map(flatten)])
+        .map(([props, children]) => output(props, children, globals))
+        .map(resolveChildren);
     }
     return merge$([resolve$(props), mergedChildren$.map(flatten)]).map(
       ([props, children]) => {
