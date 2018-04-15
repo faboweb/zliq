@@ -371,10 +371,15 @@ describe("Components", () => {
   it("should isolate children from updates", done => {
     let trigger$ = stream(true);
     let app = <div isolated>{if$(trigger$, "HALLO WORLD", "BYE WORLD")}</div>;
-    testRender(app, ["<div>HALLO WORLD</div>", "<div>HALLO WORLD</div>"], done);
-    setTimeout(() => {
-      trigger$(false);
-    }, 50);
+    testRender(
+      app,
+      ["<div>HALLO WORLD</div>", "<div>HALLO WORLD</div>"],
+      done
+    ).schedule([
+      () => {
+        trigger$(false);
+      }
+    ]);
   });
 
   it("should increment versions up to the root", done => {
@@ -458,18 +463,16 @@ describe("Components", () => {
     let app = <div>{content$}</div>;
     const myMock = jest.fn();
     render(app, document.createElement("div"), {}, 50).map(myMock);
-    setTimeout(() => {
-      expect(myMock.mock.calls.length).toBe(2);
-      // two updates signaled in between
-      expect(myMock.mock.calls[1][0].version).toBe(2);
-      done();
-    }, 150);
-    setTimeout(() => {
-      content$("text");
-      setTimeout(() => {
-        content$("text2");
-      }, 30);
-    }, 60);
+    app.schedule([
+      () => content$("text"),
+      () => content$("text2"),
+      () => {
+        expect(myMock.mock.calls.length).toBe(2);
+        // two updates signaled in between
+        expect(myMock.mock.calls[1][0].version).toBe(2);
+        done();
+      }
+    ]);
   });
 
   it("should replace idd elements again", done => {
@@ -492,18 +495,16 @@ describe("Components", () => {
       [
         ({ element }) => {
           expect(element.querySelector("#x")).toBeNull();
-          trigger$(true);
         },
         ({ element }) => {
           expect(element.querySelector("#x")).not.toBeNull();
-          trigger$(false);
         },
         ({ element }) => {
           expect(element.querySelector("#x")).toBeNull();
         }
       ],
       done
-    );
+    ).schedule([() => trigger$(true), () => trigger$(false)]);
   });
 
   it("should print a warning if the child nodes have been removed/added outside of zliq", done => {
@@ -522,17 +523,15 @@ describe("Components", () => {
       [
         ({ element }) => {
           element.querySelector("#remove").remove();
-          trigger$(true);
         },
         ({ element }) => {
           expect(global.console.warn).toHaveBeenCalled();
           element.appendChild(document.createElement("div"));
-          trigger$(false);
         },
         () => {}
       ],
       done
-    );
+    ).schedule([() => trigger$(true), () => trigger$(false)]);
   });
 
   it("should resolve in streams nested elements with streams", done => {
@@ -549,12 +548,6 @@ describe("Components", () => {
         '<div><div class="bold"></div></div>'
       ],
       done
-    );
-    setTimeout(() => {
-      trigger$(true);
-      setTimeout(() => {
-        trigger2$(true);
-      }, 10);
-    }, 10);
+    ).schedule([() => trigger$(true), () => trigger2$(true)]);
   });
 });

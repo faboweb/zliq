@@ -151,10 +151,7 @@ describe("Streamy", () => {
       ],
       done
     );
-    myStream
-      .patch({ foo: { bar: 123, to: 456 } })
-      .patch(null)
-      .patch({});
+    myStream({ foo: { bar: 123, to: 456 } })(null)({});
   });
 
   it("should notify on new values", done => {
@@ -168,20 +165,8 @@ describe("Streamy", () => {
     let agg$ = myStream.reduce((agg, cur) => {
       return agg + cur;
     }, 0);
-    test$(
-      agg$,
-      [
-        x => {
-          expect(x).toBe(1);
-          setImmediate(() => myStream(2));
-        },
-        x => {
-          expect(x).toBe(3);
-        }
-      ],
-      done
-    );
-    myStream(1);
+    test$(agg$, [1, 3], done);
+    myStream(1)(2);
   });
 
   it("should debounce values", done => {
@@ -189,8 +174,6 @@ describe("Streamy", () => {
     const myMock = jest.fn();
     let debounced$ = myStream.debounce(50);
     test$(debounced$, [1], done);
-    myStream(3);
-    myStream(2);
-    myStream(1);
+    myStream(3)(2)(1);
   });
 });

@@ -33,6 +33,7 @@ export const stream = function(init_value) {
   s.patch = partialChange => patch(s, partialChange);
   s.reduce = (fn, startValue) => reduce(s, fn, startValue);
   s.debounce = timer => debounce(s, timer);
+  s.schedule = scheduleItems => schedule(s, scheduleItems);
   s.log = (prefix = "Stream:") => log(s, prefix);
 
   return s;
@@ -258,6 +259,31 @@ function debounce(parent$, timer) {
     debounceValue(parent$.value);
   }
   parent$.listeners.push(debounceValue);
+  return newStream;
+}
+
+/*
+* Especially in tests you want to define a reaction to a certain iteration of a stream
+*/
+function schedule(parent$, schedule, onDone = () => {}) {
+  let iteration = 0;
+  function execute(value) {
+    if (schedule.length < iteration + 1) {
+      throw Error("ZLIQ: schedule for iteration " + iteration + "not defined");
+    }
+    let item = schedule[iteration++];
+    if (typeof item === "function") {
+      return item(value);
+    } else {
+      return item;
+    }
+  }
+  let newStream = fork$(parent$, execute);
+  if (iteration === schedule.length - 1) onDone();
+  parent$.listeners.push(function deepSelectValue(value) {
+    newStream(execute(value));
+    if (iteration === schedule.length - 1) onDone();
+  });
   return newStream;
 }
 
