@@ -29,6 +29,15 @@ describe("Zliq-Pug", () => {
     });
   });
 
+  it("should render multiple classes", () => {
+    expect(pug`.class1.class2`({}, [], {})).toEqual({
+      tag: "div",
+      props: { class: "class1 class2" },
+      children: [],
+      version: 0
+    });
+  });
+
   it("should allow attribtues", () => {
     expect(pug`p(data='foo')`({}, [], {})).toEqual({
       tag: "p",
