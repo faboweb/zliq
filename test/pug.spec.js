@@ -18,35 +18,48 @@ import { setTimeout } from "timers";
 import { pug } from "../src/utils/zliq-pug.js";
 
 describe("Zliq-Pug", () => {
-  it("should create vdom from pug", () => {
-    expect(pug`p HELLO WORLD`({}, [], {})).toEqual({
-      tag: "p",
-      props: {},
-      children: [
-        { tag: "#text", props: {}, children: ["HELLO WORLD"], version: 0 }
+  it("should create vdom from pug", done => {
+    test$(
+      pug`p HELLO WORLD`({}, [], {}),
+      [
+        {
+          tag: "p",
+          props: {},
+          children: [
+            { tag: "#text", props: {}, children: ["HELLO WORLD"], version: 0 }
+          ],
+          version: 0
+        }
       ],
-      version: 0
-    });
+      done
+    );
   });
 
-  it("should render multiple classes", () => {
-    expect(pug`.class1.class2`({}, [], {})).toEqual({
-      tag: "div",
-      props: { class: "class1 class2" },
-      children: [],
-      version: 0
-    });
+  it("should render multiple classes", done => {
+    test$(
+      pug`.class1.class2`({}, [], {}),
+      [
+        {
+          tag: "div",
+          props: { class: "class1 class2" },
+          children: [],
+          version: 0
+        }
+      ],
+      done
+    );
   });
 
   it("should allow attribtues", () => {
-    expect(pug`p(data='foo')`({}, [], {})).toEqual({
+    // rendered templates return a stream
+    expect(pug`p(data='foo')`({}, [], {}).value).toEqual({
       tag: "p",
       props: { data: "foo" },
       children: [],
       version: 0
     });
 
-    expect(pug`p(data="1")`({}, [], {})).toEqual({
+    expect(pug`p(data="1")`({}, [], {}).value).toEqual({
       tag: "p",
       props: { data: "1" },
       children: [],
@@ -55,7 +68,7 @@ describe("Zliq-Pug", () => {
   });
 
   it("should use props", () => {
-    expect(pug`p(data=foo)`({ foo: "abc" })).toEqual({
+    expect(pug`p(data=foo)`({ foo: "abc" }).value).toEqual({
       tag: "p",
       props: { data: "abc" },
       children: [],
@@ -64,7 +77,7 @@ describe("Zliq-Pug", () => {
   });
 
   it("should use globals", () => {
-    expect(pug`p(data=globals.foo)`({}, [], { foo: "abc" })).toEqual({
+    expect(pug`p(data=globals.foo)`({}, [], { foo: "abc" }).value).toEqual({
       tag: "p",
       props: { data: "abc" },
       children: [],
@@ -76,7 +89,7 @@ describe("Zliq-Pug", () => {
     expect(
       pug`p
   children
-      `({}, [{ tag: "span" }])
+      `({}, [{ tag: "span" }]).value
     ).toEqual({
       tag: "p",
       props: {},
@@ -114,7 +127,7 @@ describe("Zliq-Pug", () => {
       pug`if condition
   p Hello
 else
-  p World`({ condition: true })
+  p World`({ condition: true }).value
     ).toEqual({
       tag: "p",
       children: [
@@ -132,7 +145,7 @@ else
       pug`if condition
   p Hello
 else
-  p World`({ condition: false })
+  p World`({ condition: false }).value
     ).toEqual({
       tag: "p",
       children: [
@@ -148,7 +161,19 @@ else
     });
   });
 
-  it("should allow streams as variables", done => {
+  it("should allow usage of components", done => {
+    let Component = () => pug`p Hello`;
+    testRender(
+      pug({ Component })`
+    div
+      Component
+  `,
+      ["<div><p>Hello</p></div>"],
+      done
+    );
+  });
+
+  it.only("should allow stream as variables", done => {
     let condition$ = stream(true);
     testRender(
       pug`if globals.condition$
