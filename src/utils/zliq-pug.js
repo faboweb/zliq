@@ -4,7 +4,8 @@ var lexer = require("pug-lexer");
 var parse = require("pug-parser");
 var safeEval = require("safe-eval");
 var { TEXT_NODE } = require("./streamy-dom.js");
-var { stream } = require("./streamy.js");
+var { stream, merge$ } = require("./streamy.js");
+var { flatten, resolve$ } = require("./streamy-helpers.js");
 
 export function pug(input) {
   // allow setup of components used in template by doing put({CoolButton})`CoolButton.col.s12`
@@ -39,7 +40,7 @@ export function pug(input) {
 // trim whitespaces to allow indentation in code
 function trimTemplate(template) {
   let whiteSpaces = template.search(/\S/) - 1;
-  if (whiteSpaces) {
+  if (whiteSpaces > 0) {
     return template
       .split("\n")
       .map(line => line.substr(whiteSpaces))
@@ -51,7 +52,7 @@ function trimTemplate(template) {
 function resolveCode(code, context, renderFunc = context => context) {
   let output = safeEval(code, context);
   if (isStream(output)) {
-    return output.map(renderFunc);
+    return output.flatMap(renderFunc);
   }
   return renderFunc(output);
 }
@@ -136,12 +137,14 @@ function walk(node, context) {
       return registeredComponent;
     }
 
-    return {
-      tag: node.name,
-      props: node.attrs ? resolveAttributes(node.attrs, context) : {},
-      children: node.block ? [].concat(walk(node.block, context)) : [],
-      version: 0
-    };
+    return merge$([resolve$(props), merge$(children).map(flatten)]).map(
+      ([props, children]) => ({
+        tag: node.name,
+        props,
+        children,
+        version: 0
+      })
+    );
   }
 }
 
