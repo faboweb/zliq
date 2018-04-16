@@ -173,7 +173,7 @@ else
     );
   });
 
-  it.only("should allow stream as variables", done => {
+  it("should allow stream as variables", done => {
     let condition$ = stream(true);
     testRender(
       pug`if globals.condition$
