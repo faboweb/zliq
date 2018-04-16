@@ -26,7 +26,7 @@ export const h = (tag, props, ...children) => {
       // allow simple component that receive resolved streams
       return merge$([resolve$(props), mergedChildren$.map(flatten)])
         .map(([props, children]) => output(props, children, globals))
-        .map(resolveChildren);
+        .map(children => resolveChildren(children, globals));
     }
     return merge$([resolve$(props), mergedChildren$.map(flatten)]).map(
       ([props, children]) => {

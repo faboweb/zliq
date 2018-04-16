@@ -60,7 +60,7 @@ function resolveCode(code, context, renderFunc = context => context) {
 // NOTE: we need to flatten out the blocks that produce nested arrays. if not we will have a structure of {children: [[[]]]} that zliq won't handle
 function walk(node, context) {
   if (node.type === "Block") {
-    let output = node.nodes.map(node => walk(node, context)).flatten();
+    let output = flatten(node.nodes.map(node => walk(node, context)));
     // TODO sometimes returning arrays is a problem like with root level elements
     if (output.length === 1) {
       return output[0];
@@ -76,8 +76,8 @@ function walk(node, context) {
     };
   }
   if (node.type === "Each") {
-    return JSON.parse(node.obj)
-      .map((val, i) => {
+    return flatten(
+      JSON.parse(node.obj).map((val, i) => {
         let newContext = Object.assign(
           {},
           context,
@@ -88,13 +88,13 @@ function walk(node, context) {
               }
             : {}
         );
-        return node.block.nodes
-          .map(node => {
+        return flatten(
+          node.block.nodes.map(node => {
             return walk(node, newContext);
           })
-          .flatten();
+        );
       })
-      .flatten();
+    );
   }
   if (node.type === "Code") {
     return resolveCode(node.val, context);
@@ -153,36 +153,26 @@ function resolveAttributes(attrs, context) {
     if (cur.name === "class") {
       resolvedAttrs.class =
         (resolvedAttrs.class ? resolvedAttrs.class + " " : "") +
-        cur.val.trim("'\"");
+        trim(cur.val, "'\"");
       return resolvedAttrs;
     }
     return Object.assign(resolvedAttrs, {
       [cur.name]: isVariable(cur.val)
         ? resolveCode(cur.val, context)
-        : cur.val.trim("'\"")
+        : trim(cur.val, "'\"")
     });
   }, {});
 }
 
-String.prototype.trimRight = function(charlist) {
-  if (charlist === undefined) charlist = "s";
-
-  return this.replace(new RegExp("[" + charlist + "]+$"), "");
-};
-
-String.prototype.trimLeft = function(charlist) {
-  if (charlist === undefined) charlist = "s";
-
-  return this.replace(new RegExp("^[" + charlist + "]+"), "");
-};
-
-String.prototype.trim = function(charlist) {
-  return this.trimLeft(charlist).trimRight(charlist);
-};
-
-Array.prototype.flatten = function() {
-  return this.reduce((acc, val) => acc.concat(val), []);
-};
+function trim(string, charlist) {
+  return (
+    string
+      // trim left
+      .replace(new RegExp("^[" + charlist + "]+"), "")
+      // trim right
+      .replace(new RegExp("[" + charlist + "]+$"), "")
+  );
+}
 
 function isVariable(val) {
   if (val.startsWith("'") || val.startsWith('"')) {
