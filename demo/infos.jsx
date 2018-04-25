@@ -1,7 +1,7 @@
 import { h } from "../src";
 import { pug } from "../src/utils/zliq-pug";
 
-let InfoBullet = ({ icon, title }, children) => pug`
+const InfoBullet = ({ icon, title }, children) => pug`
   .col.s12.m4
     .center.promo
       i.material-icons.highlight #{icon}
