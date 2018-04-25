@@ -175,6 +175,9 @@ function trim(string, charlist) {
 }
 
 function isVariable(val) {
+  if (val === true) {
+    return true;
+  }
   if (val.startsWith("'") || val.startsWith('"')) {
     return false;
   }
