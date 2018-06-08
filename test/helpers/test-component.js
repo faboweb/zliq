@@ -1,4 +1,4 @@
-import { diff, createNode, render } from "../../src";
+import { diff, createNode, render } from "../../src"
 
 export function testRender(
   vdom$,
@@ -10,22 +10,22 @@ export function testRender(
     globals: {}
   }
 ) {
-  let container = document.createElement("div");
+  let container = document.createElement("div")
   if (options.attach) {
-    document.body.appendChild(container);
+    document.body.appendChild(container)
   }
   // enable to just define the expected html in the render schedule
   schedule = schedule.map(fn => {
     if (typeof fn === "string") {
-      return ({ element }) => expect(element.outerHTML).toBe(fn);
+      return ({ element }) => expect(element.outerHTML).toBe(fn)
     }
-    return fn;
-  });
+    return fn
+  })
   return test$(
     render(vdom$, container, options.globals, options.debounce),
     schedule,
     done
-  );
+  )
 }
 
 export function test$(stream, schedule, done) {
@@ -34,25 +34,25 @@ export function test$(stream, schedule, done) {
       testIteration(iteration, value).then(done, done.fail)
     ),
     done
-  );
+  )
 }
 
 function testIteration(iteration, value, done) {
   return new Promise((resolve, reject) => {
-    // tests produce async behaviour often syncronous
+    // tests produce async behavior often synchronous
     // this can cause race effects on stream declarations
     // here the iterations are made asynchronous to prevent this
     setTimeout(function() {
       try {
         if (typeof iteration === "function") {
-          iteration(value);
+          iteration(value)
         } else {
-          expect(value).toEqual(iteration);
+          expect(value).toEqual(iteration)
         }
-        resolve();
+        resolve()
       } catch (error) {
-        reject(error);
+        reject(error)
       }
-    });
-  });
+    })
+  })
 }

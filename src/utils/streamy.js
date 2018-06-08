@@ -267,9 +267,9 @@ function debounce(parent$, timer) {
 */
 function executeScheduleItem(schedule, iteration, value) {
   if (schedule.length < iteration + 1) {
-    throw Error("ZLIQ: schedule for iteration " + iteration + "not defined")
+    throw Error("ZLIQ: schedule for iteration " + iteration + " not defined")
   }
-  let item = schedule[iteration++]
+  let item = schedule[iteration]
   if (typeof item === "function") {
     return item(value)
   } else {
@@ -283,11 +283,14 @@ function executeScheduleItem(schedule, iteration, value) {
 */
 function schedule(parent$, schedule, onDone = () => {}) {
   let iteration = 0
-  let newStream = fork$(parent$, execute)
-  if (iteration === schedule.length - 1) onDone()
+  let newStream = fork$(parent$, value =>
+    executeScheduleItem(schedule, iteration++, value)
+  )
+  if (schedule.length === iteration) onDone()
+
   parent$.listeners.push(function deepSelectValue(value) {
-    newStream(executeScheduleItem(schedule, iteration, value))
-    if (iteration === schedule.length - 1) onDone()
+    newStream(executeScheduleItem(schedule, iteration++, value))
+    if (iteration === schedule.length) onDone()
   })
   return newStream
 }
