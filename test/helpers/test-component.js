@@ -30,9 +30,10 @@ export function testRender(
 
 export function test$(stream, schedule, done) {
   return stream.schedule(
-    schedule.map(iteration => value =>
-      testIteration(iteration, value).then(done, done.fail)
-    ),
+    schedule.map(iteration => value => {
+      testIteration(iteration, value).then(null, done.fail)
+      return value
+    }),
     done
   )
 }

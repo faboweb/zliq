@@ -19,7 +19,7 @@ export const stream = function(init_value) {
   s.listeners = []
 
   // better debugging output for streams
-  s.toString = () => s.value
+  s.toString = () => "Stream(" + s.value + ")"
 
   s.map = fn => map(s, fn)
   s.is = value => map(s, cur => cur === value)
@@ -33,7 +33,7 @@ export const stream = function(init_value) {
   s.patch = partialChange => patch(s, partialChange)
   s.reduce = (fn, startValue) => reduce(s, fn, startValue)
   s.debounce = timer => debounce(s, timer)
-  s.schedule = scheduleItems => schedule(s, scheduleItems)
+  s.schedule = (scheduleItems, onDone) => schedule(s, scheduleItems, onDone)
   s.log = (prefix = "Stream:") => log(s, prefix)
 
   return s
@@ -288,9 +288,12 @@ function schedule(parent$, schedule, onDone = () => {}) {
   )
   if (schedule.length === iteration) onDone()
 
-  parent$.listeners.push(function deepSelectValue(value) {
-    newStream(executeScheduleItem(schedule, iteration++, value))
-    if (iteration === schedule.length) onDone()
+  parent$.listeners.push(function checkSchedule(value) {
+    // do immediate to prevent schedule items to update parent streams before child streams ran
+    setImmediate(() => {
+      newStream(executeScheduleItem(schedule, iteration++, value))
+      if (iteration === schedule.length) onDone()
+    })
   })
   return newStream
 }

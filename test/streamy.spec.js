@@ -63,6 +63,13 @@ describe("Streamy", () => {
     expect(newMock.mock.calls.length).toBe(0)
   })
 
+  it("should execute the schedule", done => {
+    let myStream = stream(1)
+    let schedule$ = myStream.schedule([() => "ONE", "TWO"])
+    test$(schedule$, ["ONE", "TWO"], done)
+    myStream(2)
+  })
+
   it("should trigger the flatMap on child update", done => {
     let myStream = stream("HALLO")
     let secondStream = stream("MARK")
@@ -73,7 +80,7 @@ describe("Streamy", () => {
       flatMap$,
       ["HALLO YOU MARK", "BYE YOU MARK", "BYE YOU FABO"],
       done
-    ).schedule([() => myStream("BYE"), () => secondStream("FABO")])
+    ).schedule([() => myStream("BYE"), () => secondStream("FABO"), null])
   })
 
   it("should trigger only on distinct values", done => {
