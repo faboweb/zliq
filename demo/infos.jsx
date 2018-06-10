@@ -1,4 +1,4 @@
-import { h } from "../src";
+import { h } from "../src"
 
 let InfoBullet = ({ icon, title }, children) => {
   return (
@@ -9,8 +9,8 @@ let InfoBullet = ({ icon, title }, children) => {
         <p class="light center">{children}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export const Infos = () => (
   <div class="section">
@@ -36,4 +36,4 @@ export const Infos = () => (
       </InfoBullet>
     </div>
   </div>
-);
+)

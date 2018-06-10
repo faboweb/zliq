@@ -1,6 +1,6 @@
-import { h, stream, merge$ } from "../src";
-import { Subheader } from "./subheader.jsx";
-import "./playground.scss";
+import { h, stream, merge$ } from "../src"
+import { Subheader } from "./subheader.jsx"
+import "./playground.scss"
 
 export const Playground = () => (
   <div class="section">
@@ -9,4 +9,4 @@ export const Playground = () => (
       <script async src="//jsfiddle.net/hvbee8m9/10/embed/js,result/" />
     </div>
   </div>
-);
+)

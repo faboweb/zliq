@@ -6,14 +6,11 @@
   "scripts": {
     "test": "jest",
     "tdd": "jest --watch",
-    "test:debug":
-      "node --inspect-brk ./node_modules/jest/bin/jest --runInBand --watch",
+    "test:debug": "node --inspect-brk ./node_modules/jest/bin/jest --runInBand --watch",
     "start": "webpack-dev-server --config webpack/demo.js",
     "format": "prettier **/*.{js,scss,json} --write",
-    "build":
-      "webpack --config webpack/build.js --output-filename=zliq.js --output-path=lib/",
-    "build:min":
-      "webpack -p --config webpack/build_min.js --output-filename=zliq.min.js --output-path=lib/",
+    "build": "webpack --config webpack/build.js --output-filename=zliq.js --output-path=lib/",
+    "build:min": "webpack -p --config webpack/build_min.js --output-filename=zliq.min.js --output-path=lib/",
     "build:all": "npm run build && npm run build:min",
     "build:demo": "webpack --config webpack/demo.js",
     "build:lib": "npm run build && npm run build:min",
@@ -21,13 +18,15 @@
     "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
     "prepublishOnly": "npm test && rimraf lib/** && npm run build:lib",
-    "ghpages":
-      "npm run build:demo && (git add bundle* & git commit -m 'updated gh-pages') & git subtree push --prefix demo origin gh-pages"
+    "ghpages": "npm run build:demo && (git add bundle* & git commit -m 'updated gh-pages') & git subtree push --prefix demo origin gh-pages"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "deep-equal": "^1.0.1",
+    "pug-lexer": "^4.0.0",
+    "pug-parser": "^5.0.0",
+    "safe-eval": "^0.3.0",
     "stacktrace-js": "^2.0.0"
   },
   "devDependencies": {
@@ -59,13 +58,17 @@
     "type": "git"
   },
   "jest": {
-    "setupFiles": ["./test/helpers/rAF.js"],
+    "setupFiles": [
+      "./test/helpers/rAF.js"
+    ],
     "moduleNameMapper": {
       "\\.(css|scss|jpg|png)$": "<rootDir>/test/helpers/empty-module.js"
     },
     "collectCoverage": true,
     "coverageDirectory": "./",
-    "coverageReporters": ["lcov"],
+    "coverageReporters": [
+      "lcov"
+    ],
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/demo/",

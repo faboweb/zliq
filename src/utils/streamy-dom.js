@@ -1,9 +1,19 @@
-import { isStream } from "./streamy";
+import { isStream, stream } from "./streamy";
 
-const TEXT_NODE = "#text";
+export const TEXT_NODE = "#text";
 
 export function render(vdom, parentElement, globals = {}, debounce = 10) {
-  let vdom$ = vdom(globals);
+  let vdom$;
+  if (isStream(vdom)) {
+    vdom$ = vdom;
+  } else if (vdom.IS_ELEMENT_CONSTRUCTOR) {
+    vdom$ = vdom(globals);
+  } else if (typeof vdom === "function") {
+    // simple element constructor
+    vdom$ = vdom({}, [], globals);
+  }
+
+  if (!isStream(vdom$)) vdom$ = stream(vdom$);
   return vdom$.debounce(debounce).reduce(
     function renderUpdate(
       {
@@ -14,30 +24,34 @@ export function render(vdom, parentElement, globals = {}, debounce = 10) {
       },
       { tag, props, children, version }
     ) {
-      if (oldElement === null) {
-        oldElement = createNode(tag, children);
-        if (parentElement) {
-          parentElement.appendChild(oldElement);
+      try {
+        if (oldElement === null) {
+          oldElement = createNode(tag, children);
+          if (parentElement) {
+            parentElement.appendChild(oldElement);
+          }
         }
-      }
-      let newElement = diff(
-        oldElement,
-        { tag, props, children, version },
-        { children: oldChildren, version: oldVersion },
-        keyContainer
-      );
+        let newElement = diff(
+          oldElement,
+          { tag, props, children, version },
+          { children: oldChildren, version: oldVersion },
+          keyContainer
+        );
 
-      // signalise mount of root element on initial render
-      if (parentElement && version === 0) {
-        triggerLifecycle(oldElement, props, "mounted");
-      }
+        // signalise mount of root element on initial render
+        if (parentElement && version === 0) {
+          triggerLifecycle(oldElement, props, "mounted");
+        }
 
-      return {
-        element: newElement,
-        version,
-        children: copyChildren(children),
-        keyContainer
-      };
+        return {
+          element: newElement,
+          version,
+          children: copyChildren(children),
+          keyContainer
+        };
+      } catch (err) {
+        console.error("Error in rendering step:", err);
+      }
     },
     {
       element: null,
