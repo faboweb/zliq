@@ -1,15 +1,12 @@
-import { h, stream, merge$ } from "../src";
-import { pug } from "../src/utils/zliq-pug";
-import { Subheader } from "./subheader.jsx";
-import "./playground.scss";
+import { h, stream, merge$ } from "../src"
+import { Subheader } from "./subheader.jsx"
+import "./playground.scss"
 
-export const Playground = () => pug({ Subheader })`
-  .section
-    Subheader(
-      title="Experiment"
-      subtitle="Fork and get your hands dirty"
-      id="experiment"
-    )
-    div(isolated)
-      script(async src="//jsfiddle.net/hvbee8m9/10/embed/js,result/")
-`;
+export const Playground = () => (
+  <div class="section">
+    <Subheader title="Experiment" subtitle="Fork and get your hands dirty" />
+    <div isolated>
+      <script async src="//jsfiddle.net/hvbee8m9/10/embed/js,result/" />
+    </div>
+  </div>
+)
