@@ -24,10 +24,8 @@
   "license": "MIT",
   "dependencies": {
     "deep-equal": "^1.0.1",
-    "pug-lexer": "^4.0.0",
-    "pug-parser": "^5.0.0",
     "safe-eval": "^0.3.0",
-    "stacktrace-js": "^2.0.0"
+    "zliq-router": "^0.0.2"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
