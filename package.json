@@ -1,6 +1,6 @@
 {
   "name": "zliq",
-  "version": "1.6.13",
+  "version": "1.6.14",
   "description": "slim and quick framework in low loc",
   "main": "index.js",
   "scripts": {
