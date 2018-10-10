@@ -11,48 +11,56 @@ import {
   UPDATED,
   isStream,
   join$
-} from "../src"
-import { testRender, test$ } from "./helpers/test-component"
-import assert from "assert"
-import { setTimeout } from "timers"
+} from "../src";
+import { testRender, test$ } from "./helpers/test-component";
+import assert from "assert";
+import { setTimeout } from "timers";
 
 describe("Components", () => {
   it("should show a component", done => {
-    testRender(<p>HELLO WORLD</p>, ["<p>HELLO WORLD</p>"], done)
-  })
+    testRender(<p>HELLO WORLD</p>, ["<p>HELLO WORLD</p>"], done);
+  });
 
   it("should work with React style hyperscript", done => {
     testRender(
       h("p", null, "this", " and ", "that"),
       ["<p>this and that</p>"],
       done
-    )
-  })
+    );
+  });
 
   it("should work with Preact style hyperscript", done => {
     testRender(
       h("p", null, ["this", " and ", "that"]),
       ["<p>this and that</p>"],
       done
-    )
-  })
+    );
+  });
+
+  it("should merge hyperscript classes and properties", done => {
+    testRender(
+      h(".class1", { class: "class2" }, []),
+      ['<div class="class2 class1"></div>'],
+      done
+    );
+  });
 
   it("should return a constructor function", () => {
-    let constructor = <p>HELLO WORLD</p>
-    expect(typeof constructor).toBe("function")
-  })
+    let constructor = <p>HELLO WORLD</p>;
+    expect(typeof constructor).toBe("function");
+  });
 
   it("should return a virtual dom stream when constructed", () => {
-    let constructor = <p>HELLO WORLD</p>
-    let vdom$ = constructor({})
-    expect(isStream(vdom$)).toBe(true)
-    expect(vdom$.value.tag).toBe("p")
-    expect(vdom$.value.props).toEqual({})
-    expect(vdom$.value.children).toEqual(["HELLO WORLD"])
-  })
+    let constructor = <p>HELLO WORLD</p>;
+    let vdom$ = constructor({});
+    expect(isStream(vdom$)).toBe(true);
+    expect(vdom$.value.tag).toBe("p");
+    expect(vdom$.value.props).toEqual({});
+    expect(vdom$.value.children).toEqual(["HELLO WORLD"]);
+  });
 
   it("should render into a parentElement provided", done => {
-    let container = document.createElement("div")
+    let container = document.createElement("div");
     test$(
       render(<p>HELLO WORLD</p>, container),
       [
@@ -60,23 +68,23 @@ describe("Components", () => {
           expect(container.innerHTML).toEqual("<p>HELLO WORLD</p>")
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should render without a parentElement provided", done => {
     test$(
       render(<p>HELLO WORLD</p>, null),
       [({ element }) => assert.equal(element.outerHTML, "<p>HELLO WORLD</p>")],
       done
-    )
-  })
+    );
+  });
 
   let DoubleClicks = ({ clicks$ }) => (
     <p>Clicks times 2: {clicks$.map(clicks => 2 * clicks)}</p>
-  )
+  );
   it("should react to inputs", done => {
-    let clicks$ = stream(3)
-    let component = <DoubleClicks clicks$={clicks$} />
+    let clicks$ = stream(3);
+    let component = <DoubleClicks clicks$={clicks$} />;
     testRender(
       component,
       [
@@ -84,84 +92,84 @@ describe("Components", () => {
           assert.equal(element.outerHTML, "<p>Clicks times 2: 6</p>")
       ],
       done
-    )
-  })
+    );
+  });
 
   it("CleverComponent should update on input stream update", done => {
-    let clicks$ = stream(3)
-    let component = <DoubleClicks clicks$={clicks$} />
+    let clicks$ = stream(3);
+    let component = <DoubleClicks clicks$={clicks$} />;
     testRender(
       component,
       [
         ({ element }) => {
-          assert.equal(element.outerHTML, "<p>Clicks times 2: 6</p>")
-          clicks$(6)
+          assert.equal(element.outerHTML, "<p>Clicks times 2: 6</p>");
+          clicks$(6);
         },
         ({ element }) =>
           assert.equal(element.outerHTML, "<p>Clicks times 2: 12</p>")
       ],
       done
-    )
-  })
+    );
+  });
 
   it("Components should have access to the provided globals", done => {
     const ShowGlobals = (props, children, globals) => {
-      return <p>{globals.value}</p>
-    }
-    let clicks$ = stream(3)
+      return <p>{globals.value}</p>;
+    };
+    let clicks$ = stream(3);
     let component = (
       <div>
         <ShowGlobals />
       </div>
-    )
+    );
     testRender(component, ["<div><p>GLOBAL TEXT</p></div>"], done, {
       globals: {
         value: "GLOBAL TEXT"
       }
-    })
-  })
+    });
+  });
 
   it("should update elements with textnodes", done => {
-    let trigger$ = stream()
+    let trigger$ = stream();
     testRender(
       <p>{if$(trigger$, <div />, "HELLO WORLD")}</p>,
       ["<p><div></div></p>", "<p>HELLO WORLD</p>"],
       done
-    )
-    trigger$(true)
+    );
+    trigger$(true);
     setTimeout(() => {
-      trigger$(false)
-    }, 10)
-  })
+      trigger$(false);
+    }, 10);
+  });
 
   it("should set the class", done => {
-    let class$ = stream("x")
-    let app = <div class={class$} />
+    let class$ = stream("x");
+    let app = <div class={class$} />;
     testRender(
       app,
       [
         ({ element }) => {
-          expect(element.classList).toContain("x")
-          class$(null)
+          expect(element.classList).toContain("x");
+          class$(null);
         },
         ({ element }) => {
-          expect(element.classList).not.toContain("x")
+          expect(element.classList).not.toContain("x");
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should resolve nested streams in props", done => {
-    let trigger$ = stream(false)
+    let trigger$ = stream(false);
     let style = {
       display: if$(trigger$, "block", "none")
-    }
+    };
     let app = (
       <div>
         <div style={style} />
       </div>
-    )
+    );
     testRender(
       app,
       [
@@ -169,73 +177,73 @@ describe("Components", () => {
         '<div><div style="display: block;"></div></div>'
       ],
       done
-    )
+    );
     setTimeout(() => {
-      trigger$(true)
-    }, 10)
-  })
+      trigger$(true);
+    }, 10);
+  });
 
   it("should allow returning streams from components", done => {
-    let Component = () => stream(<p>Hello World</p>)
+    let Component = () => stream(<p>Hello World</p>);
     let app = (
       <div>
         <Component />
       </div>
-    )
-    testRender(app, ["<div><p>Hello World</p></div>"], done)
-  })
+    );
+    testRender(app, ["<div><p>Hello World</p></div>"], done);
+  });
 
   it("should allow returning arrays of subcomponents from components", done => {
-    let Component = () => [<p>Hello</p>, <p>World</p>]
+    let Component = () => [<p>Hello</p>, <p>World</p>];
     let app = (
       <div>
         <Component />
       </div>
-    )
-    testRender(app, ["<div><p>Hello</p><p>World</p></div>"], done)
-  })
+    );
+    testRender(app, ["<div><p>Hello</p><p>World</p></div>"], done);
+  });
 
   it("should allow simple components that just receive resolved props", done => {
     let Component = () => (props, children, globals) => (
       <div>
         {props.hello} {globals.bye}
       </div>
-    )
+    );
     let app = (
       <div>
         <Component hello="world" />
       </div>
-    )
+    );
     testRender(app, ["<div><div>world cu</div></div>"], done, {
       globals: {
         bye: "cu"
       }
-    })
-  })
+    });
+  });
 
   it("should set style in different ways", done => {
-    let style$ = stream("width: 100px;")
-    let app = <div style={style$} />
+    let style$ = stream("width: 100px;");
+    let app = <div style={style$} />;
     testRender(
       app,
       [
         ({ element }) => {
-          expect(element.style.width).toBe("100px")
-          style$({ height: "200px" })
+          expect(element.style.width).toBe("100px");
+          style$({ height: "200px" });
         },
         ({ element }) => {
-          expect(element.style.width).toBe("")
-          expect(element.style.height).toBe("200px")
-          style$(null)
+          expect(element.style.width).toBe("");
+          expect(element.style.height).toBe("200px");
+          style$(null);
         },
         ({ element }) => {
-          expect(element.style.width).toBe("")
-          expect(element.style.height).toBe("")
+          expect(element.style.width).toBe("");
+          expect(element.style.height).toBe("");
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should react to attached events", done => {
     // input streams are scoped to be able to remove the listener if the element gets removed
@@ -246,73 +254,73 @@ describe("Components", () => {
           Click to emit event
         </button>
       </div>
-    )
-    let clicks$ = stream(0)
+    );
+    let clicks$ = stream(0);
     // this component fires a action on the store when clicked
     let component = (
       <DumbComponent clicks$={clicks$} onclick={x => clicks$(x)} />
-    )
+    );
     testRender(
       component,
       [
         // perform the actions on the element
         ({ element }) => {
-          element.querySelector("button").click()
-          expect(clicks$()).toBe(1)
+          element.querySelector("button").click();
+          expect(clicks$()).toBe(1);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should update lists correctly", done => {
-    var arr = []
-    var length = 3
+    var arr = [];
+    var length = 3;
     for (let i = 0; i < length; i++) {
-      arr.push({ name: i })
+      arr.push({ name: i });
     }
-    let list$ = stream(arr)
-    let listElems$ = list$.map(arr => arr.map(x => <li>{x.name}</li>))
-    let component = <ul>{listElems$}</ul>
+    let list$ = stream(arr);
+    let listElems$ = list$.map(arr => arr.map(x => <li>{x.name}</li>));
+    let component = <ul>{listElems$}</ul>;
 
     testRender(
       component,
       [
         ({ element }) => {
-          assert.equal(element.querySelectorAll("li").length, 3)
-          assert.equal(element.querySelectorAll("li")[2].innerHTML, "2")
-          let newArr = arr.slice(1)
-          list$(newArr)
+          assert.equal(element.querySelectorAll("li").length, 3);
+          assert.equal(element.querySelectorAll("li")[2].innerHTML, "2");
+          let newArr = arr.slice(1);
+          list$(newArr);
         },
         ({ element }) => {
-          assert.equal(element.querySelectorAll("li").length, 2)
-          assert.equal(element.querySelectorAll("li")[1].innerHTML, "2")
+          assert.equal(element.querySelectorAll("li").length, 2);
+          assert.equal(element.querySelectorAll("li")[1].innerHTML, "2");
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should remove attributes on null value", done => {
-    let value$ = stream(true)
-    let component = <div disabled={value$} />
+    let value$ = stream(true);
+    let component = <div disabled={value$} />;
     testRender(
       component,
       [
         ({ element }) => {
-          expect(element.disabled).toBe(true)
-          value$(null)
+          expect(element.disabled).toBe(true);
+          value$(null);
         },
         ({ element }) => {
-          expect(element.disabled).toBe(undefined)
+          expect(element.disabled).toBe(undefined);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should remove attributes on updates if not available anymore", done => {
-    let trigger$ = stream(true)
+    let trigger$ = stream(true);
     let app = (
       <div>
         {if$(
@@ -321,35 +329,37 @@ describe("Components", () => {
           <img src="img_girl.jpg" height="600" />
         )}
       </div>
-    )
+    );
     testRender(
       app,
       [
         ({ element }) => {
-          expect(element.querySelector("img").getAttribute("width")).toBe("500")
-          trigger$(false)
+          expect(element.querySelector("img").getAttribute("width")).toBe(
+            "500"
+          );
+          trigger$(false);
         },
         ({ element }) => {
-          expect(element.querySelector("img").getAttribute("width")).toBe(null)
+          expect(element.querySelector("img").getAttribute("width")).toBe(null);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should trigger lifecycle events on nested components", done => {
-    const mountedMock = jest.fn()
-    const createdMock = jest.fn()
-    const removedMock = jest.fn()
-    let trigger$ = stream(true)
+    const mountedMock = jest.fn();
+    const createdMock = jest.fn();
+    const removedMock = jest.fn();
+    let trigger$ = stream(true);
     let cycle = {
       mounted: mountedMock,
       created: createdMock,
       removed: removedMock
-    }
-    const component = <div id="test" cycle={cycle} />
+    };
+    const component = <div id="test" cycle={cycle} />;
 
-    let app = <div>{if$(trigger$, component)}</div>
+    let app = <div>{if$(trigger$, component)}</div>;
 
     testRender(
       app,
@@ -357,85 +367,85 @@ describe("Components", () => {
         () => trigger$(false),
         () => trigger$(true),
         () => {
-          expect(mountedMock.mock.calls.length).toBe(2)
-          expect(createdMock.mock.calls.length).toBe(1)
-          expect(removedMock.mock.calls.length).toBe(1)
+          expect(mountedMock.mock.calls.length).toBe(2);
+          expect(createdMock.mock.calls.length).toBe(1);
+          expect(removedMock.mock.calls.length).toBe(1);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should isolate children from updates", done => {
-    let trigger$ = stream(true)
-    let app = <div isolated>{if$(trigger$, "HALLO WORLD", "BYE WORLD")}</div>
+    let trigger$ = stream(true);
+    let app = <div isolated>{if$(trigger$, "HALLO WORLD", "BYE WORLD")}</div>;
     testRender(
       app,
       ["<div>HALLO WORLD</div>", "<div>HALLO WORLD</div>"],
       done
     ).schedule([
       () => {
-        trigger$(false)
+        trigger$(false);
       },
       null
-    ])
-  })
+    ]);
+  });
 
   it("should increment versions up to the root", done => {
-    let content$ = stream("")
+    let content$ = stream("");
     let app = (
       <div>
         <div>{content$}</div>
       </div>
-    )
+    );
     testRender(
       app,
       [
         ({ element, version }) => {
-          expect(version).toBe(0)
-          content$("text")
+          expect(version).toBe(0);
+          content$("text");
         },
         ({ element, version }) => {
-          expect(version).toBe(1)
+          expect(version).toBe(1);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should save id elements to reuse them", done => {
-    let content$ = stream("")
+    let content$ = stream("");
     let app = (
       <div>
         <div id="test">{content$}</div>
       </div>
-    )
-    let i
+    );
+    let i;
     testRender(
       app,
       [
         ({ keyContainer }) => {
-          expect(keyContainer["test"].element.outerHTML).toMatchSnapshot()
-          expect(keyContainer["test"].version).toBe(0)
-          content$("text")
+          expect(keyContainer["test"].element.outerHTML).toMatchSnapshot();
+          expect(keyContainer["test"].version).toBe(0);
+          content$("text");
         },
         ({ keyContainer }) => {
-          expect(keyContainer["test"].element.outerHTML).toMatchSnapshot()
-          expect(keyContainer["test"].version).toBe(1)
+          expect(keyContainer["test"].element.outerHTML).toMatchSnapshot();
+          expect(keyContainer["test"].version).toBe(1);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should reuse id elements on rerenderings", done => {
-    let content$ = stream("")
+    let content$ = stream("");
     let app = (
       <div>
         {content$}
         <div id="test" />
       </div>
-    )
+    );
     testRender(
       app,
       [
@@ -444,29 +454,29 @@ describe("Components", () => {
           element.replaceChild(
             document.createElement("div"),
             keyContainer["test"].element
-          )
+          );
           // manipulating the stored element
-          keyContainer["test"].element.setAttribute("id", "updated")
-          content$("text")
+          keyContainer["test"].element.setAttribute("id", "updated");
+          content$("text");
         },
         ({ element, keyContainer }) => {
-          expect(element.querySelector("#updated")).not.toBe(null)
+          expect(element.querySelector("#updated")).not.toBe(null);
         }
       ],
       done
-    )
-  })
+    );
+  });
 
   it("should debounce renderings", done => {
-    let content$ = stream("")
-    let app = <div>{content$}</div>
-    const myMock = jest.fn()
+    let content$ = stream("");
+    let app = <div>{content$}</div>;
+    const myMock = jest.fn();
     testRender(
       app,
       [
         () => {
-          setImmediate(() => content$("text"))
-          setImmediate(() => content$("text2"))
+          setImmediate(() => content$("text"));
+          setImmediate(() => content$("text2"));
         },
         () => {
           // render only ran twice for 3 values
@@ -476,11 +486,11 @@ describe("Components", () => {
       {
         debounce: 50
       }
-    )
-  })
+    );
+  });
 
   it("should replace idd elements again", done => {
-    let trigger$ = stream(false)
+    let trigger$ = stream(false);
     let app = (
       <div>
         <img />
@@ -492,58 +502,58 @@ describe("Components", () => {
           </div>
         )}
       </div>
-    )
+    );
 
     testRender(
       app,
       [
         ({ element }) => {
-          expect(element.querySelector("#x")).toBeNull()
+          expect(element.querySelector("#x")).toBeNull();
         },
         ({ element }) => {
-          expect(element.querySelector("#x")).not.toBeNull()
+          expect(element.querySelector("#x")).not.toBeNull();
         },
         ({ element }) => {
-          expect(element.querySelector("#x")).toBeNull()
+          expect(element.querySelector("#x")).toBeNull();
         }
       ],
       done
-    ).schedule([() => trigger$(true), () => trigger$(false), null])
-  })
+    ).schedule([() => trigger$(true), () => trigger$(false), null]);
+  });
 
   it("should print a warning if the child nodes have been removed/added outside of zliq", done => {
-    let trigger$ = stream(false)
+    let trigger$ = stream(false);
     let app = (
       <div>
         <div id="remove" />
         <div id="stays" />
         {if$(trigger$, <div id="added" />)}
       </div>
-    )
-    global.console = { warn: jest.fn() }
+    );
+    global.console = { warn: jest.fn() };
 
     testRender(
       app,
       [
         ({ element }) => {
-          element.querySelector("#remove").remove()
+          element.querySelector("#remove").remove();
         },
         ({ element }) => {
-          expect(global.console.warn).toHaveBeenCalled()
-          element.appendChild(document.createElement("div"))
+          expect(global.console.warn).toHaveBeenCalled();
+          element.appendChild(document.createElement("div"));
         },
         () => {}
       ],
       done
-    ).schedule([() => trigger$(true), () => trigger$(false), null])
-  })
+    ).schedule([() => trigger$(true), () => trigger$(false), null]);
+  });
 
   it("should resolve in streams nested elements with streams", done => {
-    let trigger$ = stream(false)
-    let trigger2$ = stream(false)
+    let trigger$ = stream(false);
+    let trigger2$ = stream(false);
     let app = (
       <div>{if$(trigger$, <div class={join$(if$(trigger2$, "bold"))} />)}</div>
-    )
+    );
     testRender(
       app,
       [
@@ -552,6 +562,6 @@ describe("Components", () => {
         '<div><div class="bold"></div></div>'
       ],
       done
-    ).schedule([() => trigger$(true), () => trigger2$(true), null])
-  })
-})
+    ).schedule([() => trigger$(true), () => trigger2$(true), null]);
+  });
+});

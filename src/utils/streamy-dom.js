@@ -252,8 +252,8 @@ function diffAttributes(element, props, oldProps = {}) {
 }
 
 function applyAttribute(element, attribute, value) {
-  if (attribute === "class" || attribute === "className") {
-    element.className = value || "";
+  if (attribute === "class") {
+    element.className = value || ""; // "" in the case of a class stream returning null
     // we leave the possibility to define styles as strings
     // but we allow styles to be defined as an object
   } else if (attribute === "style" && typeof value !== "string") {
