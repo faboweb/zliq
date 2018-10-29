@@ -2,79 +2,47 @@ import { isStream, stream } from "./streamy";
 
 export const TEXT_NODE = "#text";
 
-export function render(vdom, parentElement, globals = {}, debounce = 10) {
-  let vdom$;
-  if (isStream(vdom)) {
-    vdom$ = vdom;
-  } else if (vdom.IS_ELEMENT_CONSTRUCTOR) {
-    vdom$ = vdom(globals);
-  } else if (typeof vdom === "function") {
-    // simple element constructor
-    vdom$ = vdom({}, [], globals);
+export function diff(
+  parentElement,
+  oldElement,
+  newChild,
+  oldChild,
+  cacheContainer
+) {
+  // if there is no element on the parent to diff against yet,
+  // we create the element here to make diffing later on more uniform
+  if (oldElement === null) {
+    oldElement = createNode(newChild.tag, newChild.children);
+    if (parentElement) {
+      parentElement.appendChild(oldElement);
+    }
   }
 
-  if (!isStream(vdom$)) vdom$ = stream(vdom$);
-  return vdom$.debounce(debounce).reduce(
-    function renderUpdate(
-      {
-        element: oldElement,
-        version: oldVersion,
-        children: oldChildren,
-        keyContainer
-      },
-      { tag, props, children, version }
-    ) {
-      try {
-        if (oldElement === null) {
-          oldElement = createNode(tag, children);
-          if (parentElement) {
-            parentElement.appendChild(oldElement);
-          }
-        }
-        let newElement = diff(
-          oldElement,
-          { tag, props, children, version },
-          { children: oldChildren, version: oldVersion },
-          keyContainer
-        );
-
-        // signalise mount of root element on initial render
-        if (parentElement && version === 0) {
-          triggerLifecycle(oldElement, props, "mounted");
-        }
-
-        return {
-          element: newElement,
-          version,
-          children: copyChildren(children),
-          keyContainer
-        };
-      } catch (err) {
-        console.error("Error in rendering step:", err);
-      }
-    },
-    {
-      element: null,
-      version: -1,
-      children: [],
-      keyContainer: {}
-    }
-  );
-}
-
-export function diff(oldElement, newChild, oldChild, cacheContainer) {
   let newElement = oldElement;
   let isCaching = newChild.props && newChild.props.id;
-  // for keyed elements, we recall unchanged elements
-  if (isCaching) {
-    newElement = diffCachedElement(
-      oldElement,
-      newChild,
-      oldChild,
-      cacheContainer
-    );
-  } else {
-    newElement = diffElement(oldElement, newChild, oldChild, cacheContainer);
+
+  try {
+    // for keyed/idd elements, we recall unchanged elements
+    if (isCaching) {
+      newElement = diffCachedElement(
+        oldElement,
+        newChild,
+        oldChild,
+        cacheContainer
+      );
+    } else {
+      newElement = diffElement(oldElement, newChild, oldChild, cacheContainer);
+    }
+  } catch (err) {
+    // on errors, show an error element instead of crashing
+    newElement = {
+      tag: "div",
+      props: {
+        style: "border: 1px solid red; color: red;"
+      },
+      children: ["FAULTY ELEMENT"]
+    };
+    console.error("[ERROR]: An element failed to render.\n", err);
   }
 
   return newElement;
@@ -217,7 +185,13 @@ function updateExistingNodes(
 ) {
   let nodes = parentElement.childNodes;
   for (let i = 0; i < nodes.length && i < newChildren.length; i++) {
-    diff(nodes[i], newChildren[i], oldChildren[i], cacheContainer);
+    diff(
+      parentElement,
+      nodes[i],
+      newChildren[i],
+      oldChildren[i],
+      cacheContainer
+    );
   }
 }
 
@@ -228,7 +202,7 @@ function addNewNodes(parentElement, newChildren, cacheContainer) {
 
     parentElement.appendChild(newElement);
 
-    diff(newElement, newChildren[i], {}, cacheContainer);
+    diff(parentElement, newElement, newChildren[i], {}, cacheContainer);
 
     if (props && props.cycle && props.cycle.mounted && !props.id) {
       console.error(
@@ -265,6 +239,14 @@ function applyAttribute(element, attribute, value) {
     element.style.cssText = cssText;
     // other propertys are just added as is to the DOM
   } else {
+    if (element[attribute] !== undefined) {
+      if (value === null) {
+        element[attribute] = undefined;
+      } else {
+        // element.setAttribute(attribute, value);
+        element[attribute] = value;
+      }
+    }
     // also remove attributes on null to allow better handling of streams
     // streams don't emit on undefined
     if (value === null) {
@@ -273,10 +255,17 @@ function applyAttribute(element, attribute, value) {
       // element.setAttribute(attribute, value);
       element[attribute] = value;
     }
+
+    // TODO handle custom attributes
   }
 }
 
-function diffChildren(element, newChildren, oldChildren = [], cacheContainer) {
+function diffChildren(
+  element,
+  newChildren = [],
+  oldChildren = [],
+  cacheContainer
+) {
   if (newChildren.length === 0 && oldChildren.length === 0) {
     return;
   }
@@ -298,10 +287,10 @@ function diffChildren(element, newChildren, oldChildren = [], cacheContainer) {
 /* HELPERS */
 
 /*
-* jsx has children mixed as vdom-elements and numbers or strings
-* to consistently treat these children similar in the code we transform those numbers and strings
-* into vdom-elements with the tag #text that have one child with their value
-*/
+  * jsx has children mixed as vdom-elements and numbers or strings
+  * to consistently treat these children similar in the code we transform those numbers and strings
+  * into vdom-elements with the tag #text that have one child with their value
+  */
 function unifyChildren(children) {
   return children.map(child => {
     // if there is no tag we assume it's a number or a string
@@ -327,25 +316,8 @@ export function createNode(tag, children) {
   }
 }
 
-// to not mutate the representation of our children from the last iteration we clone them
-// we copy the cycle functions for each element, as JSON parse/stringify does not work for functions
-function copyChildren(oldChildren) {
-  let newChildren = JSON.parse(JSON.stringify(oldChildren));
-  newChildren.forEach((child, index) => {
-    let oldChild = oldChildren[index];
-    if (oldChild.props && oldChild.props.cycle) {
-      child.cycle = oldChild.props.cycle;
-    }
-
-    if (typeof oldChildren[index] === "object") {
-      child.children = copyChildren(oldChild.children);
-    }
-  });
-  return newChildren;
-}
-
 // shorthand to call a cycle event for an element if existing
-function triggerLifecycle(element, { cycle } = {}, event) {
+export function triggerLifecycle(element, { cycle } = {}, event) {
   if (cycle && cycle[event]) {
     cycle[event](element);
   }

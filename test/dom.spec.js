@@ -1,17 +1,4 @@
-import {
-  render,
-  h,
-  stream,
-  if$,
-  merge$,
-  initRouter,
-  CHILDREN_CHANGED,
-  ADDED,
-  REMOVED,
-  UPDATED,
-  isStream,
-  join$
-} from "../src";
+import { render, h, stream, if$, isStream, join$ } from "../src";
 import { testRender, test$ } from "./helpers/test-component";
 import assert from "assert";
 import { setTimeout } from "timers";
