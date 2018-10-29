@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "babel-core": "^6.23.1",
-    "babel-jest": "^20.0.0",
     "babel-loader": "^6.2.10",
     "babel-plugin-transform-h-jsx": "^1.0.0",
     "babel-preset-babili": "0.0.12",
@@ -56,9 +55,6 @@
     "type": "git"
   },
   "jest": {
-    "setupFiles": [
-      "./test/helpers/rAF.js"
-    ],
     "moduleNameMapper": {
       "\\.(css|scss|jpg|png)$": "<rootDir>/test/helpers/empty-module.js"
     },

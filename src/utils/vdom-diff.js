@@ -189,7 +189,7 @@ function updateExistingNodes(
       parentElement,
       nodes[i],
       newChildren[i],
-      oldChildren[i],
+      oldChildren[i] || {},
       cacheContainer
     );
   }

@@ -1,32 +1,27 @@
 import Prism from "prismjs";
 import "prismjs/components/prism-jsx.js";
 import "prismjs/themes/prism-solarizedlight.css";
-import { h, stream } from "../src";
+import { zx, stream } from "../src";
 
-export const Markup = (props, children$) => {
-  // children are always arrays of arrays to allow children that stream arrays
+export const Markup = code => {
   let code$ = stream("");
+  // need to timeout here until prism is initialized
   setTimeout(() => {
-    children$
-      .map(children => {
-        let code = children[0];
-        let strippedMarginCode = code
-          .split("\n")
-          .filter(line => line.trim() !== "")
-          .map(line => line.trim().substr(1))
-          .join("\n");
-        let html = Prism.highlight(strippedMarginCode, Prism.languages.jsx);
-        return html;
-      })
-      .map(code$);
+    let strippedMarginCode = code
+      .split("\n")
+      .filter(line => line.trim() !== "")
+      .map(line => line.trim().substr(1))
+      .join("\n");
+    let html = Prism.highlight(strippedMarginCode, Prism.languages.jsx);
+    code$(html);
   }, 10);
-  return (
+  return zx`
     <pre class="language-jsx">
-      <code class="language-jsx" innerHTML={code$} />
+      <code class="language-jsx" innerHTML=${code$}></code>
     </pre>
-  );
+  `;
 };
 
-export const Output = (props, children) => {
-  return <pre class="example-output">{children}</pre>;
-};
+export const Output = children => zx`
+  return <pre class="example-output">${children}</pre>;
+`;

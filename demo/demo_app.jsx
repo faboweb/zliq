@@ -2,7 +2,7 @@
 import "materialize-css/css/ghpages-materialize.css";
 
 // core
-import { render, h, stream, merge$ } from "../src";
+import { render, zx } from "../src";
 
 // components
 import { Subheader } from "./subheader.jsx";
@@ -15,10 +15,10 @@ import { Playground } from "./playground.jsx";
 import "./styles.scss";
 
 //plugins
-import { shrinkStacktrace } from "zliq-stacktrace";
-let errorHandler = shrinkStacktrace(
-  /(src\/utils|bootstrap|null:null:null|bundle\.js)/
-);
+// import { shrinkStacktrace } from "zliq-stacktrace";
+// let errorHandler = shrinkStacktrace(
+//   /(src\/utils|bootstrap|null:null:null|bundle\.js)/
+// );
 // We can add the error handler whereever we catch an error
 // Here we explicitly want the errors in ZLIQ for testing purposes
 // window.onerror = (messageOrEvent, source, lineno, colno, error) =>
@@ -30,9 +30,9 @@ let router$ = initRouter();
 // main render function for the application
 // render provided hyperscript into a parent element
 // zliq passes around HTMLElement elements so you can decide what to do with them
-let app = (
+let app = zx`
   <div>
-    <Header />
+    ${Header()}
     <div class="container">
       <a href="https://github.com/faboweb/zliq">
         <img
@@ -42,19 +42,19 @@ let app = (
           data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
         />
       </a>
-      <Infos />
+      ${Infos()}
       <div class="section">
-        <Subheader
-          title="Motivation"
-          subtitle="Why yet another web framework?"
-          id="motivation"
-        />
+        ${Subheader({
+          title: "Motivation",
+          subtitle: "Why yet another web framework?",
+          id: "motivation"
+        })}
 
         <div class="row">
           <p>
             Modern web frameworks got really big (React + Redux 139Kb and
-            Angular 2 + Rx 766Kb,{" "}
-            <a href="https://gist.github.com/Restuta/cda69e50a853aa64912d">
+            Angular 2 + Rx 766Kb,
+            (<a href="https://gist.github.com/Restuta/cda69e50a853aa64912d">
               src
             </a>). As a developer I came into the (un)pleasant situation to
             teach people how these work. But I couldn't really say, as I haven't
@@ -77,11 +77,11 @@ let app = (
           </p>
         </div>
       </div>
-      <Tutorial router$={router$} />
-      <Playground />
+      ${Tutorial({ router$ })}
+      ${Playground()}
     </div>
   </div>
-);
+`;
 render(app, document.querySelector("#app"), {
   config: {
     value: "abc",

@@ -423,7 +423,7 @@ babel-helpers@^6.24.1:
     babel-runtime "^6.22.0"
     babel-template "^6.24.1"
 
-babel-jest@^20.0.0, babel-jest@^20.0.3:
+babel-jest@^20.0.3:
   version "20.0.3"
   resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-20.0.3.tgz#e4a03b13dc10389e140fc645d09ffc4ced301671"
   dependencies:
@@ -5903,22 +5903,13 @@ yargs@~3.10.0:
     decamelize "^1.0.0"
     window-size "0.1.0"
 
-zliq-pug@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/zliq-pug/-/zliq-pug-0.0.2.tgz#8f346e349a6b32747cd91c9cc9bb44d6892a2f4d"
-  dependencies:
-    pug-lexer "^4.0.0"
-    pug-parser "^5.0.0"
-    safe-eval "^0.3.0"
-    zliq "1.x"
-
 zliq-router@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/zliq-router/-/zliq-router-0.0.2.tgz#0822063429275c5c674d710b5ff8b34363aa30b7"
   dependencies:
     zliq "^1.6.4"
 
-zliq@1.x, zliq@^1.6.4:
+zliq@^1.6.4:
   version "1.6.13"
   resolved "https://registry.yarnpkg.com/zliq/-/zliq-1.6.13.tgz#f4177e1e0d31ed11d022221652e15970a636467f"
   dependencies:
