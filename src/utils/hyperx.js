@@ -1,6 +1,7 @@
 // forked from https://github.com/choojs/hyperx
 
 let VAR = 0,
+  WHITESPACE = 14,
   TEXT = 1,
   OPEN = 2,
   CLOSE = 3,
@@ -28,14 +29,15 @@ module.exports = function(h, opts) {
 
   return function(strings) {
     let state = TEXT,
-      token = "";
+      token = "",
+      parents = [];
     let arglen = arguments.length;
     let parts = [];
 
     for (let i = 0; i < strings.length; i++) {
       if (i < arglen - 1) {
         let arg = escape(arguments[i + 1]);
-        let p = parse(strings[i]);
+        let parsedTokens = parse(strings[i]);
         let xstate = state;
         if (xstate === ATTR_VALUE_DOUBLEQUOTE) xstate = ATTR_VALUE;
         if (xstate === ATTR_VALUE_SINGLEQUOTE) xstate = ATTR_VALUE;
@@ -43,15 +45,16 @@ module.exports = function(h, opts) {
         if (xstate === ATTR) xstate = ATTR_KEY;
         if (xstate === OPEN) {
           if (token === "/") {
-            p.push([OPEN, "/", arg]);
+            parsedTokens.push([OPEN, "/", arg]);
             token = "";
           } else {
-            p.push([OPEN, arg]);
+            parsedTokens.push([OPEN, arg]);
           }
         } else {
-          p.push([VAR, xstate, arg]);
+          // TODO resolve component here?
+          parsedTokens.push([VAR, xstate, arg]);
         }
-        parts.push.apply(parts, p);
+        parts.push.apply(parts, parsedTokens);
       } else parts.push.apply(parts, parse(strings[i]));
     }
 
@@ -60,22 +63,27 @@ module.exports = function(h, opts) {
     for (let i = 0; i < parts.length; i++) {
       let cur = stack[stack.length - 1][0];
       let p = parts[i],
-        s = p[0];
-      if (s === OPEN && /^\//.test(p[1])) {
+        tokenType = p[0];
+      if (tokenType === OPEN && /^\//.test(p[1])) {
         let ix = stack[stack.length - 1][1];
         if (stack.length > 1) {
           stack.pop();
           stack[stack.length - 1][0][2][ix] = h(
             cur[0],
             cur[1],
-            cur[2].length ? cur[2] : undefined
+            cur[2].length
+              ? trimWhitespacesInChildren(cur[0], cur[2])
+              : undefined
           );
         }
-      } else if (s === OPEN) {
+      } else if (tokenType === OPEN) {
         let c = [p[1], {}, []];
         cur[2].push(c);
         stack.push([c, cur[2].length - 1]);
-      } else if (s === ATTR_KEY || (s === VAR && p[1] === ATTR_KEY)) {
+      } else if (
+        tokenType === ATTR_KEY ||
+        (tokenType === VAR && p[1] === ATTR_KEY)
+      ) {
         let key = "";
         let copyKey;
         for (; i < parts.length; i++) {
@@ -126,11 +134,11 @@ module.exports = function(h, opts) {
             break;
           }
         }
-      } else if (s === ATTR_KEY) {
+      } else if (tokenType === ATTR_KEY) {
         cur[1][p[1]] = true;
-      } else if (s === VAR && p[1] === ATTR_KEY) {
+      } else if (tokenType === VAR && p[1] === ATTR_KEY) {
         cur[1][p[2]] = true;
-      } else if (s === CLOSE) {
+      } else if (tokenType === CLOSE) {
         if (selfClosing(cur[0]) && stack.length) {
           let ix = stack[stack.length - 1][1];
           stack.pop();
@@ -140,7 +148,7 @@ module.exports = function(h, opts) {
             cur[2].length ? cur[2] : undefined
           );
         }
-      } else if (s === VAR && p[1] === TEXT) {
+      } else if (tokenType === VAR && p[1] === TEXT) {
         if (p[2] === undefined || p[2] === null) p[2] = "";
         else if (!p[2]) p[2] = concat("", p[2]);
         if (Array.isArray(p[2][0])) {
@@ -148,14 +156,17 @@ module.exports = function(h, opts) {
         } else {
           cur[2].push(p[2]);
         }
-      } else if (s === TEXT) {
+      } else if (tokenType === TEXT) {
         cur[2].push(p[1]);
-      } else if (s === ATTR_EQ || s === ATTR_BREAK) {
+      } else if (tokenType === ATTR_EQ || tokenType === ATTR_BREAK) {
         // no-op
       } else {
-        throw new Error("unhandled: " + s);
+        throw new Error("unhandled: " + tokenType);
       }
     }
+
+    // TODO strip line breaks and junk whitespace
+    // TODO handle components
 
     if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
       tree[2].shift();
@@ -169,7 +180,10 @@ module.exports = function(h, opts) {
       typeof tree[2][0][0] === "string" &&
       Array.isArray(tree[2][0][2])
     ) {
-      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2]);
+      // trim whitespaces
+      let children = trimWhitespacesInChildren(tree[2][0][0], tree[2][0][2]);
+
+      tree[2][0] = h(tree[2][0][0], tree[2][0][1], children);
     }
     return tree[2][0];
 
@@ -178,8 +192,9 @@ module.exports = function(h, opts) {
       if (state === ATTR_VALUE_WHITESPACE) state = ATTR;
       for (let i = 0; i < str.length; i++) {
         let curChar = str.charAt(i);
-        // <button>HALLO_</button>
+
         if (state === TEXT && curChar === "<") {
+          // _<button>HALLO_</button>
           if (token.length) res.push([TEXT, token]);
           token = "";
           state = OPEN;
@@ -276,6 +291,7 @@ module.exports = function(h, opts) {
         }
       }
       if (state === TEXT && token.length) {
+        // remove whitespaces from not preformatted html
         res.push([TEXT, token]);
         token = "";
       } else if (state === ATTR_VALUE && token.length) {
@@ -413,3 +429,27 @@ export const escape = arg => {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 };
+
+function trimWhitespacesInChildren(tag, children) {
+  if (tag === "pre") return children;
+
+  let copy = children.slice();
+  while (copy && typeof copy[0] === "string" && /^\s*$/.test(copy[0])) {
+    copy = copy.slice(1);
+  }
+  if (copy && typeof copy[0] === "string") {
+    copy[0] = copy[0].trimLeft();
+  }
+  while (
+    copy &&
+    typeof copy[copy.length - 1] === "string" &&
+    /^\s*$/.test(copy[copy.length - 1])
+  ) {
+    copy = copy.slice(0, copy.length - 1);
+  }
+  if (copy && typeof copy[copy.length - 1] === "string") {
+    copy[0] = copy[0].trimRight();
+  }
+
+  return copy;
+}
