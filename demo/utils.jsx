@@ -16,9 +16,7 @@ export const Markup = code => {
     code$(html);
   }, 10);
   return zx`
-    <pre class="language-jsx">
-      <code class="language-jsx" innerHTML=${code$}></code>
-    </pre>
+    <pre class="language-jsx"><code class="language-jsx" innerHTML=${code$}></code></pre>
   `;
 };
 

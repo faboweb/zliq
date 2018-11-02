@@ -1,4 +1,5 @@
-import { isStream, stream } from "./streamy";
+import { isStream } from "./streamy";
+import { Component } from "./streamy-vdom";
 import { diff, triggerLifecycle } from "./vdom-diff";
 
 export function render(vdom, parentElement, globals = {}, debounce = 10) {
@@ -62,8 +63,8 @@ function resolveInputToStream(input, globals) {
 
   if (isStream(input)) {
     vdom$ = input;
-  } else if (input.IS_ELEMENT_CONSTRUCTOR) {
-    vdom$ = input(globals);
+  } else if (input instanceof Component) {
+    vdom$ = input.build(globals);
   } else if (typeof input === "function") {
     // simple element constructor
     vdom$ = input({}, [], globals);

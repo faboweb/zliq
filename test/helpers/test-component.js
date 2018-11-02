@@ -15,11 +15,11 @@ export function testRender(
     document.body.appendChild(container);
   }
   // enable to just define the expected html in the render schedule
-  schedule = schedule.map(fn => {
-    if (typeof fn === "string") {
-      return ({ element }) => expect(element.outerHTML).toBe(fn);
+  schedule = schedule.map(expected => {
+    if (typeof expected === "string") {
+      return ({ element }) => expect(element.outerHTML).toBe(expected);
     }
-    return fn;
+    return expected;
   });
   return test$(
     render(vdom$, container, options.globals, options.debounce),

@@ -1,4 +1,4 @@
-import { isStream, stream } from "./streamy";
+import { isStream } from "./streamy";
 
 export const TEXT_NODE = "#text";
 
@@ -316,6 +316,7 @@ export function createNode(tag, children) {
   }
 }
 
+// TODO use React like effects for lifecycle events
 // shorthand to call a cycle event for an element if existing
 export function triggerLifecycle(element, { cycle } = {}, event) {
   if (cycle && cycle[event]) {

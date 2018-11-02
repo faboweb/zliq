@@ -1,7 +1,8 @@
 // forked from https://github.com/choojs/hyperx
 
+import { Component } from "./index.js";
+
 let VAR = 0,
-  WHITESPACE = 14,
   TEXT = 1,
   OPEN = 2,
   CLOSE = 3,
@@ -27,16 +28,24 @@ module.exports = function(h, opts) {
     h = attributeToProperty(h);
   }
 
-  return function(strings) {
+  return (strings, ...values) => {
+    return new Component(globals => {
+      let component = handleTemplateLiteral(globals, strings, values);
+      return component.build(globals);
+    });
+  };
+
+  // return (strings, ...values) => handleTemplateLiteral(null, strings, values);
+
+  function handleTemplateLiteral(globals, strings, values) {
     let state = TEXT,
-      token = "",
-      parents = [];
-    let arglen = arguments.length;
+      token = "";
+    let valuesLength = values.length;
     let parts = [];
 
     for (let i = 0; i < strings.length; i++) {
-      if (i < arglen - 1) {
-        let arg = escape(arguments[i + 1]);
+      if (i < valuesLength) {
+        let value = escape(values[i]);
         let parsedTokens = parse(strings[i]);
         let xstate = state;
         if (xstate === ATTR_VALUE_DOUBLEQUOTE) xstate = ATTR_VALUE;
@@ -45,14 +54,15 @@ module.exports = function(h, opts) {
         if (xstate === ATTR) xstate = ATTR_KEY;
         if (xstate === OPEN) {
           if (token === "/") {
-            parsedTokens.push([OPEN, "/", arg]);
+            parsedTokens.push([OPEN, "/", value]);
             token = "";
           } else {
-            parsedTokens.push([OPEN, arg]);
+            parsedTokens.push([OPEN, value]);
           }
         } else {
           // TODO resolve component here?
-          parsedTokens.push([VAR, xstate, arg]);
+          // if (typeof value === "function") value = value(globals);
+          parsedTokens.push([VAR, xstate, value]);
         }
         parts.push.apply(parts, parsedTokens);
       } else parts.push.apply(parts, parse(strings[i]));
@@ -165,7 +175,6 @@ module.exports = function(h, opts) {
       }
     }
 
-    // TODO strip line breaks and junk whitespace
     // TODO handle components
 
     if (tree[2].length > 1 && /^\s*$/.test(tree[2][0])) {
@@ -291,7 +300,6 @@ module.exports = function(h, opts) {
         }
       }
       if (state === TEXT && token.length) {
-        // remove whitespaces from not preformatted html
         res.push([TEXT, token]);
         token = "";
       } else if (state === ATTR_VALUE && token.length) {
@@ -309,7 +317,7 @@ module.exports = function(h, opts) {
       }
       return res;
     }
-  };
+  }
 
   function strfn(x) {
     if (typeof x === "function") return x;
@@ -410,7 +418,9 @@ function attributeToProperty(h) {
     for: "htmlFor",
     "http-equiv": "httpEquiv"
   };
+
   return function(tagName, attrs = {}, children = []) {
+    // console.log(tagName, attrs, children);
     for (let attr in attrs) {
       if (attr in transform) {
         attrs[transform[attr]] = attrs[attr];

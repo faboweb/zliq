@@ -14,38 +14,20 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     <p>
       ZLIQ is leveraging ES2015 to read easier and to be readable by everybody.
-      ZLIQ is using <a href="https://facebook.github.io/jsx/">JSX</a> as a DOM
-      abstraction in JS. This allows templating of the components and allows
-      ZLIQ to define how properties and children are rendered.
+      ZLIQ is using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates">tagged templates</a> as a templating tool.
+      Those templates are converted into a virtual dom format, which is used to render the HTML and to update it.
     </p>
 
     <p>A component in ZLIQ can look like this:</p>
 
     ${Markup(
       `
-      |import {h} from 'zliq';
+      |import {zx} from 'zliq';
       |
       |// insert values in the markup with {x}
-      |export const Highlight = (props, children) =>
-      |    <span class='highlight'>{props.text}</span>;
-      `
-    )}
-
-    <p>
-      You need to always provide the <code>h</code> function. JSX gets
-      transformed to Hyperscript and the <code>h</code> is what gets evaluated
-      by ZLIQ.
-    </p>
-
-    ${Markup(
-      `
-      |// before
-      |export const Highlight = ({text}) =>
-      |    <span class="highlight">{text}</span>;
-      |
-      |// after
-      |export const Highlight = ({text}) =>
-      |    h('span', {'class': 'highlight'}, [text]);
+      |export const Highlight = text => zx\`
+      |    <span class='highlight'>\${text}</span>;
+      | \`
       `
     )}
 
@@ -58,18 +40,17 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     </p>
 
     <p>
-      To use components in other components just import the function and use the
-      function name as a tag name:
+      Components in ZLIQ are just functions returning virtual dom (streams). To use component in other components just use the components function as a value:
     </p>
 
     ${Markup(
       `
-      |import {h} from 'zliq';
+      |import {zx} from 'zliq';
       |import {Highlight} from './highlight.js';
       |
-      |let app = <div>
-      |        <Highlight text="Hello World!!!"></Highlight>
-      |    </div>;
+      |let app = zx\`<div>
+      |        \${Highlight(text)}
+      |    </div>\`;
       |...
       `
     )}
@@ -85,22 +66,19 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     )}
 
     <p>
-      ZLIQ doesn't enforce the parent element rule known from React. Do whatever
-      you like with an element array.
+      Templates in Zliq do not need to have a single parent. They can return also lists:
     </p>
 
     ${Markup(
       `
-      |import {h} from 'zliq';
+      |import {zx} from 'zliq';
       |
-      |export const ListItems = () => {
-      |    return [
-      |        <li>I am 1</li>,
+      |export const ListItems = zx\`
+      |        <li>I am 1</li>
       |        <li>I am 2</li>
-      |    ]
-      |}
+      |    \`
       |
-      |let list = <ul><ListItems /></ul>;
+      |let list = zx\`<ul>\${ListItems}</ul>\`;
       `
     )}
 
@@ -108,7 +86,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |let button = <button onclick={() => console.log('got clicked')}>Click me</button>;
+      |let button = zx\`<button onclick=\${() => console.log('got clicked')}>Click me</button>\`;
       `
     )}
 
@@ -117,10 +95,10 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     <p>
       To render static content, we don't need a framework... Actual user
       interaction with our application will change the state at several
-      occasions over time. Stream-librarys like{" "}
+      occasions over time. Stream-librarys like 
       <a href="https://github.com/Reactive-Extensions/RxJS">RXJS</a> are there
       explicitly for that scenario. ZLIQ includes a very lite implementation of
-      streams inspired by RXJS and{" "}
+      streams inspired by RXJS and 
       <a href="https://github.com/paldepind/flyd">Flyd</a>.
     </p>
 
@@ -269,7 +247,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     ${Markup(
       `
       |let newStream = stream('Hello World')
-      |let app = <span>{newStream}</span>
+      |let app = zx\`<span>\${newStream}</span>\`
       |render(app).map(({element}) => element.outerHTML).log()
       |// <span>Hello World</span>
       |newStream('Bye World')
@@ -307,21 +285,45 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     </p>
 
     <p>
-      For a component based on state like used in the most MV* frameworks just
-      define a state stream locally.
+      The easiest way to think about ZLIQ component updates is, that you send a 
+      new virtual dom object whenever you update the component. So on an update
+      we just rerender the component and send it.
     </p>
 
     ${Markup(
       `
-      |let state$ = stream({ clicks: 0 });
-      |let Component = () => <div>
-      |  Clicks: {state$.$('clicks')}
-      |</div>;
+      |let Component = () => {
+      |  let state = { clicks: 0 };
+      |  function update() {
+      |    state.clicks++
+      |    output$(render(state))
+      |  }
+      |  function render({clicks}) {
+      |    return zx\`<button onclick=\${update}>Clicks: \${clicks}</button>\`
+      |  }
+      |  let output$ = stream(render(state))
+      |  return output$
       `
     )}
 
     <p>
-      As developers are lazy and don't want to repet code like \`state$.$(...)\`
+      As ZLIQ works with streams we can integrate this process into a stream:
+    </p>
+
+    ${Markup(
+      `
+      |let Component = () => {
+      |  let state$ = stream({ clicks: 0 });
+      |  return state$.map(({clicks}) =>
+      |    zx\`<button onclick=\${state$.patch({clicks: state.value.clicks + 1})}>Clicks: \${clicks}</button>\`
+      |  );
+      `
+    )}
+
+    ${
+      /*
+    <p>
+      As developers are lazy and don't want to repeat code like \`state$.$(...)\`
       in the code the whole time, there is also a simpler way. You just return a
       function that will be executed with the resolved attributes:
     </p>
@@ -329,11 +331,14 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     ${Markup(
       `
       |let state$ = stream({ clicks: 0 });
-      |let Component = () => ({clicks}) => <div>
+      |let Component = (state$) => ({clicks}) => <div>
       |  Clicks: {clicks}
       |</div>;
       `
     )}
+    */
+      ""
+    }
 
     <p>
       For a centralized state like in <a href="http://redux.js.org/">Redux</a>{" "}
@@ -364,12 +369,12 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       `
       |// Redux like action
       |let increment = (state$) => () => {
-      |    state$.patch({ clicks: state$.$('clicks')() + 1 })
+      |    state$.patch({ clicks: state$.value.clicks + 1 })
       |};
       |
-      |let app = <div>
-      |    <button onclick={increment(state$)}>Click + 1</button>
-      |</div>;
+      |let app = zx\`<div>
+      |    <button onclick=\${increment(state$)}>Click + 1</button>
+      |  </div>\`;
       `
     )}
 
