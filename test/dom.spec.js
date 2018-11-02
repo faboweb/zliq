@@ -74,14 +74,14 @@ describe("Components", () => {
     );
   });
 
-  xit("Components should have access to the provided globals", done => {
-    const ShowGlobals = (props, children, globals) => {
+  it("Components should have access to the provided globals", done => {
+    const ShowGlobals = new Component(globals => {
       return zx`<p>${globals.value}</p>`;
-    };
-    let component = zx`<div>
+    });
+    let app = zx`<div>
         ${ShowGlobals}
       </div>`;
-    testRender(component, ["<div><p>GLOBAL TEXT</p></div>"], done, {
+    testRender(app, ["<div><p>GLOBAL TEXT</p></div>"], done, {
       globals: {
         value: "GLOBAL TEXT"
       }
@@ -493,7 +493,6 @@ describe("Components", () => {
       app,
       [
         ({ element }) => {
-          console.log(element.outerHTML);
           element.querySelector("#remove").remove();
         },
         ({ element }) => {
