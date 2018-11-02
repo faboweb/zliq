@@ -488,6 +488,7 @@ describe("Components", () => {
       </div>
     `;
     let spy = jest.spyOn(global.console, "warn");
+    global.console.warn.mockImplementation(() => {});
 
     testRender(
       app,
@@ -497,6 +498,7 @@ describe("Components", () => {
         },
         ({ element }) => {
           expect(spy).toHaveBeenCalled();
+          global.console.warn.mockReset();
           element.appendChild(document.createElement("div"));
         },
         () => {}
