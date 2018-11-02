@@ -1,8 +1,7 @@
 import { render, zx, stream, if$, isStream, join$, Component } from "../src";
 import { testRender, test$ } from "./helpers/test-component";
-import { setTimeout } from "timers";
 
-// TODO remove hyperscript tests in favor of zx
+// TODO groom tests
 
 describe("Components", () => {
   it("should show a component", done => {
