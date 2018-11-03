@@ -31,6 +31,7 @@ module.exports = function(h, opts) {
   return (strings, ...values) => {
     return new Component(globals => {
       let component = handleTemplateLiteral(globals, strings, values);
+      // if (Array.isArray())
       return component.build(globals);
     });
   };

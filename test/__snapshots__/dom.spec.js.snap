@@ -3,3 +3,5 @@
 exports[`Components should reuse id elements on rerenderings 1`] = `"<div id=\\"test\\">text</div>"`;
 
 exports[`Components should save id elements to reuse them 1`] = `"<div id=\\"test\\"></div>"`;
+
+exports[`Components should save id elements to reuse them 2`] = `"<div id=\\"test\\">text</div>"`;

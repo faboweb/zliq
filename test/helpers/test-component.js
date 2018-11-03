@@ -30,8 +30,8 @@ export function testRender(
 
 export function test$(stream, schedule, done) {
   return stream.schedule(
-    schedule.map(iteration => value => {
-      testIteration(iteration, value).then(null, done.fail);
+    schedule.map(iteration => async value => {
+      await testIteration(iteration, value).catch(done.fail);
       return value;
     }),
     done

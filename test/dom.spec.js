@@ -525,4 +525,18 @@ describe("Components", () => {
       done
     ).schedule([() => trigger$(true), () => trigger2$(true), null]);
   });
+
+  it.only("should allow a list of elements to be returned from a component", done => {
+    let component = new Component(globals => [
+      "TESTING A STRING",
+      zx`<div>HALLO WORLD</div>`,
+      "ANOTHER STRING"
+    ]);
+
+    testRender(
+      zx`<div>${component}</div>`,
+      [`<div></div>TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING</div>`],
+      done
+    );
+  });
 });

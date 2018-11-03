@@ -291,8 +291,8 @@ function schedule(parent$, schedule, onDone = () => {}) {
 
   parent$.listeners.push(function checkSchedule(value) {
     // do immediate to prevent schedule items to update parent streams before child streams ran
-    setImmediate(() => {
-      newStream(executeScheduleItem(schedule, iteration++, value));
+    setImmediate(async () => {
+      newStream(await executeScheduleItem(schedule, iteration++, value));
       if (iteration === schedule.length) onDone();
     });
   });
