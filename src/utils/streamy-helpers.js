@@ -1,31 +1,5 @@
 import { stream, merge$, isStream } from "./";
 
-// wrapper around promises to provide an indicator if the promise is running
-export const promise$ = promise => {
-  let output$ = stream({
-    loading: true,
-    error: null,
-    data: null
-  });
-
-  promise.then(
-    result => {
-      output$.patch({
-        loading: false,
-        data: result
-      });
-    },
-    error => {
-      output$.patch({
-        loading: false,
-        error
-      });
-    }
-  );
-
-  return output$;
-};
-
 // provide easy switched on boolean streams
 // example use case: <button onclick={()=>open$(!open$())}>{if$(open$, 'Close', 'Open')}</button>
 export function if$(boolean$, onTrue = null, onFalse = null) {

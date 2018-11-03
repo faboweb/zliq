@@ -246,11 +246,11 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |let newStream = stream('Hello World')
-      |let app = zx\`<span>\${newStream}</span>\`
+      |let content$ = stream('Hello World')
+      |let app = zx\`<span>\${content$}</span>\`
       |render(app).map(({element}) => element.outerHTML).log()
       |// <span>Hello World</span>
-      |newStream('Bye World')
+      |content$('Bye World')
       |// <span>Bye World</span>
       `
     )}
@@ -264,9 +264,9 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       `
       |let newStream = stream()
       |assert(newStream() === undefined)
-      |newStream.log() // 'Hallo World', ...
+      |newStream.log() // this doesn't print anything right now
       |newStream('Hallo World')
-      |newStream.log() // 'Hallo World', ...
+      |// .log() now prints 'Hallo World'
       `
     )}
 
@@ -343,19 +343,23 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     <p>
       For a centralized state like in <a href="http://redux.js.org/">Redux</a>{" "}
       define a state for the application and then pass it on to each component.
+      For a nested component function to receive the globals, we wrap the component function
+      in a \`Component\` class. This way ZLIQ knows, that it needs to handle this component
+      differently.
     </p>
 
     ${Markup(
       `
+      |import {Component, stream, render} from "zliq"
       |let state$ = stream({ clicks: 0 });
       |
-      |let Component = (props, children, {state$}) => <div>
-      |  Clicks: {state$.$('clicks')}
-      |</div>;
+      |let App = new Component(globals => zx\`<div>
+      |  Clicks: \${globals.state$.$('clicks')}
+      |</div>\`) ;
       |
-      |let app = <Component />;
       |// pass the state$ as a global to all sub-components
-      |render(app, document.querySelector('#app'), {state$})
+      |const globals = {state$}
+      |render(App, document.querySelector('#app'), globals)
       `
     )}
 
@@ -448,48 +452,6 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       `
     )}
 
-    <h6>promise$ - promise enhancer</h6>
-
-    <p>
-      ZLIQ provides a little wrapper around promises. It provides a flag for the
-      ongoing request. This way you can show loading bars easily:
-    </p>
-
-    ${Markup(
-      `
-      |import { promise$ } from '../src';
-      |
-      |let fetchQuote = (into$) => () => {
-      |	promise$(fetch('http://quotes.rest/qod.json?category=inspire')
-      |        .then(res => res.json())
-      |        .then(data => {
-      |		    return {
-      |		    	quote: data.contents.quotes["0"].quote,
-      |		    	author: data.contents.quotes["0"].author
-      |		    };
-      |	}).map(into$);
-      |}
-      |let quoteRequest$ = stream({initial: true});
-      |
-      |let app = <div>
-      |    <button onclick={fetchQuote(quoteRequest$)}>Get Quote of the Day</button>
-      |    <p>
-      |        {
-      |            quoteRequest$.map(({initial, data, loading}) => {
-      |                if (initial) {
-      |                   return null;
-      |                }
-      |                if (loading) {
-      |                    return 'Loading...';
-      |                }
-      |                return <p>{data.quote} - {data.author}</p>;
-      |            })
-      |        }
-      |    </p>
-      |</div>;
-      `
-    )}
-
     ${Subheader({
       title: "Routing",
       subtitle: "Put your state where your URL is",
@@ -506,21 +468,17 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |import {Router, initRouter}
+      |import {Router, initRouter} from "zliq-router"
       |
       |let router$ = initRouter()
       |router$.log() // {route: '/', params: {}, routes: [...]}
       |
-      |let app = <div>
+      |let app = new Component(({router$}) => zx\`<div>
       |    <a href="/cats">Go the cats</a>
       |    <a href="/">Go away from cats</a>
-      |    <Router route="/" router$={router$}>
-      |        No Cats here. :-(
-      |    </Router>
-      |    <Router route="/cats" router$={router$}>
-      |        Miau! Miau!
-      |    </Router>
-      |</div>
+      |    \${Router({router$, router: "/"}, "No Cats here. :-(")}
+      |    \${Router({router$, router: "/cats"}, "Miau! Miau!")}
+      |</div>\`)
       `
     )}
 
@@ -542,22 +500,22 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       |let cycle = {
       |    mounted: element => {} // do sth with the element here
       |}
-      |let app = <div cycle={cycle}><div>
+      |let app = zx\`<div cycle=\${cycle}><div>\`
       `
     )}
 
     <p>
       In rare cases you want to prevent ZLIQ from updating renderer children.
-      For example if yome external plugin handles a renderer element. To do so
+      For example if some external plugin handles a renderer element. To do so
       you just add the \`isolated\` attribute to the element.
     </p>
 
     ${Markup(
       `
       |let state$ = stream({ clicks: 0 });
-      |let app = <div isolated>
-      |  Clicks: {state$.$('clicks')}
-      |</div>
+      |let app = zx\`<div isolated>
+      |  Clicks: \${state$.$('clicks')}
+      |</div>\`
       |render(app).map(({element}) => element.outerHTML).log()
       |// <div>Clicks: 0</div>
       |// <div>Clicks: 0</div>
@@ -577,10 +535,10 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |import {h, stream, testRender} from 'zliq';
+      |import {zx, stream, testRender} from 'zliq';
       |
       |let text$ = stream('Hello World!!!');
-      |testRender(<p>{text$}></p>, [
+      |testRender(zx\`<p>{text$}></p>\`, [
       |    // on each update of an element, we can test it
       |    ({element}) => assert.equal(element.outerHTML, '<p>Hello World!!!</p>'),
       |    // it is enough to just provide the expected html
