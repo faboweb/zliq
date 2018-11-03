@@ -94,7 +94,7 @@ export function resolveChildren(children, globals) {
 * resolve the element constructor, also for elements nested in streams
 * returns the format string|number|vdom|stream<string|number|vdom>
 */
-function resolveChild(child, globals) {
+export function resolveChild(child, globals) {
   if (child instanceof Component) {
     return resolveChildren(child.build(globals), globals);
   }

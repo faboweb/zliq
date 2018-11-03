@@ -531,6 +531,14 @@ describe("Components", () => {
     testRender(component, [`<div>TESTING A STRING</div>`], done);
   });
 
+  it("should allow a component to return a component", done => {
+    let component = new Component(
+      globals => new Component(globals => zx`<div>TESTING A STRING</div>`)
+    );
+
+    testRender(component, [`<div>TESTING A STRING</div>`], done);
+  });
+
   it("should allow a list of elements to be returned from a component", done => {
     let component = new Component(globals => [
       "TESTING A STRING",

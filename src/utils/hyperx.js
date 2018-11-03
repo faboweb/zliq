@@ -1,6 +1,6 @@
 // forked from https://github.com/choojs/hyperx
 
-import { Component, resolveChildren } from "./index.js";
+import { Component, resolveChildren, resolveChild } from "./index.js";
 
 let VAR = 0,
   TEXT = 1,
@@ -34,7 +34,14 @@ module.exports = function(h, opts) {
       if (Array.isArray(component)) {
         return resolveChildren(component, globals);
       }
-      return component.build(globals);
+
+      // resolve nested components
+      // TODO needed? why?
+      let output = component;
+      while (output instanceof Component) {
+        output = output.build(globals);
+      }
+      return output;
     });
   };
 
