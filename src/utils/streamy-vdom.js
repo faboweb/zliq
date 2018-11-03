@@ -96,7 +96,7 @@ function resolveChildren(children, globals) {
 */
 function resolveChild(child, globals) {
   if (child instanceof Component) {
-    return resolveChild(child.build(globals));
+    return resolveChild(child.build(globals), globals);
   }
   if (isStream(child)) {
     return child.map(x => resolveChildren(x, globals));
