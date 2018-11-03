@@ -60,7 +60,6 @@ function renderUpdate(
 // this function resolves the input to a vdom-stream
 function resolveInputToStream(input, globals) {
   let vdom$;
-
   if (isStream(input)) {
     vdom$ = input;
   } else if (input instanceof Component) {

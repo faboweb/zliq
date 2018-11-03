@@ -525,6 +525,12 @@ describe("Components", () => {
     ).schedule([() => trigger$(true), () => trigger2$(true), null]);
   });
 
+  it("should allow a component as root element", done => {
+    let component = new Component(globals => zx`<div>TESTING A STRING</div>`);
+
+    testRender(component, [`<div>TESTING A STRING</div>`], done);
+  });
+
   it("should allow a list of elements to be returned from a component", done => {
     let component = new Component(globals => [
       "TESTING A STRING",
