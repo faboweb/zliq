@@ -17,7 +17,11 @@ export function testRender(
   // enable to just define the expected html in the render schedule
   schedule = schedule.map(expected => {
     if (typeof expected === "string") {
-      return ({ element }) => expect(element.outerHTML).toBe(expected);
+      return ({ element }) =>
+        // we trim line breaks to make outerHTML more like the visible DOM
+        expect(trimWhitespaces(element.outerHTML)).toBe(
+          trimWhitespaces(expected)
+        );
     }
     return expected;
   });
@@ -26,6 +30,12 @@ export function testRender(
     schedule,
     done
   );
+}
+
+// trims whitespaces between tags and strings
+function trimWhitespaces(html) {
+  let trimmed = html.replace(/\>(\s*)(.*)(\s*)\</g, ">$2<");
+  return trimmed;
 }
 
 export function test$(stream, schedule, done) {

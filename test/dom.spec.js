@@ -383,7 +383,6 @@ describe("Components", () => {
         ({ keyContainer }) => {
           expect(keyContainer["test"].element.outerHTML).toMatchSnapshot();
           expect(keyContainer["test"].version).toBe(0);
-          content$("text");
         },
         ({ keyContainer }) => {
           expect(keyContainer["test"].element.outerHTML).toMatchSnapshot();
@@ -391,7 +390,7 @@ describe("Components", () => {
         }
       ],
       done
-    );
+    ).schedule([() => content$("text"), null]);
   });
 
   it("should reuse id elements on rerenderings", done => {
@@ -526,7 +525,7 @@ describe("Components", () => {
     ).schedule([() => trigger$(true), () => trigger2$(true), null]);
   });
 
-  it.only("should allow a list of elements to be returned from a component", done => {
+  it("should allow a list of elements to be returned from a component", done => {
     let component = new Component(globals => [
       "TESTING A STRING",
       zx`<div>HALLO WORLD</div>`,
@@ -535,7 +534,29 @@ describe("Components", () => {
 
     testRender(
       zx`<div>${component}</div>`,
-      [`<div></div>TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING</div>`],
+      [`<div>TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING</div>`],
+      done
+    );
+  });
+
+  it("should allow a list of elements to be returned from a component", done => {
+    let component = zx`TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING`;
+
+    testRender(
+      zx`<div>${component}</div>`,
+      [`<div>TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING</div>`],
+      done
+    );
+  });
+
+  it("should trim line breaks in array returns of the template function", done => {
+    let component = zx`TESTING A STRING
+      <div>HALLO WORLD</div>
+      ANOTHER STRING`;
+
+    testRender(
+      zx`<div>${component}</div>`,
+      [`<div>TESTING A STRING<div>HALLO WORLD</div>ANOTHER STRING</div>`],
       done
     );
   });

@@ -1,6 +1,6 @@
 // forked from https://github.com/choojs/hyperx
 
-import { Component } from "./index.js";
+import { Component, resolveChildren } from "./index.js";
 
 let VAR = 0,
   TEXT = 1,
@@ -31,7 +31,9 @@ module.exports = function(h, opts) {
   return (strings, ...values) => {
     return new Component(globals => {
       let component = handleTemplateLiteral(globals, strings, values);
-      // if (Array.isArray())
+      if (Array.isArray(component)) {
+        return resolveChildren(component, globals);
+      }
       return component.build(globals);
     });
   };
@@ -82,9 +84,7 @@ module.exports = function(h, opts) {
           stack[stack.length - 1][0][2][ix] = h(
             cur[0],
             cur[1],
-            cur[2].length
-              ? trimWhitespacesInChildren(cur[0], cur[2])
-              : undefined
+            cur[2].length ? cur[2] : undefined
           );
         }
       } else if (tokenType === OPEN) {
@@ -190,10 +190,7 @@ module.exports = function(h, opts) {
       typeof tree[2][0][0] === "string" &&
       Array.isArray(tree[2][0][2])
     ) {
-      // trim whitespaces
-      let children = trimWhitespacesInChildren(tree[2][0][0], tree[2][0][2]);
-
-      tree[2][0] = h(tree[2][0][0], tree[2][0][1], children);
+      tree[2][0] = h(tree[2][0][0], tree[2][0][1], tree[2][0][2]);
     }
     return tree[2][0];
 
@@ -421,7 +418,6 @@ function attributeToProperty(h) {
   };
 
   return function(tagName, attrs = {}, children = []) {
-    // console.log(tagName, attrs, children);
     for (let attr in attrs) {
       if (attr in transform) {
         attrs[transform[attr]] = attrs[attr];
@@ -440,27 +436,3 @@ export const escape = arg => {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 };
-
-function trimWhitespacesInChildren(tag, children) {
-  if (tag === "pre") return children;
-
-  let copy = children.slice();
-  while (copy && typeof copy[0] === "string" && /^\s*$/.test(copy[0])) {
-    copy = copy.slice(1);
-  }
-  if (copy && typeof copy[0] === "string") {
-    copy[0] = copy[0].trimLeft();
-  }
-  while (
-    copy &&
-    typeof copy[copy.length - 1] === "string" &&
-    /^\s*$/.test(copy[copy.length - 1])
-  ) {
-    copy = copy.slice(0, copy.length - 1);
-  }
-  if (copy && typeof copy[copy.length - 1] === "string") {
-    copy[0] = copy[0].trimRight();
-  }
-
-  return copy;
-}
