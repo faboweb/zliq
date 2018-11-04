@@ -1,5 +1,5 @@
 import { isStream } from "./streamy";
-import { Component } from "./streamy-vdom";
+import { Component, resolveChild, resolveChildren } from "./streamy-vdom";
 import { diff, triggerLifecycle } from "./vdom-diff";
 
 export function render(vdom, parentElement, globals = {}, debounce = 10) {
@@ -55,14 +55,37 @@ function renderUpdate(
 
 // we allow inputs to the render function to be:
 // a vdom-stream
-// a simple element constructor function: globals => vdom-stream
-// a component function: (props, children, globals) => vdom-stream
+// a stream of Component
+// a Component
 // this function resolves the input to a vdom-stream
 function resolveInputToStream(input, globals) {
   let vdom$;
   if (isStream(input)) {
-    vdom$ = input;
-  } else if (input instanceof Component) {
+    // resolve downstream components
+    vdom$ = input
+      .flatMap(input => {
+        let resolved = resolveChild(input, globals);
+
+        // resolvedChild can return an array of elements but we expect only one
+        // TODO make this better
+        if (Array.isArray(resolved)) {
+          resolved = resolved[0];
+        }
+
+        return resolved;
+      })
+      // a resolved input could return an array but we expect the vdom$
+      // to return just one root vdom elem
+      .map(x => {
+        if (Array.isArray(x)) {
+          x = x[0];
+        }
+        return x;
+      });
+    return vdom$;
+  }
+
+  if (input instanceof Component) {
     vdom$ = input.build(globals);
   } else if (typeof input === "function") {
     // simple element constructor
@@ -70,7 +93,7 @@ function resolveInputToStream(input, globals) {
   }
 
   // reiterate if still not a vdom-stream
-  if (!isStream(vdom$)) vdom$ = resolveInputToStream(vdom$);
+  if (!isStream(vdom$)) vdom$ = resolveInputToStream(vdom$, globals);
 
   return vdom$;
 }

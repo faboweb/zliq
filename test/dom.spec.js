@@ -574,4 +574,12 @@ describe("Components", () => {
       done
     );
   });
+
+  it("should allow returning streams of Component contructors", done => {
+    let component$ = stream(zx`<div></div>`);
+    testRender(component$, [`<div></div>`, `<p></p>`], done).schedule([
+      () => component$(new Component(globals => zx`<p></p>`)),
+      null
+    ]);
+  });
 });
