@@ -1,6 +1,12 @@
 import { merge$, isStream } from "./streamy";
 import { resolve$, flatten } from "./streamy-helpers";
 
+// class VNode {
+//   constructor(tag, props, children) {
+
+//   }
+// }
+
 export class Component {
   constructor(constructorFn) {
     this.build = constructorFn;

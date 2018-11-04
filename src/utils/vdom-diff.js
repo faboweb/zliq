@@ -226,6 +226,12 @@ function diffAttributes(element, props, oldProps = {}) {
 }
 
 function applyAttribute(element, attribute, value) {
+  // allow for any custom attribute to be set on the element
+  if (attribute.startsWith("*")) {
+    element.setAttribute(attribute.substr(1), value);
+    return;
+  }
+
   if (attribute === "class") {
     element.className = value || ""; // "" in the case of a class stream returning null
     // we leave the possibility to define styles as strings
@@ -243,7 +249,6 @@ function applyAttribute(element, attribute, value) {
       if (value === null) {
         element[attribute] = undefined;
       } else {
-        // element.setAttribute(attribute, value);
         element[attribute] = value;
       }
     }
@@ -252,11 +257,8 @@ function applyAttribute(element, attribute, value) {
     if (value === null) {
       element[attribute] = undefined;
     } else {
-      // element.setAttribute(attribute, value);
       element[attribute] = value;
     }
-
-    // TODO handle custom attributes
   }
 }
 

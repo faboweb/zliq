@@ -1,4 +1,4 @@
-import { isStream } from "./streamy";
+import { isStream, stream } from "./streamy";
 import { Component, resolveChild, resolveChildren } from "./streamy-vdom";
 import { diff, triggerLifecycle } from "./vdom-diff";
 
@@ -72,6 +72,11 @@ function resolveInputToStream(input, globals) {
           resolved = resolved[0];
         }
 
+        // because we are flatMapping we need to return streams
+        if (!isStream(resolved)) {
+          return stream(resolved);
+        }
+
         return resolved;
       })
       // a resolved input could return an array but we expect the vdom$
@@ -87,6 +92,8 @@ function resolveInputToStream(input, globals) {
 
   if (input instanceof Component) {
     vdom$ = input.build(globals);
+    vdom$ = resolveInputToStream(vdom$, globals);
+    return vdom$;
   } else if (typeof input === "function") {
     // simple element constructor
     vdom$ = input({}, [], globals);

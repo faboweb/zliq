@@ -575,11 +575,21 @@ describe("Components", () => {
     );
   });
 
-  it("should allow returning streams of Component contructors", done => {
+  it("should allow returning streams of Component constructors", done => {
     let component$ = stream(zx`<div></div>`);
     testRender(component$, [`<div></div>`, `<p></p>`], done).schedule([
       () => component$(new Component(globals => zx`<p></p>`)),
       null
     ]);
+  });
+
+  it("should allow nesting Component constructors", done => {
+    let component = new Component(x => new Component(y => zx`<div></div>`));
+    testRender(component, [`<div></div>`], done);
+  });
+
+  it("should allow custom attributes", done => {
+    let component = zx`<div *custom="hallo_world"></div>`;
+    testRender(component, [`<div custom="hallo_world"></div>`], done);
   });
 });
