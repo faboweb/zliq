@@ -456,8 +456,8 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       |let app = new Component(({router$}) => zx\`<div>
       |    <a href="/cats">Go the cats</a>
       |    <a href="/">Go away from cats</a>
-      |    \${Router({router$, router: "/"}, "No Cats here. :-(")}
-      |    \${Router({router$, router: "/cats"}, "Miau! Miau!")}
+      |    \${Router({router$, route: "/"}, "No Cats here. :-(")}
+      |    \${Router({router$, route: "/cats"}, "Miau! Miau!")}
       |</div>\`)
       `
     )}
