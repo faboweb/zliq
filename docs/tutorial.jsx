@@ -399,13 +399,13 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |<div>
-      |    {
+      |zx\`<div>
+      |    \${
       |        if$(open$,
-      |            <span>Open</span>,
-      |            <span>Closed</span>)
+      |            zx\`<span>Open</span>\`,
+      |            zx\`<span>Closed</span>\`)
       |    }
-      |</div>
+      |</div>\`
       `
     )}
 
@@ -415,8 +415,8 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |<div class={open$.map(open => 'container ' + open ? 'open' : 'closed')}>
-      |</div>
+      |zx\`<div class=\${open$.map(open => 'container ' + open ? 'open' : 'closed')}>
+      |</div>\`
       `
     )}
 
@@ -427,8 +427,8 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Markup(
       `
-      |<div class={join$('container', if$(open$, 'open', 'closed'))}>
-      |</div>
+      |zx\`<div class=\${join$('container', if$(open$, 'open', 'closed'))}>
+      |</div>\`
       `
     )}
 
