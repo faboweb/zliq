@@ -17,7 +17,7 @@ let ATTR_EQ = 11,
   ATTR_BREAK = 12;
 let COMMENT = 13;
 
-module.exports = function(h, opts) {
+export default function hyperx(h, opts) {
   if (!opts) opts = {};
   let concat =
     opts.concat ||
@@ -330,7 +330,7 @@ module.exports = function(h, opts) {
     else if (x && typeof x === "object") return x;
     else return concat("", x);
   }
-};
+}
 
 function quot(state) {
   return state === ATTR_VALUE_SINGLEQUOTE || state === ATTR_VALUE_DOUBLEQUOTE;
