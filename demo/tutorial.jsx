@@ -26,7 +26,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       |
       |// insert values in the markup with {x}
       |export const Highlight = text => zx\`
-      |    <span class='highlight'>\${text}</span>;
+      |    <span class='highlight'>\${text}</span>
       | \`
       `
     )}
@@ -110,7 +110,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       |// create a new stream with an optional starting value
       |let newStream = stream(5);
       |// retrieve the current value of the stream with stream() or stream.value
-      |console.log(newStream()); // 5
+      |console.log(newStream.value; // 5
       |// update the stream
       |newStream(6);
       |console.log(newStream.value); // 6
@@ -151,9 +151,9 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     )}
 
     <p>
-      There are a bunch of stream manipulation functions available:{" "}
-      <code>.map</code>, <code>.is</code>, <code>.filter</code>,{" "}
-      <code>.distinct</code> and <code>.reduce</code>. Checkout{" "}
+      There are a bunch of stream manipulation functions available: 
+      <code>.map</code>, <code>.is</code>, <code>.filter</code>, 
+      <code>.distinct</code> and <code>.reduce</code>. Checkout 
       <code>src/utils/streamy.js</code> for descriptions.
     </p>
 
@@ -263,7 +263,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
     ${Markup(
       `
       |let newStream = stream()
-      |assert(newStream() === undefined)
+      |assert(newStream.value === undefined)
       |newStream.log() // this doesn't print anything right now
       |newStream('Hallo World')
       |// .log() now prints 'Hallo World'
@@ -320,28 +320,8 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       `
     )}
 
-    ${
-      /*
     <p>
-      As developers are lazy and don't want to repeat code like \`state$.$(...)\`
-      in the code the whole time, there is also a simpler way. You just return a
-      function that will be executed with the resolved attributes:
-    </p>
-
-    ${Markup(
-      `
-      |let state$ = stream({ clicks: 0 });
-      |let Component = (state$) => ({clicks}) => <div>
-      |  Clicks: {clicks}
-      |</div>;
-      `
-    )}
-    */
-      ""
-    }
-
-    <p>
-      For a centralized state like in <a href="http://redux.js.org/">Redux</a>{" "}
+      For a centralized state like in <a href="http://redux.js.org/">Redux</a> 
       define a state for the application and then pass it on to each component.
       For a nested component function to receive the globals, we wrap the component function
       in a \`Component\` class. This way ZLIQ knows, that it needs to handle this component
@@ -462,7 +442,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
       ZLIQ provides a small router as a package 'zliq-router' to be installed
       via npm. It plugs very natural into native links. It provides you with the
       routing as a stream so you can use it as an input to your view. It also
-      provides a component to switch on certain routes. Check it out on{" "}
+      provides a component to switch on certain routes. Check it out on 
       <a href="http://github.com/faboweb/zliq-router">GitHub</a>
     </p>
 

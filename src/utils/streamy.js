@@ -7,9 +7,6 @@ import deepEqual from "deep-equal";
 */
 export const stream = function(init_value) {
   let s = function(value) {
-    if (value === undefined) {
-      return s.value;
-    }
     update(s, value);
     return s;
   };

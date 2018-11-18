@@ -1,4 +1,4 @@
-import { h, stream } from "../src";
+import { zx, Component, stream } from "../src";
 import "./header.scss";
 
 export const Header = () => {
@@ -6,13 +6,13 @@ export const Header = () => {
   window.addEventListener("scroll", scroll$);
 
   let headerHidden$ = stream(false);
-  let header = (
+  let header = zx`
     <div
-      class={headerHidden$.map(
+      class=${headerHidden$.map(
         hidden =>
           "row big-header highlight-background " + (hidden ? "hidden" : "")
       )}
-      onclick={e => e.target.tagName !== "A" && scrollUp()}
+      onclick=${e => e.target.tagName !== "A" && scrollUp()}
     >
       <div class="container">
         <div class="row">
@@ -36,7 +36,7 @@ export const Header = () => {
         <a href="#testing">Testing</a>
       </div>
     </div>
-  );
+  `;
 
   scroll$
     .map(() => {
@@ -57,7 +57,7 @@ function scrollUp() {
 function scrollTo(element, to, duration) {
   if (duration <= 0) return;
   var difference = to - element.scrollTop;
-  var perTick = difference / duration * 10;
+  var perTick = (difference / duration) * 10;
 
   setTimeout(function() {
     element.scrollTop = element.scrollTop + perTick;
