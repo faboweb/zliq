@@ -2,9 +2,9 @@ var path = require("path");
 
 module.exports = {
   devtool: "source-map",
-  entry: "./demo/demo_app.jsx",
+  entry: "./docs/demo_app.jsx",
   output: {
-    path: path.resolve(__dirname, "../demo"),
+    path: path.resolve(__dirname, "../docs"),
     filename: "bundle.js"
   },
   module: {
@@ -47,7 +47,7 @@ module.exports = {
     ]
   },
   devServer: {
-    contentBase: path.join(__dirname, "../demo"),
+    contentBase: path.join(__dirname, "../docs"),
     historyApiFallback: true
   }
 };

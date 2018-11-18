@@ -13,8 +13,7 @@
     "build:min": "webpack --mode=production --config webpack/build.js --output-filename=zliq.min.js --output-path=lib/",
     "build:all": "npm run build && npm run build:min",
     "build:demo": "webpack --config webpack/demo.js",
-    "prepublishOnly": "npm test && rimraf lib/** && npm run build:all",
-    "ghpages": "npm run build:demo && (git add bundle* & git commit -m 'updated gh-pages') & git subtree push --prefix demo origin gh-pages"
+    "prepublishOnly": "npm test && rimraf lib/** && npm run build:all"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
