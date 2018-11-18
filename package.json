@@ -25,6 +25,8 @@
   "devDependencies": {
     "@babel/core": "^7.1.6",
     "@babel/preset-env": "^7.1.6",
+    "babel-core": "^7.0.0-bridge",
+    "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
     "css-loader": "^0.26.1",
     "jest": "^23.6.0",
@@ -48,6 +50,9 @@
   "jest": {
     "moduleNameMapper": {
       "\\.(css|scss|jpg|png)$": "<rootDir>/test/helpers/empty-module.js"
+    },
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
     },
     "collectCoverage": true,
     "coverageDirectory": "./",
