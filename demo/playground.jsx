@@ -9,7 +9,7 @@ export const Playground = () => zx`
       subtitle: "Fork and get your hands dirty"
     })}
     <div isolated>
-      <script async src="//jsfiddle.net/hvbee8m9/10/embed/js,result/" />
+      <script async src="//jsfiddle.net/582wayrz/embed/js,result/" />
     </div>
   </div>
 `;
