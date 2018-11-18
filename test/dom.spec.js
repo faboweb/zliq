@@ -205,7 +205,7 @@ describe("Components", () => {
     // this means you can not manipulate the stream from the inside to the outside but need to use a callback function
     let DumbComponent = ({ clicks$, onclick }) => zx`
       <div>
-        <button onclick=${() => onclick(clicks$() + 1)}>
+        <button onclick=${() => onclick(clicks$.value + 1)}>
           Click to emit event
         </button>
       </div>
@@ -218,7 +218,7 @@ describe("Components", () => {
         // perform the actions on the element
         ({ element }) => {
           element.querySelector("button").click();
-          expect(clicks$()).toBe(1);
+          expect(clicks$.value).toBe(1);
         }
       ],
       done
