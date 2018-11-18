@@ -1,6 +1,6 @@
 // forked from https://github.com/choojs/hyperx
 
-import { Component, resolveChildren, resolveChild } from "./index.js";
+import { Component, resolveChildren } from "./index.js";
 
 let VAR = 0,
   TEXT = 1,
