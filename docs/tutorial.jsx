@@ -272,7 +272,7 @@ export const Tutorial = ({ router$ }, children, globals) => zx`
 
     ${Subheader({
       title: "State Management",
-      subtitle: "F*** Redux. ZLIQ &#9829; streams",
+      subtitle: "F*** Redux. ZLIQ ❤️ streams",
       id: "state"
     })}
 
