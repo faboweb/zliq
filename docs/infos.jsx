@@ -17,9 +17,9 @@ export const Infos = zx`
         { icon: "fast_forward", title: "Few concepts" },
         zx`
         ZLIQ is mainly based on functions and streams. If you know React you
-          already understand it. But it doesn't force you into how to build your
-          components.
-          <br />Bend it to your will.
+        already understand it. But it doesn't force you into how to build your
+        components.
+        <br />Bend it to your will.
       `
       )}
 
@@ -34,11 +34,11 @@ export const Infos = zx`
       )}
 
       ${InfoBullet(
-        { icon: "short_text", title: "An evenings read" },
+        { icon: "photo_size_select_small", title: "Plug and play" },
         zx`
-        ZLIQ has only a few lines of code (~600 January 2018). ZLIQ may be the
-        first framework you actually understand E2E.
-        <br />Own your code.
+        ZLIQ is build to be plug and play. You don't need to preprocess your files 
+        via webpack er similar tools. This keeps your stack small and easy to work with.
+        <br />Simple is good.
       `
       )}
     </div>
